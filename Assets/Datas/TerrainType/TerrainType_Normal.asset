@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: TerrainType_Normal
   m_EditorClassIdentifier: 
   terrainName: Normal
-  color: {r: 0.3207547, g: 0.31016374, b: 0.31016374, a: 1}
+  color: {r: 0.8584906, g: 0.7329566, b: 0.7329566, a: 1}
   resourceYield: 0

@@ -21,6 +21,7 @@ public class UnitAgent : MonoBehaviour
 
     private void Awake()
     {
+        if (id == 0) id = GetInstanceID();
         cachedRenderer = GetComponentInChildren<Renderer>();
         cachedSprite = GetComponentInChildren<SpriteRenderer>();
         mpb = new MaterialPropertyBlock();
@@ -36,8 +37,7 @@ public class UnitAgent : MonoBehaviour
 
     private void Start()
     {
-        if (id == 0) id = GetInstanceID();
-        Register();
+        // Do not auto-register here. Registration should happen after the unit's initial placement via SetPosition or explicit RegisterWithFog().
     }
 
     private void OnDestroy()
@@ -45,9 +45,11 @@ public class UnitAgent : MonoBehaviour
         Unregister();
     }
 
-    public void Register()
+    // Explicit registration method if needed
+    public void RegisterWithFog()
     {
-        FogOfWarManager.Instance?.RegisterUnit(id, q, r);
+        if (FogOfWarManager.Instance == null) return;
+        FogOfWarManager.Instance.RegisterUnit(id, q, r, visionRange);
         isRegistered = true;
     }
 
@@ -58,17 +60,18 @@ public class UnitAgent : MonoBehaviour
     }
 
     // update logical tile position; do not change transform here to avoid jitter
+    // ensures FogOfWarManager gets the unit's visionRange applied
     public void SetPosition(int nq, int nr)
     {
         q = nq; r = nr;
         if (FogOfWarManager.Instance == null) return;
         if (isRegistered)
         {
-            FogOfWarManager.Instance.UpdateUnitPosition(id, q, r);
+            FogOfWarManager.Instance.UpdateUnitPosition(id, q, r, visionRange);
         }
         else
         {
-            FogOfWarManager.Instance.RegisterUnit(id, q, r);
+            FogOfWarManager.Instance.RegisterUnit(id, q, r, visionRange);
             isRegistered = true;
         }
     }

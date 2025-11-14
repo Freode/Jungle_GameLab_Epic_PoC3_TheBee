@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
 public class UnitCommandPanel : MonoBehaviour
 {
@@ -45,16 +46,19 @@ public class UnitCommandPanel : MonoBehaviour
 
         if (currentAgent == null) return;
 
-        // get commands from provider (RoleAssigner or other)
+        // get commands from provider (IUnitCommandProvider) if available
         List<ICommand> commands = new List<ICommand>();
-        var provider = currentAgent.GetComponent<RoleAssigner>();
+        var provider = currentAgent.GetComponent<IUnitCommandProvider>();
         if (provider != null)
         {
-            // placeholder: RoleAssigner could expose commands in future
+            foreach (var c in provider.GetCommands(currentAgent))
+            {
+                if (c != null) commands.Add(c);
+            }
         }
 
-        // fallback to defaultCommands
-        if ((commands == null || commands.Count == 0) && defaultCommands != null)
+        // fallback to defaultCommands if none provided
+        if (commands.Count == 0 && defaultCommands != null)
         {
             foreach (var c in defaultCommands)
             {
@@ -62,16 +66,28 @@ public class UnitCommandPanel : MonoBehaviour
             }
         }
 
-        // create buttons
+        // create buttons (left-to-right via HorizontalLayoutGroup on buttonContainer)
         foreach (var cmd in commands)
         {
+            var command = cmd; // local copy to avoid closure capture issues
             var btnObj = Instantiate(commandButtonPrefab, buttonContainer);
+            btnObj.name = "cmd_" + command.Id;
             var btn = btnObj.GetComponentInChildren<Button>();
             var img = btnObj.GetComponentInChildren<UnityEngine.UI.Image>();
+            var tmp = btnObj.GetComponentInChildren<TextMeshProUGUI>();
             var txt = btnObj.GetComponentInChildren<UnityEngine.UI.Text>();
-            if (img != null) img.sprite = cmd.Icon;
-            if (txt != null) txt.text = cmd.DisplayName;
-            btn.onClick.AddListener(() => OnCommandClicked(cmd));
+            if (img != null) img.sprite = command.Icon;
+            if (tmp != null) tmp.text = command.DisplayName;
+            else if (txt != null) txt.text = command.DisplayName;
+
+            // disable if not available
+            bool avail = command.IsAvailable(currentAgent);
+            if (btn != null)
+            {
+                btn.interactable = avail;
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() => OnCommandClicked(command));
+            }
         }
     }
 
@@ -80,11 +96,25 @@ public class UnitCommandPanel : MonoBehaviour
         if (currentAgent == null) return;
         if (!cmd.IsAvailable(currentAgent)) return;
 
+        // Special-case: construct_hive should execute immediately at the agent's current tile
+        if (cmd.Id == "construct_hive")
+        {
+            cmd.Execute(currentAgent, CommandTarget.ForTile(currentAgent.q, currentAgent.r));
+            return;
+        }
+
         if (cmd.RequiresTarget)
         {
+            // ensure PendingCommandHolder exists
+            PendingCommandHolder.EnsureInstance();
+            if (PendingCommandHolder.Instance == null)
+            {
+                Debug.LogWarning("PendingCommandHolder not found in scene. Command will not be queued.");
+                return;
+            }
+
             // enter target selection mode
             TileClickMover.Instance?.EnterMoveMode();
-            // store pending command somewhere: for simplicity use TileClickMover's moveMode to mean pending move command
             PendingCommandHolder.Instance?.SetPendingCommand(cmd, currentAgent);
         }
         else

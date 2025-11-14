@@ -5,10 +5,17 @@ public class FogOfWarManager : MonoBehaviour
 {
     public static FogOfWarManager Instance { get; private set; }
 
-    public int visionRange = 3;
+    // Default vision range if unit doesn't provide one
+    public int defaultVisionRange = 3;
 
-    // track unit positions by id
-    private Dictionary<int, Vector2Int> unitPositions = new Dictionary<int, Vector2Int>();
+    // track unit positions and vision by id
+    private class UnitSight
+    {
+        public Vector2Int pos;
+        public int vision;
+    }
+
+    private Dictionary<int, UnitSight> unitSight = new Dictionary<int, UnitSight>();
 
     void Awake()
     {
@@ -25,23 +32,31 @@ public class FogOfWarManager : MonoBehaviour
         RecalculateVisibility();
     }
 
-    // Register/Update/Unregister unit positions
-    public void RegisterUnit(int id, int q, int r)
+    // Register/Update/Unregister unit positions with per-unit vision
+    public void RegisterUnit(int id, int q, int r, int vision)
     {
-        unitPositions[id] = new Vector2Int(q, r);
+        unitSight[id] = new UnitSight { pos = new Vector2Int(q, r), vision = vision > 0 ? vision : defaultVisionRange };
     }
 
-    public void UpdateUnitPosition(int id, int q, int r)
+    public void UpdateUnitPosition(int id, int q, int r, int vision)
     {
-        unitPositions[id] = new Vector2Int(q, r);
+        if (unitSight.ContainsKey(id))
+        {
+            unitSight[id].pos = new Vector2Int(q, r);
+            unitSight[id].vision = vision > 0 ? vision : defaultVisionRange;
+        }
+        else
+        {
+            RegisterUnit(id, q, r, vision);
+        }
     }
 
     public void UnregisterUnit(int id)
     {
-        if (unitPositions.ContainsKey(id)) unitPositions.Remove(id);
+        if (unitSight.ContainsKey(id)) unitSight.Remove(id);
     }
 
-    // Recalculate which tiles are visible based on current unit positions
+    // Recalculate which tiles are visible based on current unit positions and their individual vision
     public void RecalculateVisibility()
     {
         var tm = TileManager.Instance;
@@ -49,10 +64,11 @@ public class FogOfWarManager : MonoBehaviour
 
         // compute union of visible tile coordinates
         var visibleCoords = new HashSet<Vector2Int>();
-        foreach (var kv in unitPositions)
+        foreach (var kv in unitSight)
         {
-            var center = kv.Value;
-            var tilesInRange = GetTilesCoordsInRange(center.x, center.y, visionRange);
+            var center = kv.Value.pos;
+            int vision = kv.Value.vision;
+            var tilesInRange = GetTilesCoordsInRange(center.x, center.y, vision);
             foreach (var c in tilesInRange) visibleCoords.Add(c);
         }
 
@@ -99,7 +115,7 @@ public class FogOfWarManager : MonoBehaviour
     public void RevealArea(int q, int r)
     {
         // legacy single-source reveal: register a temporary source with id -1
-        RegisterUnit(-1, q, r);
+        RegisterUnit(-1, q, r, defaultVisionRange);
         RecalculateVisibility();
         UnregisterUnit(-1);
     }

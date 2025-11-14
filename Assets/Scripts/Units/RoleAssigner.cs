@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public enum UnitRole
 { 
@@ -7,12 +8,17 @@ public enum UnitRole
     Scout, 
     Guard,
     Queen,
+    Hive,
+    Normal,
 }
 
-public class RoleAssigner : MonoBehaviour
+public class RoleAssigner : MonoBehaviour, IUnitCommandProvider
 {
     public UnitAgent agent;
     public UnitRole currentRole = UnitRole.None;
+
+    // assignable commands for this role (inspector)
+    public SOCommand[] roleCommands;
 
     void Start()
     {
@@ -39,7 +45,15 @@ public class RoleAssigner : MonoBehaviour
                 // defensive behavior
                 break;
             case UnitRole.Queen:
+                agent.visionRange = 1;
+                FogOfWarManager.Instance?.RecalculateVisibility();
+                break;
+            case UnitRole.Hive:
                 agent.visionRange = 2;
+                FogOfWarManager.Instance?.RecalculateVisibility();
+                break;
+            case UnitRole.Normal:
+                agent.visionRange = 0;
                 FogOfWarManager.Instance?.RecalculateVisibility();
                 break;
             case UnitRole.None:
@@ -47,6 +61,16 @@ public class RoleAssigner : MonoBehaviour
                 agent.visionRange = 1;
                 FogOfWarManager.Instance?.RecalculateVisibility();
                 break;
+        }
+    }
+
+    // IUnitCommandProvider
+    public IEnumerable<ICommand> GetCommands(UnitAgent a)
+    {
+        if (roleCommands == null) yield break;
+        foreach (var c in roleCommands)
+        {
+            yield return c;
         }
     }
 }

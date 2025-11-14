@@ -8,41 +8,53 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 744478408339897767, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 744478408339897767, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.15
+      objectReference: {fileID: 0}
     - target: {fileID: 1245175580857229108, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: m_Name
-      value: QueenBee
+      value: NormalBee
       objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: currentRole
-      value: 4
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: roleCommands.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: 'roleCommands.Array.data[0]'
       value: 
       objectReference: {fileID: 11400000, guid: 6087083f8ef98e7489dd1ef6a38160c3, type: 2}
-    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
-      propertyPath: 'roleCommands.Array.data[1]'
-      value: 
-      objectReference: {fileID: 11400000, guid: 01d4518e8bdd1d741baffef49883c7fc, type: 2}
+    - target: {fileID: 6112904449999854078, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: moveSpeed
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6144156112367316586, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: m_Color.b
-      value: 0
+      value: 0.045656808
       objectReference: {fileID: 0}
     - target: {fileID: 6144156112367316586, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: m_Color.g
-      value: 1
+      value: 0.43808874
       objectReference: {fileID: 0}
     - target: {fileID: 6144156112367316586, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: m_Color.r
-      value: 1
+      value: 0.509434
+      objectReference: {fileID: 0}
+    - target: {fileID: 6144156112367316586, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_SortingOrder
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 7071419041377049769, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: visionRange
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8356495950311495776, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: m_LocalPosition.x

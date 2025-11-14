@@ -7,7 +7,23 @@ public class PendingCommandHolder : MonoBehaviour
     private ICommand pendingCommand;
     private UnitAgent pendingAgent;
 
-    void Awake() { Instance = this; }
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    // Ensure there is an instance in the scene; create one if missing
+    public static void EnsureInstance()
+    {
+        if (Instance != null) return;
+        var go = new GameObject("PendingCommandHolder");
+        Instance = go.AddComponent<PendingCommandHolder>();
+    }
 
     public void SetPendingCommand(ICommand cmd, UnitAgent agent)
     {
@@ -27,14 +43,25 @@ public class PendingCommandHolder : MonoBehaviour
     {
         if (pendingCommand != null && pendingAgent != null)
         {
-            // special-case move command id
-            if (pendingCommand.Id == "move")
+            // handle common command ids
+            switch (pendingCommand.Id)
             {
-                MoveCommandHandler.ExecuteMove(pendingAgent, target);
-            }
-            else
-            {
-                pendingCommand.Execute(pendingAgent, target);
+                case "move":
+                    MoveCommandHandler.ExecuteMove(pendingAgent, target);
+                    break;
+                case "construct_hive":
+                    Debug.Log("Hive2");
+                    ConstructHiveHandler.ExecuteConstruct(pendingAgent, target);
+                    break;
+                case "hive_explore":
+                case "hive_gather":
+                case "hive_attack":
+                    HiveCommandHandler.ExecuteHiveCommand(pendingAgent, pendingCommand.Id, target);
+                    break;
+                default:
+                    // fallback to SOCommand behavior
+                    pendingCommand.Execute(pendingAgent, target);
+                    break;
             }
         }
         Clear();

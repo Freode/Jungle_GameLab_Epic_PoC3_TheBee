@@ -29,48 +29,97 @@ public class TileClickMover : MonoBehaviour
 
     void Update()
     {
+        // Left click: selection / UI interactions
         if (Input.GetMouseButtonDown(0))
         {
-            var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+            HandleLeftClick();
+        }
+
+        // Right click: issue command/move to clicked tile
+        if (Input.GetMouseButtonDown(1))
+        {
+            HandleRightClick();
+        }
+
+        // Cancel move mode with Escape
+        if (moveMode && Input.GetKeyDown(KeyCode.Escape))
+        {
+            StopMoveMode();
+        }
+    }
+
+    void HandleLeftClick()
+    {
+        var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+        {
+            var unit = hit.collider.GetComponentInParent<UnitAgent>();
+            if (unit != null)
             {
-                var unit = hit.collider.GetComponentInParent<UnitAgent>();
+                // select existing unit
+                SelectUnit(unit);
+                return;
+            }
+
+            var tile = hit.collider.GetComponentInParent<HexTile>();
+            if (tile != null)
+            {
+                // just show tile info
+                if (debugText != null) debugText.text = $"Tile: ({tile.q}, {tile.r})";
+            }
+        }
+        else
+        {
+            // Try 2D
+            Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            var hit2 = Physics2D.Raycast(wp, Vector2.zero);
+            if (hit2.collider != null)
+            {
+                var unit = hit2.collider.GetComponentInParent<UnitAgent>();
                 if (unit != null)
                 {
-                    // select existing unit
                     SelectUnit(unit);
                     return;
                 }
-
-                var tile = hit.collider.GetComponentInParent<HexTile>();
+                var tile = hit2.collider.GetComponentInParent<HexTile>();
                 if (tile != null)
                 {
-                    OnTileClicked(tile);
-                }
-            }
-            else
-            {
-                // Try 2D
-                Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-                var hit2 = Physics2D.Raycast(wp, Vector2.zero);
-                if (hit2.collider != null)
-                {
-                    var unit = hit2.collider.GetComponentInParent<UnitAgent>();
-                    if (unit != null)
-                    {
-                        SelectUnit(unit);
-                        return;
-                    }
-                    var tile = hit2.collider.GetComponentInParent<HexTile>();
-                    if (tile != null) OnTileClicked(tile);
+                    if (debugText != null) debugText.text = $"Tile: ({tile.q}, {tile.r})";
                 }
             }
         }
+    }
 
-        // Cancel move mode with right click or Escape
-        if (moveMode && (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape)))
+    void HandleRightClick()
+    {
+        var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
         {
-            StopMoveMode();
+            var tile = hit.collider.GetComponentInParent<HexTile>();
+            if (tile != null)
+            {
+                OnTileCommand(tile);
+            }
+
+            var unit = hit.collider.GetComponentInParent<UnitAgent>();
+            if (unit != null)
+            {
+                // right-click on unit could be used for attack-targeting etc; for now select
+                SelectUnit(unit);
+            }
+        }
+        else
+        {
+            // Try 2D
+            Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            var hit2 = Physics2D.Raycast(wp, Vector2.zero);
+            if (hit2.collider != null)
+            {
+                var tile = hit2.collider.GetComponentInParent<HexTile>();
+                if (tile != null) OnTileCommand(tile);
+                var unit = hit2.collider.GetComponentInParent<UnitAgent>();
+                if (unit != null) SelectUnit(unit);
+            }
         }
     }
 
@@ -98,7 +147,7 @@ public class TileClickMover : MonoBehaviour
         PendingCommandHolder.Instance?.Clear();
     }
 
-    void OnTileClicked(HexTile tile)
+    void OnTileCommand(HexTile tile)
     {
         // update debug UI
         if (debugText != null)
@@ -108,49 +157,38 @@ public class TileClickMover : MonoBehaviour
 
         if (selectedUnitInstance == null)
         {
-            // do not spawn unit on click anymore
+            // no unit selected to command
             return;
         }
-        else
+
+        // if there is a pending command, execute with this tile as target
+        if (PendingCommandHolder.Instance.HasPending)
         {
-            // move existing unit using Pathfinder
-            // if move confirmation required, only move when in moveMode
-            if (requireMoveConfirm && !moveMode && !PendingCommandHolder.Instance.HasPending)
-            {
-                // allow direct click movement if unit canMove
-                if (selectedUnitInstance.canMove)
-                {
-                    // fall through to move handling below
-                }
-                else
-                {
-                    if (debugText != null) debugText.text = "Select a command in the command UI to issue";
-                    return;
-                }
-            }
+            PendingCommandHolder.Instance.ExecutePending(CommandTarget.ForTile(tile.q, tile.r));
+            StopMoveMode();
+            return;
+        }
 
-            // if there is a pending command, execute with this tile as target
-            if (PendingCommandHolder.Instance.HasPending)
-            {
-                PendingCommandHolder.Instance.ExecutePending(CommandTarget.ForTile(tile.q, tile.r));
-                StopMoveMode();
-                return;
-            }
+        // if move confirmation required, only move when in moveMode unless unit allows direct click
+        if (requireMoveConfirm && !moveMode && !selectedUnitInstance.canMove)
+        {
+            if (debugText != null) debugText.text = "Select a command in the command UI to issue";
+            return;
+        }
 
-            // otherwise default to move if moveMode or unit.canMove
-            if (moveMode || selectedUnitInstance.canMove)
+        // otherwise perform move if allowed
+        if (moveMode || selectedUnitInstance.canMove)
+        {
+            var startTile = TileManager.Instance.GetTile(selectedUnitInstance.q, selectedUnitInstance.r);
+            var path = Pathfinder.FindPath(startTile, tile);
+            if (path != null && path.Count > 0)
             {
-                var startTile = TileManager.Instance.GetTile(selectedUnitInstance.q, selectedUnitInstance.r);
-                var path = Pathfinder.FindPath(startTile, tile);
-                if (path != null && path.Count > 0)
-                {
-                    var ctrl = selectedUnitInstance.GetComponent<UnitController>();
-                    if (ctrl == null) ctrl = selectedUnitInstance.gameObject.AddComponent<UnitController>();
-                    ctrl.agent = selectedUnitInstance;
-                    ctrl.SetPath(path);
-                }
-                StopMoveMode();
+                var ctrl = selectedUnitInstance.GetComponent<UnitController>();
+                if (ctrl == null) ctrl = selectedUnitInstance.gameObject.AddComponent<UnitController>();
+                ctrl.agent = selectedUnitInstance;
+                ctrl.SetPath(path);
             }
+            StopMoveMode();
         }
     }
 }

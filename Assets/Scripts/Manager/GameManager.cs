@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance { get; private set; }
+
     [Header("Map Shape")]
     public bool hexMap = true; // if true, generate a hex-shaped map around (0,0)
     public int mapRadius = 5; // radius for hex-shaped map (number of rings around center)
@@ -23,6 +25,20 @@ public class GameManager : MonoBehaviour
 
     [Header("Spawn")]
     public GameObject queenPrefab;
+    public GameObject hivePrefab; // prefab used when constructing a hive
+    public GameObject normalBeePrefab; // renamed from workerPrefab to normalBeePrefab
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        // optional: persist across scenes
+        // DontDestroyOnLoad(gameObject);
+    }
 
     void Start()
     {

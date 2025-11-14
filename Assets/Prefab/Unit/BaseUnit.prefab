@@ -53,6 +53,7 @@ MonoBehaviour:
   r: 0
   visionRange: 1
   hexSize: 0.5
+  canMove: 1
 --- !u!114 &4691115191405788594
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67,6 +68,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   agent: {fileID: 7071419041377049769}
   currentRole: 1
+  roleCommands: []
 --- !u!61 &1092768442395172163
 BoxCollider2D:
   m_ObjectHideFlags: 0

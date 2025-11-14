@@ -23,5 +23,20 @@ public class SOCommand : ScriptableObject, ICommand
     public virtual void Execute(UnitAgent agent, CommandTarget target)
     {
         Debug.Log($"Executing SOCommand {displayName} for agent {agent?.name} target {target.type}");
+        // route common commands
+        switch (id)
+        {
+            case "move":
+                MoveCommandHandler.ExecuteMove(agent, target);
+                break;
+            case "construct_hive":
+                ConstructHiveHandler.ExecuteConstruct(agent, target);
+                break;
+            case "hive_explore":
+            case "hive_gather":
+            case "hive_attack":
+                HiveCommandHandler.ExecuteHiveCommand(agent, id, target);
+                break;
+        }
     }
 }
