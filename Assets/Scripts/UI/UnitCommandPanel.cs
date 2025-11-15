@@ -86,8 +86,24 @@ public class UnitCommandPanel : MonoBehaviour
             {
                 btn.interactable = avail;
                 btn.onClick.RemoveAllListeners();
-                btn.onClick.AddListener(() => OnCommandClicked(command));
+                // use local copy of btn for closure
+                var localBtn = btn;
+                btn.onClick.AddListener(() => HandleCommandButtonClick(command, localBtn));
             }
+        }
+    }
+
+    void HandleCommandButtonClick(ICommand cmd, Button clickedButton)
+    {
+        OnCommandClicked(cmd);
+
+        // disable the clicked button to prevent duplicate clicks
+        if (clickedButton != null) clickedButton.interactable = false;
+
+        // hide panel only if command requests it
+        if (cmd.HidePanelOnClick)
+        {
+            if (panelRoot != null) panelRoot.SetActive(false);
         }
     }
 

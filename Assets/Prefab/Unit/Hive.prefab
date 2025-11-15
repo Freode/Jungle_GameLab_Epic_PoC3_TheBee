@@ -76,7 +76,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 15
-  m_Sprite: {fileID: -712631045867808456, guid: b670ab75dde984907b8570040daa08c5, type: 3}
+  m_Sprite: {fileID: -2135585597343286014, guid: eed45a33cd08446c8b88325cf82fc52f, type: 3}
   m_Color: {r: 1, g: 1, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -178,8 +178,34 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8356495950311495776, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1448510208658271436}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1245175580857229108, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2645853368713034063}
   m_SourcePrefab: {fileID: 100100000, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+--- !u!1 &122535924390814216 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1245175580857229108, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+  m_PrefabInstance: {fileID: 1221765577647177020}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2645853368713034063
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 122535924390814216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c6067f9121793349b96e7b1c164b9a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  q: 0
+  r: 0
+  workerPrefab: {fileID: 122535924390814216, guid: 9b4e582aa5b040e4fba39b28bd92b7c8, type: 3}
+  spawnInterval: 10
+  maxWorkers: 10
+  storedResources: 0
 --- !u!4 &7137265993117279580 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8356495950311495776, guid: fbd489a349676d34997f12e8c68a8424, type: 3}

@@ -17,6 +17,9 @@ public class TileClickMover : MonoBehaviour
     public bool requireMoveConfirm = true;
     private bool moveMode = false;
 
+    public TileHighlighter highlighter;
+    public HexBoundaryHighlighter boundaryHighlighter;
+
     void Awake()
     {
         Instance = this;
@@ -45,6 +48,23 @@ public class TileClickMover : MonoBehaviour
         if (moveMode && Input.GetKeyDown(KeyCode.Escape))
         {
             StopMoveMode();
+        }
+
+        // show radius when unit selected
+        if (selectedUnitInstance != null)
+        {
+            var behavior = selectedUnitInstance.GetComponent<UnitBehaviorController>();
+
+            // Do NOT call boundaryHighlighter.ShowBoundary here ? showing boundary on unit selection caused confusion.
+            // BoundaryHighlighter is enabled by HiveManager when hives exist and should be triggered when a hive is constructed or explicitly requested.
+            // Only show the circle/sprite radius via TileHighlighter for the selected unit.
+            if (highlighter != null)
+                highlighter.ShowRadius(selectedUnitInstance.homeHive, behavior != null ? behavior.activityRadius : 0);
+        }
+        else
+        {
+            boundaryHighlighter?.Clear();
+            highlighter?.HideRadius();
         }
     }
 
@@ -165,6 +185,15 @@ public class TileClickMover : MonoBehaviour
         if (PendingCommandHolder.Instance.HasPending)
         {
             PendingCommandHolder.Instance.ExecutePending(CommandTarget.ForTile(tile.q, tile.r));
+            StopMoveMode();
+            return;
+        }
+
+        // If unit has behavior controller, dispatch to its decision logic (priority attack/gather/idle)
+        var behavior = selectedUnitInstance.GetComponent<UnitBehaviorController>();
+        if (behavior != null && selectedUnitInstance.canMove)
+        {
+            behavior.IssueCommandToTile(tile);
             StopMoveMode();
             return;
         }

@@ -16,3 +16,4 @@ MonoBehaviour:
   displayName: Construct Hive
   icon: {fileID: 0}
   requiresTarget: 1
+  hidePanelOnClick: 1

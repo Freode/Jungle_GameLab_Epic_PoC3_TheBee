@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Terrain")]
     public TerrainType[] terrainTypes;
+    public TerrainType normalTerrain; // new: color to use when resources depleted
     public float noiseScale = 0.15f;
     public int noiseSeed = 0;
 

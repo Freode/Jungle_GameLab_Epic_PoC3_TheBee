@@ -6,6 +6,7 @@ public class TileManager : MonoBehaviour
     public static TileManager Instance { get; private set; }
 
     private Dictionary<Vector2Int, HexTile> tiles = new Dictionary<Vector2Int, HexTile>();
+    private List<UnitAgent> units = new List<UnitAgent>();
 
     void Awake()
     {
@@ -40,4 +41,17 @@ public class TileManager : MonoBehaviour
     }
 
     public IEnumerable<HexTile> GetAllTiles() => tiles.Values;
+
+    // unit registration to avoid FindObjectsOfType
+    public void RegisterUnit(UnitAgent unit)
+    {
+        if (!units.Contains(unit)) units.Add(unit);
+    }
+
+    public void UnregisterUnit(UnitAgent unit)
+    {
+        if (units.Contains(unit)) units.Remove(unit);
+    }
+
+    public IEnumerable<UnitAgent> GetAllUnits() => units;
 }

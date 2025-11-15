@@ -42,6 +42,17 @@ public class ConstructHiveHandler : MonoBehaviour
         hive.workerPrefab = gm.normalBeePrefab;
         hive.Initialize(q, r);
 
+        // Enable HexBoundaryHighlighter singleton (if present) so boundaries are available immediately
+        if (HexBoundaryHighlighter.Instance != null)
+        {
+            var bh = HexBoundaryHighlighter.Instance;
+            if (bh.gameObject != null && !bh.gameObject.activeInHierarchy)
+            {
+                bh.gameObject.SetActive(true);
+            }
+            bh.enabled = true;
+        }
+
         // Update fog visibility after hive placed (in case position matters)
         FogOfWarManager.Instance?.RecalculateVisibility();
     }

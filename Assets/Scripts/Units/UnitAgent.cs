@@ -8,6 +8,12 @@ public class UnitAgent : MonoBehaviour
     public int visionRange = 3;
     public float hexSize = 0.5f;
 
+    // faction
+    public Faction faction = Faction.Player;
+
+    // home hive reference (if spawned by a hive)
+    public Hive homeHive;
+
     // Whether this unit can be moved by player clicking tiles
     public bool canMove = true;
 
@@ -38,10 +44,23 @@ public class UnitAgent : MonoBehaviour
     private void Start()
     {
         // Do not auto-register here. Registration should happen after the unit's initial placement via SetPosition or explicit RegisterWithFog().
+        TileManager.Instance?.RegisterUnit(this);
+    }
+
+    private void OnEnable()
+    {
+        TileManager.Instance?.RegisterUnit(this);
+    }
+
+    private void OnDisable()
+    {
+        TileManager.Instance?.UnregisterUnit(this);
+        Unregister();
     }
 
     private void OnDestroy()
     {
+        TileManager.Instance?.UnregisterUnit(this);
         Unregister();
     }
 

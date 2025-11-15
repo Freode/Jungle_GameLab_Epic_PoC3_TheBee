@@ -11,14 +11,35 @@ public class Hive : MonoBehaviour
     public float spawnInterval = 10f; // seconds
     public int maxWorkers = 10;
 
+    public int storedResources = 0;
+
     private List<UnitAgent> workers = new List<UnitAgent>();
     private Coroutine spawnRoutine;
+
+    void OnEnable()
+    {
+        HiveManager.Instance?.RegisterHive(this);
+    }
+
+    void OnDisable()
+    {
+        HiveManager.Instance?.UnregisterHive(this);
+    }
 
     public void Initialize(int q, int r)
     {
         this.q = q; this.r = r;
         // start spawning
+        if (spawnRoutine != null) StopCoroutine(spawnRoutine);
         spawnRoutine = StartCoroutine(SpawnLoop());
+
+        // show boundary using configured hive activity radius from HiveManager
+        int radius = 5;
+        if (HiveManager.Instance != null) radius = HiveManager.Instance.hiveActivityRadius;
+        if (HexBoundaryHighlighter.Instance != null)
+        {
+            HexBoundaryHighlighter.Instance.ShowBoundary(this, radius);
+        }
     }
 
     IEnumerator SpawnLoop()
@@ -41,7 +62,10 @@ public class Hive : MonoBehaviour
         var agent = go.GetComponent<UnitAgent>();
         if (agent == null) agent = go.AddComponent<UnitAgent>();
         agent.SetPosition(q, r);
+        // assign home hive so activity radius checks work
+        agent.homeHive = this;
         agent.canMove = true;
+        agent.faction = Faction.Player;
         workers.Add(agent);
     }
 

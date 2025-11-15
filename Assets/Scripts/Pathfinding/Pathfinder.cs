@@ -89,7 +89,7 @@ public static class Pathfinder
     }
 
     // axial distance
-    static int AxialDistance(int q1, int r1, int q2, int r2)
+    public static int AxialDistance(int q1, int r1, int q2, int r2)
     {
         int x1 = q1;
         int z1 = r1;
