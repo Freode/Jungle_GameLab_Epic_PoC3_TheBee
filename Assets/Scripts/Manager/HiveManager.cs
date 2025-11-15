@@ -10,6 +10,9 @@ public class HiveManager : MonoBehaviour
     [Header("Hive Settings")]
     public int hiveActivityRadius = 5;
 
+    [Header("Player Resources")]
+    public int playerStoredResources = 0; // 플레이어의 전체 저장 자원
+
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -32,7 +35,7 @@ public class HiveManager : MonoBehaviour
             if (bh != null)
             {
                 bh.SetEnabledForHives(true);
-                bh.debugLogs = true; // enable logs to assist debugging
+                bh.debugLogs = false; // disable debug logs
             }
         }
     }
@@ -69,5 +72,30 @@ public class HiveManager : MonoBehaviour
             }
         }
         return found;
+    }
+
+    // Add resources to player's storage
+    public void AddResources(int amount)
+    {
+        playerStoredResources += amount;
+        Debug.Log($"자원 추가: +{amount}, 총 자원: {playerStoredResources}");
+    }
+
+    // Try to spend resources, returns true if successful
+    public bool TrySpendResources(int amount)
+    {
+        if (playerStoredResources >= amount)
+        {
+            playerStoredResources -= amount;
+            Debug.Log($"자원 사용: -{amount}, 남은 자원: {playerStoredResources}");
+            return true;
+        }
+        return false;
+    }
+
+    // Check if player has enough resources
+    public bool HasResources(int amount)
+    {
+        return playerStoredResources >= amount;
     }
 }

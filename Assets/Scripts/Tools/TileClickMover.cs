@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using TMPro;
 
@@ -35,13 +36,21 @@ public class TileClickMover : MonoBehaviour
         // Left click: selection / UI interactions
         if (Input.GetMouseButtonDown(0))
         {
-            HandleLeftClick();
+            // Check if clicking over UI - if so, ignore tile/unit selection
+            if (!IsPointerOverUI())
+            {
+                HandleLeftClick();
+            }
         }
 
         // Right click: issue command/move to clicked tile
         if (Input.GetMouseButtonDown(1))
         {
-            HandleRightClick();
+            // Check if clicking over UI - if so, ignore
+            if (!IsPointerOverUI())
+            {
+                HandleRightClick();
+            }
         }
 
         // Cancel move mode with Escape
@@ -63,34 +72,68 @@ public class TileClickMover : MonoBehaviour
         }
         else
         {
-            boundaryHighlighter?.Clear();
+            // Do NOT clear boundaryHighlighter when no unit selected
+            // BoundaryHighlighter should stay visible as long as hives exist
+            // boundaryHighlighter?.Clear(); // REMOVED
+            
             highlighter?.HideRadius();
         }
+    }
+
+    // Check if mouse is over UI element
+    bool IsPointerOverUI()
+    {
+        // Check if EventSystem exists
+        if (EventSystem.current == null)
+            return false;
+
+        // Check if pointer is over UI
+        return EventSystem.current.IsPointerOverGameObject();
     }
 
     void HandleLeftClick()
     {
         var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+        
+        // Physics.Raycast는 가장 가까운 히트만 반환함 (최상단 유닛)
         if (Physics.Raycast(ray, out RaycastHit hit, 100f))
         {
+            // First check for UnitAgent (including Hive)
             var unit = hit.collider.GetComponentInParent<UnitAgent>();
             if (unit != null)
             {
-                // select existing unit
+                // select existing unit (or hive)
                 SelectUnit(unit);
                 return;
+            }
+
+            // Then check for Hive directly (in case collider is on Hive GameObject)
+            var hive = hit.collider.GetComponentInParent<Hive>();
+            if (hive != null)
+            {
+                // Get the UnitAgent from Hive
+                var hiveAgent = hive.GetComponent<UnitAgent>();
+                if (hiveAgent != null)
+                {
+                    SelectUnit(hiveAgent);
+                    return;
+                }
             }
 
             var tile = hit.collider.GetComponentInParent<HexTile>();
             if (tile != null)
             {
+                // Clicked on tile - deselect current unit
+                DeselectUnit();
+                
                 // just show tile info
                 if (debugText != null) debugText.text = $"Tile: ({tile.q}, {tile.r})";
+                return;
             }
         }
         else
         {
-            // Try 2D
+            // Try 2D - RaycastHit2D도 가장 가까운 것만 반환
             Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             var hit2 = Physics2D.Raycast(wp, Vector2.zero);
             if (hit2.collider != null)
@@ -101,10 +144,27 @@ public class TileClickMover : MonoBehaviour
                     SelectUnit(unit);
                     return;
                 }
+                
+                // Check for Hive
+                var hive = hit2.collider.GetComponentInParent<Hive>();
+                if (hive != null)
+                {
+                    var hiveAgent = hive.GetComponent<UnitAgent>();
+                    if (hiveAgent != null)
+                    {
+                        SelectUnit(hiveAgent);
+                        return;
+                    }
+                }
+                
                 var tile = hit2.collider.GetComponentInParent<HexTile>();
                 if (tile != null)
                 {
+                    // Clicked on tile - deselect current unit
+                    DeselectUnit();
+                    
                     if (debugText != null) debugText.text = $"Tile: ({tile.q}, {tile.r})";
+                    return;
                 }
             }
         }
@@ -127,6 +187,17 @@ public class TileClickMover : MonoBehaviour
                 // right-click on unit could be used for attack-targeting etc; for now select
                 SelectUnit(unit);
             }
+            
+            // Check for Hive
+            var hive = hit.collider.GetComponentInParent<Hive>();
+            if (hive != null)
+            {
+                var hiveAgent = hive.GetComponent<UnitAgent>();
+                if (hiveAgent != null)
+                {
+                    SelectUnit(hiveAgent);
+                }
+            }
         }
         else
         {
@@ -137,8 +208,19 @@ public class TileClickMover : MonoBehaviour
             {
                 var tile = hit2.collider.GetComponentInParent<HexTile>();
                 if (tile != null) OnTileCommand(tile);
+                
                 var unit = hit2.collider.GetComponentInParent<UnitAgent>();
                 if (unit != null) SelectUnit(unit);
+                
+                var hive = hit2.collider.GetComponentInParent<Hive>();
+                if (hive != null)
+                {
+                    var hiveAgent = hive.GetComponent<UnitAgent>();
+                    if (hiveAgent != null)
+                    {
+                        SelectUnit(hiveAgent);
+                    }
+                }
             }
         }
     }
@@ -152,6 +234,18 @@ public class TileClickMover : MonoBehaviour
 
         // show command UI for this unit
         UnitCommandPanel.Instance?.Show(selectedUnitInstance);
+    }
+
+    void DeselectUnit()
+    {
+        if (selectedUnitInstance != null)
+        {
+            selectedUnitInstance.SetSelected(false);
+            selectedUnitInstance = null;
+        }
+        
+        // Hide command UI
+        UnitCommandPanel.Instance?.Hide();
     }
 
     public void EnterMoveMode()

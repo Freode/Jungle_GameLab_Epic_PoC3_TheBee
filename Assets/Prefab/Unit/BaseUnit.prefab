@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 8356495950311495776}
   - component: {fileID: 7071419041377049769}
   - component: {fileID: 4691115191405788594}
-  - component: {fileID: 1092768442395172163}
   - component: {fileID: 6112904449999854078}
+  - component: {fileID: 4134228670265870189}
   m_Layer: 6
   m_Name: BaseUnit
   m_TagString: Untagged
@@ -53,7 +53,12 @@ MonoBehaviour:
   r: 0
   visionRange: 1
   hexSize: 0.5
+  faction: 0
+  homeHive: {fileID: 0}
   canMove: 1
+  isQueen: 0
+  isFollowingQueen: 0
+  hasManualOrder: 0
 --- !u!114 &4691115191405788594
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69,8 +74,22 @@ MonoBehaviour:
   agent: {fileID: 7071419041377049769}
   currentRole: 1
   roleCommands: []
---- !u!61 &1092768442395172163
-BoxCollider2D:
+--- !u!114 &6112904449999854078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1245175580857229108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 709c6473ada261b4eba4b04059e49805, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agent: {fileID: 7071419041377049769}
+  moveSpeed: 2
+--- !u!60 &4134228670265870189
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -113,22 +132,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.5, y: 0.5}
-  m_EdgeRadius: 0
---- !u!114 &6112904449999854078
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1245175580857229108}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 709c6473ada261b4eba4b04059e49805, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  agent: {fileID: 7071419041377049769}
-  moveSpeed: 2
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 0
 --- !u!1 &6787317738952659036
 GameObject:
   m_ObjectHideFlags: 0

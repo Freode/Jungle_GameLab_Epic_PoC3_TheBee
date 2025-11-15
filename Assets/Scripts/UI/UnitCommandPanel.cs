@@ -97,14 +97,8 @@ public class UnitCommandPanel : MonoBehaviour
     {
         OnCommandClicked(cmd);
 
-        // disable the clicked button to prevent duplicate clicks
-        if (clickedButton != null) clickedButton.interactable = false;
-
-        // hide panel only if command requests it
-        if (cmd.HidePanelOnClick)
-        {
-            if (panelRoot != null) panelRoot.SetActive(false);
-        }
+        // After command execution, refresh button states
+        RefreshButtonStates();
     }
 
     void OnCommandClicked(ICommand cmd)
@@ -112,10 +106,16 @@ public class UnitCommandPanel : MonoBehaviour
         if (currentAgent == null) return;
         if (!cmd.IsAvailable(currentAgent)) return;
 
-        // Special-case: construct_hive should execute immediately at the agent's current tile
-        if (cmd.Id == "construct_hive")
+        // Special-case: construct_hive and relocate_hive should execute immediately at the agent's current tile
+        if (cmd.Id == "construct_hive" || cmd.Id == "relocate_hive")
         {
             cmd.Execute(currentAgent, CommandTarget.ForTile(currentAgent.q, currentAgent.r));
+            
+            // Hide panel if command requests it
+            if (cmd.HidePanelOnClick)
+            {
+                Hide();
+            }
             return;
         }
 
@@ -132,10 +132,70 @@ public class UnitCommandPanel : MonoBehaviour
             // enter target selection mode
             TileClickMover.Instance?.EnterMoveMode();
             PendingCommandHolder.Instance?.SetPendingCommand(cmd, currentAgent);
+            
+            // Hide panel if command requests it
+            if (cmd.HidePanelOnClick)
+            {
+                Hide();
+            }
         }
         else
         {
             cmd.Execute(currentAgent, new CommandTarget { type = CommandTargetType.None });
+            
+            // Hide panel if command requests it
+            if (cmd.HidePanelOnClick)
+            {
+                Hide();
+            }
+        }
+    }
+
+    // Refresh button states to reflect current availability
+    void RefreshButtonStates()
+    {
+        if (currentAgent == null) return;
+
+        // Get commands from provider
+        List<ICommand> commands = new List<ICommand>();
+        var provider = currentAgent.GetComponent<IUnitCommandProvider>();
+        if (provider != null)
+        {
+            foreach (var c in provider.GetCommands(currentAgent))
+            {
+                if (c != null) commands.Add(c);
+            }
+        }
+
+        // fallback to defaultCommands if none provided
+        if (commands.Count == 0 && defaultCommands != null)
+        {
+            foreach (var c in defaultCommands)
+            {
+                commands.Add(c);
+            }
+        }
+
+        // Update button states
+        foreach (Transform t in buttonContainer)
+        {
+            var btn = t.GetComponentInChildren<Button>();
+            if (btn == null) continue;
+
+            // Find corresponding command
+            string btnName = t.name;
+            if (btnName.StartsWith("cmd_"))
+            {
+                string cmdId = btnName.Substring(4);
+                foreach (var cmd in commands)
+                {
+                    if (cmd.Id == cmdId)
+                    {
+                        btn.interactable = cmd.IsAvailable(currentAgent);
+                        break;
+                    }
+                }
+            }
         }
     }
 }

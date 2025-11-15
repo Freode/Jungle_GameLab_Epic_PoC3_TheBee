@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bee08da9a8c5a55488a2898292cdca9f, type: 3}
-  m_Name: SOCommand_QueenBee_ConstructHive
+  m_Name: SOCommand_Hive_Relocate_Hive
   m_EditorClassIdentifier: 
-  id: construct_hive
-  displayName: Construct Hive
+  id: relocate_hive
+  displayName: Ready To 24
   icon: {fileID: 0}
-  requiresTarget: 1
-  hidePanelOnClick: 1
-  resourceCost: 0
+  requiresTarget: 0
+  hidePanelOnClick: 0
+  resourceCost: 4

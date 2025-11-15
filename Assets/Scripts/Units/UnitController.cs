@@ -8,13 +8,14 @@ public class UnitController : MonoBehaviour
 
     private Queue<HexTile> pathQueue = new Queue<HexTile>();
     private bool isMoving = false;
+    private Coroutine moveCoroutine;
 
     void Update()
     {
         if (!isMoving && pathQueue.Count > 0)
         {
             var next = pathQueue.Dequeue();
-            StartCoroutine(MoveToTileCoroutine(next));
+            moveCoroutine = StartCoroutine(MoveToTileCoroutine(next));
         }
     }
 
@@ -32,6 +33,17 @@ public class UnitController : MonoBehaviour
         {
             pathQueue.Enqueue(path[i]);
         }
+    }
+
+    public void ClearPath()
+    {
+        pathQueue.Clear();
+        if (moveCoroutine != null)
+        {
+            StopCoroutine(moveCoroutine);
+            moveCoroutine = null;
+        }
+        isMoving = false;
     }
 
     System.Collections.IEnumerator MoveToTileCoroutine(HexTile dest)

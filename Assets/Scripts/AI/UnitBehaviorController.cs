@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum UnitTaskType { Idle, Move, Attack, Gather, ReturnToHive }
+public enum UnitTaskType { Idle, Move, Attack, Gather, ReturnToHive, FollowQueen }
 
 public class UnitBehaviorController : MonoBehaviour
 {
@@ -22,6 +22,10 @@ public class UnitBehaviorController : MonoBehaviour
     public HexTile targetTile;
     public UnitAgent targetUnit;
 
+    // Follow queen settings
+    private float followQueenInterval = 1.0f; // Check queen position every second
+    private float lastFollowCheck = 0f;
+
     void Start()
     {
         if (agent == null) agent = GetComponent<UnitAgent>();
@@ -36,18 +40,89 @@ public class UnitBehaviorController : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        // If worker is following queen and has no manual order, keep following
+        if (agent.isFollowingQueen && !agent.hasManualOrder)
+        {
+            if (Time.time - lastFollowCheck > followQueenInterval)
+            {
+                lastFollowCheck = Time.time;
+                FollowQueen();
+            }
+        }
+    }
+
+    void FollowQueen()
+    {
+        UnitAgent queen = null;
+        
+        // If homeHive exists and has queen reference, use it
+        if (agent.homeHive != null && agent.homeHive.queenBee != null)
+        {
+            queen = agent.homeHive.queenBee;
+        }
+        else
+        {
+            // Hive is destroyed or doesn't exist, find queen in scene
+            queen = FindQueenInScene();
+        }
+        
+        if (queen == null)
+        {
+            // No queen to follow
+            return;
+        }
+        
+        // If already at queen's position, don't move
+        if (agent.q == queen.q && agent.r == queen.r)
+        {
+            return;
+        }
+
+        // Move towards queen
+        var start = TileManager.Instance.GetTile(agent.q, agent.r);
+        var dest = TileManager.Instance.GetTile(queen.q, queen.r);
+        
+        if (start != null && dest != null)
+        {
+            var path = Pathfinder.FindPath(start, dest);
+            if (path != null)
+            {
+                currentTask = UnitTaskType.FollowQueen;
+                mover.SetPath(path);
+            }
+        }
+    }
+
+    UnitAgent FindQueenInScene()
+    {
+        // Find queen from all units in TileManager
+        var allUnits = TileManager.Instance.GetAllUnits();
+        foreach (var unit in allUnits)
+        {
+            if (unit != null && unit.isQueen && unit.faction == agent.faction)
+            {
+                return unit;
+            }
+        }
+        return null;
+    }
+
     public void IssueCommandToTile(HexTile tile)
     {
-        // enforce activity radius: must be within homeHive radius
-        if (agent.homeHive != null)
+        // Mark that this worker received a manual order
+        if (agent.isFollowingQueen)
         {
-            int d = Pathfinder.AxialDistance(agent.homeHive.q, agent.homeHive.r, tile.q, tile.r);
-            if (d > activityRadius)
-            {
-                // out of range: ignore or optionally clamp; here we ignore the command
-                Debug.Log("Target out of home hive activity radius");
-                return;
-            }
+            agent.hasManualOrder = true;
+            agent.isFollowingQueen = false;
+        }
+
+        // Check if worker can move to this tile based on hive presence
+        if (!agent.CanMoveToTile(tile.q, tile.r))
+        {
+            Debug.Log($"Worker cannot move to ({tile.q},{tile.r}): outside activity radius");
+            return;
         }
 
         // Priority logic on click: 1) if enemy present -> attack, 2) else if resource available -> gather, 3) else idle
@@ -63,7 +138,10 @@ public class UnitBehaviorController : MonoBehaviour
             return;
         }
 
-        if (tile.resourceAmount > 0)
+        // If hive is relocating (homeHive == null or isRelocating), don't gather
+        bool canGather = agent.homeHive != null && !agent.homeHive.isRelocating;
+        
+        if (canGather && tile.resourceAmount > 0)
         {
             // gather
             currentTask = UnitTaskType.Gather;
@@ -72,9 +150,21 @@ public class UnitBehaviorController : MonoBehaviour
             return;
         }
 
-        // nothing to do
-        currentTask = UnitTaskType.Idle;
+        // nothing to do or just move
+        currentTask = UnitTaskType.Move;
         targetTile = tile;
+        MoveToTile(tile);
+    }
+
+    void MoveToTile(HexTile tile)
+    {
+        if (tile == null) return;
+        var start = TileManager.Instance.GetTile(agent.q, agent.r);
+        var path = Pathfinder.FindPath(start, tile);
+        if (path != null)
+        {
+            mover.SetPath(path);
+        }
     }
 
     UnitAgent FindEnemyOnTile(HexTile tile)
@@ -173,7 +263,12 @@ public class UnitBehaviorController : MonoBehaviour
         {
             yield return null;
         }
-        hive.storedResources += amount;
+        
+        // Add resources to HiveManager instead of individual hive
+        if (HiveManager.Instance != null)
+        {
+            HiveManager.Instance.AddResources(amount);
+        }
 
         // After delivering, if the original target tile still has resources, go back and repeat after cooldown.
         if (targetTile != null && targetTile.resourceAmount > 0)

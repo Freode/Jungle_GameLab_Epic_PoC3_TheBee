@@ -6,7 +6,6 @@ public class HiveUI : MonoBehaviour
 {
     public HiveManager hiveManager;
     public TextMeshProUGUI storedText;
-    public int selectedHiveIndex = 0;
 
     void Start()
     {
@@ -16,17 +15,8 @@ public class HiveUI : MonoBehaviour
     void Update()
     {
         if (hiveManager == null || storedText == null) return;
-        var hives = hiveManager.GetAllHives();
-        int i = 0;
-        foreach (var h in hives)
-        {
-            if (i == selectedHiveIndex)
-            {
-                storedText.text = $"Stored: {h.storedResources}";
-                return;
-            }
-            i++;
-        }
-        storedText.text = "No hive";
+        
+        // Display player's total stored resources
+        storedText.text = $"Stored: {hiveManager.playerStoredResources}";
     }
 }

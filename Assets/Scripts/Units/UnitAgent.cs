@@ -17,6 +17,13 @@ public class UnitAgent : MonoBehaviour
     // Whether this unit can be moved by player clicking tiles
     public bool canMove = true;
 
+    // Queen bee flag
+    public bool isQueen = false;
+
+    // Worker behavior flags for hive relocation
+    public bool isFollowingQueen = false; // Worker is following queen during relocation
+    public bool hasManualOrder = false; // Worker received manual move order
+
     private bool isRegistered = false;
 
     // selection visuals
@@ -109,5 +116,25 @@ public class UnitAgent : MonoBehaviour
             mpb.SetColor("_Color", target);
             cachedRenderer.SetPropertyBlock(mpb);
         }
+    }
+
+    // Check if worker can move to a tile based on hive presence
+    public bool CanMoveToTile(int targetQ, int targetR)
+    {
+        // If has manual order, ignore restrictions
+        if (hasManualOrder) return true;
+
+        // If no home hive (relocated), can move anywhere
+        if (homeHive == null) return true;
+
+        // If home hive exists, check if target is within activity radius
+        int radius = 5;
+        if (HiveManager.Instance != null) radius = HiveManager.Instance.hiveActivityRadius;
+
+        int dq = targetQ - homeHive.q;
+        int dr = targetR - homeHive.r;
+        int distance = (Mathf.Abs(dq) + Mathf.Abs(dr) + Mathf.Abs(dq + dr)) / 2;
+
+        return distance <= radius;
     }
 }

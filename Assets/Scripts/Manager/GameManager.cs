@@ -25,9 +25,9 @@ public class GameManager : MonoBehaviour
     public int noiseSeed = 0;
 
     [Header("Spawn")]
-    public GameObject queenPrefab;
+    public GameObject queenPrefab; // Initial queen spawned at game start
     public GameObject hivePrefab; // prefab used when constructing a hive
-    public GameObject normalBeePrefab; // renamed from workerPrefab to normalBeePrefab
+    public GameObject normalBeePrefab; // worker bee prefab for hive spawning
 
     void Awake()
     {
@@ -171,6 +171,9 @@ public class GameManager : MonoBehaviour
         if (agent != null)
         {
             agent.SetPosition(q, r);
+            agent.isQueen = true; // Mark as queen bee
+            agent.canMove = true;
+            agent.faction = Faction.Player;
         }
 
         // Move camera to queen position (preserve camera z)

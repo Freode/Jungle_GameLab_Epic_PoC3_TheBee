@@ -12,6 +12,46 @@ PrefabInstance:
       propertyPath: m_Name
       value: QueenBee
       objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[0].x
+      value: -0.000018617138
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[0].y
+      value: 0.2508142
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[1].x
+      value: -0.2508763
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[1].y
+      value: 0.25069827
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[2].x
+      value: -0.2515362
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[2].y
+      value: -0.2505017
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[3].x
+      value: 0.25193313
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[3].y
+      value: -0.2503486
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[4].x
+      value: 0.25011423
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[4].y
+      value: 0.2505274
+      objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: currentRole
       value: 4

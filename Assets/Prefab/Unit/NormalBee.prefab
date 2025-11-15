@@ -20,6 +20,46 @@ PrefabInstance:
       propertyPath: m_Name
       value: NormalBee
       objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[0].x
+      value: 0.00064662844
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[0].y
+      value: 0.075686924
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[1].x
+      value: -0.07553998
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[1].y
+      value: 0.075550616
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[2].x
+      value: -0.075706184
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[2].y
+      value: -0.0757712
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[3].x
+      value: 0.07605351
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[3].y
+      value: -0.07563016
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[4].x
+      value: 0.07581851
+      objectReference: {fileID: 0}
+    - target: {fileID: 4134228670265870189, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: m_Points.m_Paths.Array.data[0].Array.data[4].y
+      value: 0.07560428
+      objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: currentRole
       value: 6
@@ -128,6 +168,9 @@ MonoBehaviour:
   combat: {fileID: 3353755694435963864}
   mover: {fileID: 4909472681349407938}
   role: {fileID: 5903837824391282830}
+  gatherAmount: 1
+  gatherCooldown: 1
+  activityRadius: 5
   currentTask: 0
   targetTile: {fileID: 0}
   targetUnit: {fileID: 0}
