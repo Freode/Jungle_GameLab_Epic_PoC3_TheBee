@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SOCommand_QueenBee_ConstructHive
   m_EditorClassIdentifier: 
   id: construct_hive
-  displayName: Construct Hive
+  displayName: "\uBC8C\uC9D1 \uAC74\uC124 "
   icon: {fileID: 0}
   requiresTarget: 1
   hidePanelOnClick: 1

@@ -4,46 +4,63 @@ public static class RelocateHiveCommandHandler
 {
     public static void ExecuteRelocate(UnitAgent agent, CommandTarget target)
     {
+        Debug.Log("[RelocateHive] ExecuteRelocate 시작");
+        
         if (agent == null)
         {
-            Debug.LogWarning("RelocateHiveCommandHandler: agent is null");
+            Debug.LogWarning("[RelocateHive] agent is null");
             return;
         }
+
+        Debug.Log($"[RelocateHive] agent: {agent.name}, q={agent.q}, r={agent.r}");
 
         // Find the hive at agent's position (agent should be the hive's UnitAgent component)
         Hive hive = agent.GetComponent<Hive>();
         
         if (hive == null)
         {
+            Debug.Log("[RelocateHive] agent에 Hive 컴포넌트 없음, 위치로 검색 시도");
             // If agent doesn't have Hive component, try to find hive at agent's location
             hive = FindHiveAtPosition(agent.q, agent.r);
         }
         
         if (hive == null)
         {
-            Debug.LogWarning("RelocateHiveCommandHandler: No hive found");
+            Debug.LogWarning("[RelocateHive] No hive found");
             return;
         }
+
+        Debug.Log($"[RelocateHive] 하이브 발견: {hive.name}");
 
         // Check if hive can relocate (not already relocating)
         if (!hive.CanRelocate())
         {
-            Debug.LogWarning("하이브가 이미 이사 중입니다");
+            Debug.LogWarning("[RelocateHive] 하이브가 이미 이사 중입니다");
             return;
         }
 
         // Get resource cost from the relocate_hive command
         int resourceCost = GetRelocateResourceCost(hive);
-        Debug.Log($"[RelocateHive] SOCommand resourceCost: {resourceCost}"); // 디버그 로그
+        Debug.Log($"[RelocateHive] 필요 자원: {resourceCost}");
         
         // Check if HiveManager has enough resources
-        if (HiveManager.Instance == null || !HiveManager.Instance.HasResources(resourceCost))
+        if (HiveManager.Instance == null)
         {
-            int available = HiveManager.Instance != null ? HiveManager.Instance.playerStoredResources : 0;
-            Debug.LogWarning($"자원이 부족합니다. 필요: {resourceCost}, 보유: {available}");
+            Debug.LogError("[RelocateHive] HiveManager.Instance is null");
+            return;
+        }
+        
+        int available = HiveManager.Instance.playerStoredResources;
+        Debug.Log($"[RelocateHive] 현재 자원: {available}");
+        
+        if (!HiveManager.Instance.HasResources(resourceCost))
+        {
+            Debug.LogWarning($"[RelocateHive] 자원이 부족합니다. 필요: {resourceCost}, 보유: {available}");
             return;
         }
 
+        Debug.Log($"[RelocateHive] 자원 충분. 이사 시작!");
+        
         // Start relocation process
         hive.StartRelocation(resourceCost);
     }
@@ -56,29 +73,35 @@ public static class RelocateHiveCommandHandler
         {
             if (cmd is SOCommand soCmd && soCmd.id == "relocate_hive")
             {
-                Debug.Log($"[GetResourceCost] Found relocate_hive command with resourceCost: {soCmd.resourceCost}");
+                Debug.Log($"[GetResourceCost] relocate_hive 명령 찾음, 비용: {soCmd.resourceCost}");
                 return soCmd.resourceCost;
             }
         }
         
-        // Default to 50 if not found (should not happen)
-        Debug.LogWarning("relocate_hive command not found in hive.hiveCommands array! Using default cost 50");
-        return 50;
+        // Default to 10 if not found ?
+        Debug.LogWarning("[GetResourceCost] relocate_hive 명령을 찾을 수 없습니다. 기본 비용 10 사용");
+        return 10;
     }
 
     private static Hive FindHiveAtPosition(int q, int r)
     {
         // Find hive from HiveManager
-        if (HiveManager.Instance == null) return null;
+        if (HiveManager.Instance == null)
+        {
+            Debug.LogWarning("[FindHiveAtPosition] HiveManager.Instance is null");
+            return null;
+        }
         
         foreach (var hive in HiveManager.Instance.GetAllHives())
         {
             if (hive.q == q && hive.r == r)
             {
+                Debug.Log($"[FindHiveAtPosition] 하이브 발견: ({q}, {r})");
                 return hive;
             }
         }
         
+        Debug.LogWarning($"[FindHiveAtPosition] ({q}, {r}) 위치에 하이브 없음");
         return null;
     }
 }

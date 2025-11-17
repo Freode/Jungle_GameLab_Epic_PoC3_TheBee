@@ -58,6 +58,15 @@ public class HexBoundaryHighlighter : MonoBehaviour
             Clear();
             return;
         }
+
+        // Enemy 하이브는 활동 범위 표시 안 함
+        var agent = hive.GetComponent<UnitAgent>();
+        if (agent != null && agent.faction == Faction.Enemy)
+        {
+            if (debugLogs) Debug.Log("HexBoundaryHighlighter.ShowBoundary ignored: Enemy hive");
+            return;
+        }
+
         ShowBoundaryAt(hive.q, hive.r, radius);
     }
 

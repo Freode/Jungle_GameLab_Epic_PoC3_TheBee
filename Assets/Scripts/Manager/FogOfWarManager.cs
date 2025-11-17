@@ -77,9 +77,16 @@ public class FogOfWarManager : MonoBehaviour
         {
             var coord = new Vector2Int(tile.q, tile.r);
             bool isVisible = visibleCoords.Contains(coord);
+            
             if (isVisible)
             {
                 tile.SetFogState(HexTile.FogState.Visible);
+                
+                // 타일에 EnemyHive가 있으면 렌더러 활성화 ?
+                if (tile.enemyHive != null)
+                {
+                    EnableEnemyHiveRenderers(tile.enemyHive, true);
+                }
             }
             else
             {
@@ -89,7 +96,46 @@ public class FogOfWarManager : MonoBehaviour
                     tile.SetFogState(HexTile.FogState.Revealed);
                 }
                 // if already Revealed or Hidden, keep as is
+                
+                // 한 번 발견된 EnemyHive는 계속 보이게 ?
+                if (tile.enemyHive != null && tile.fogState == HexTile.FogState.Revealed)
+                {
+                    EnableEnemyHiveRenderers(tile.enemyHive, true);
+                }
             }
+        }
+    }
+
+    /// <summary>
+    /// EnemyHive의 렌더러 활성화/비활성화 ?
+    /// </summary>
+    void EnableEnemyHiveRenderers(EnemyHive hive, bool enabled)
+    {
+        if (hive == null) return;
+        
+        // 자신의 렌더러
+        var sprite = hive.GetComponent<SpriteRenderer>();
+        if (sprite != null) sprite.enabled = enabled;
+        
+        var renderer = hive.GetComponent<Renderer>();
+        if (renderer != null) renderer.enabled = enabled;
+        
+        // 자식 렌더러
+        var childRenderers = hive.GetComponentsInChildren<Renderer>(true);
+        foreach (var r in childRenderers)
+        {
+            r.enabled = enabled;
+        }
+        
+        var childSprites = hive.GetComponentsInChildren<SpriteRenderer>(true);
+        foreach (var s in childSprites)
+        {
+            s.enabled = enabled;
+        }
+        
+        if (enabled)
+        {
+            Debug.Log($"[Fog] 적 말벌집 발견: ({hive.q}, {hive.r})");
         }
     }
 

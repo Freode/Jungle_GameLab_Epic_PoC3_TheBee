@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SOCommand_Hive_Relocate_Hive
   m_EditorClassIdentifier: 
   id: relocate_hive
-  displayName: Ready To 24
+  displayName: "\uBC8C\uC9D1 \uC774\uC0AC \uC900\uBE44 "
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0
-  resourceCost: 4
+  resourceCost: 10

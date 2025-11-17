@@ -82,7 +82,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7071419041377049769, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: visionRange
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8356495950311495776, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: m_LocalPosition.x
@@ -152,4 +152,5 @@ MonoBehaviour:
   maxHealth: 30
   health: 0
   attack: 5
-  attackRange: 1
+  attackRange: 0
+  attackCooldown: 2

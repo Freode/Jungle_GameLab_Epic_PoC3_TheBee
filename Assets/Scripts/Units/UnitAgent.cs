@@ -74,6 +74,10 @@ public class UnitAgent : MonoBehaviour
     // Explicit registration method if needed
     public void RegisterWithFog()
     {
+        // Enemy 유닛은 전장의 안개에 영향을 주지 않음
+        if (faction == Faction.Enemy)
+            return;
+
         if (FogOfWarManager.Instance == null) return;
         FogOfWarManager.Instance.RegisterUnit(id, q, r, visionRange);
         isRegistered = true;
@@ -81,6 +85,10 @@ public class UnitAgent : MonoBehaviour
 
     public void Unregister()
     {
+        // Enemy 유닛은 등록되지 않았으므로 해제도 필요 없음
+        if (faction == Faction.Enemy)
+            return;
+
         FogOfWarManager.Instance?.UnregisterUnit(id);
         isRegistered = false;
     }
@@ -90,6 +98,11 @@ public class UnitAgent : MonoBehaviour
     public void SetPosition(int nq, int nr)
     {
         q = nq; r = nr;
+
+        // Enemy 유닛은 전장의 안개에 영향을 주지 않음
+        if (faction == Faction.Enemy)
+            return;
+
         if (FogOfWarManager.Instance == null) return;
         if (isRegistered)
         {
@@ -104,7 +117,10 @@ public class UnitAgent : MonoBehaviour
 
     public void SetSelected(bool selected)
     {
-        Color target = selected ? Color.yellow : originalColor;
+        // 연한 연두색: RGB(144, 238, 144) = Light Green
+        Color selectedColor = new Color(144f / 255f, 238f / 255f, 144f / 255f, 1f);
+        Color target = selected ? selectedColor : originalColor;
+        
         if (cachedSprite != null)
         {
             cachedSprite.color = target;

@@ -189,7 +189,7 @@ MonoBehaviour:
   maxHealth: 10
   health: 0
   attack: 2
-  attackRange: 1
+  attackRange: 0
 --- !u!114 &4909472681349407938 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6112904449999854078, guid: fbd489a349676d34997f12e8c68a8424, type: 3}

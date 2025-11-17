@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: SOCommand_Move
   m_EditorClassIdentifier: 
   id: move
-  displayName: Move
+  displayName: "\uC774\uB3D9 "
   icon: {fileID: 0}
   requiresTarget: 1
+  hidePanelOnClick: 0
+  resourceCost: 0

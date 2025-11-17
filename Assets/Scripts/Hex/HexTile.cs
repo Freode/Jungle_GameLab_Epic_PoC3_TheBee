@@ -8,7 +8,7 @@ public class HexTile : MonoBehaviour
     public int q;
     public int r;
 
-    // 지형 정보
+    // 지형 타입
     public TerrainType terrain;
 
     // resource amount on this tile (dynamic)
@@ -19,7 +19,10 @@ public class HexTile : MonoBehaviour
     public enum FogState { Hidden, Revealed, Visible }
     public FogState fogState = FogState.Hidden;
 
-    // 기본 색상(지형 색상에서 가져옴)
+    // 타일 위의 EnemyHive (있으면 설정) ?
+    public EnemyHive enemyHive;
+
+    // 기본 색상(지형 타입에서 가져옴)
     private Color baseColor = Color.white;
 
     // 현재/목표 색상 및 보간 속도
@@ -114,7 +117,7 @@ public class HexTile : MonoBehaviour
         {
             case FogState.Hidden:
                 // almost black
-                targetColor = tileColor * 0.08f;
+                targetColor = Color.black;
                 targetColor.a = 1f;
                 break;
             case FogState.Revealed:

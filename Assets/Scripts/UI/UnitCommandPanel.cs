@@ -11,6 +11,12 @@ public class UnitCommandPanel : MonoBehaviour
     public RectTransform buttonContainer;
     public GameObject commandButtonPrefab; // prefab with Button + Image + Text
 
+    [Header("유닛 정보 UI")]
+    public TextMeshProUGUI unitNameText;
+    public TextMeshProUGUI unitHealthText;
+    public TextMeshProUGUI unitAttackText;
+    public TextMeshProUGUI workerCountText; // 일꾼 수 표시 ?
+
     private UnitAgent currentAgent;
 
     // a list of default SOCommands, assign in inspector
@@ -26,17 +32,259 @@ public class UnitCommandPanel : MonoBehaviour
         Hide();
     }
 
+    void OnEnable()
+    {
+        // 자원 변경 이벤트 구독
+        if (HiveManager.Instance != null)
+        {
+            HiveManager.Instance.OnResourcesChanged += RefreshButtonStates;
+        }
+    }
+
+    void OnDisable()
+    {
+        // 자원 변경 이벤트 구독 해제
+        if (HiveManager.Instance != null)
+        {
+            HiveManager.Instance.OnResourcesChanged -= RefreshButtonStates;
+        }
+    }
+
+    // Show the panel for the given unit
     public void Show(UnitAgent agent)
     {
+        if (agent == null) return;
+        
+        // 이전 agent의 이벤트 구독 해제
+        if (currentAgent != null)
+        {
+            UnsubscribeFromEvents(currentAgent);
+        }
+        
         currentAgent = agent;
         if (panelRoot != null) panelRoot.SetActive(true);
+        
+        // 이벤트 구독 ?
+        SubscribeToEvents(currentAgent);
+        
+        // 유닛 정보 표시
+        UpdateUnitInfo();
+        
         RebuildCommands();
     }
 
     public void Hide()
     {
+        // 이벤트 구독 해제 ?
+        if (currentAgent != null)
+        {
+            UnsubscribeFromEvents(currentAgent);
+        }
+        
         currentAgent = null;
         if (panelRoot != null) panelRoot.SetActive(false);
+    }
+
+    /// <summary>
+    /// 유닛 이벤트 구독
+    /// </summary>
+    void SubscribeToEvents(UnitAgent agent)
+    {
+        if (agent == null) return;
+
+        var combat = agent.GetComponent<CombatUnit>();
+        if (combat != null)
+        {
+            combat.OnStatsChanged += UpdateUnitInfo;
+        }
+
+        var hive = agent.GetComponent<Hive>();
+        if (hive != null)
+        {
+            var hiveCombat = hive.GetComponent<CombatUnit>();
+            if (hiveCombat != null)
+            {
+                hiveCombat.OnStatsChanged += UpdateUnitInfo;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 유닛 이벤트 구독 해제
+    /// </summary>
+    void UnsubscribeFromEvents(UnitAgent agent)
+    {
+        if (agent == null) return;
+
+        var combat = agent.GetComponent<CombatUnit>();
+        if (combat != null)
+        {
+            combat.OnStatsChanged -= UpdateUnitInfo;
+        }
+
+        var hive = agent.GetComponent<Hive>();
+        if (hive != null)
+        {
+            var hiveCombat = hive.GetComponent<CombatUnit>();
+            if (hiveCombat != null)
+            {
+                hiveCombat.OnStatsChanged -= UpdateUnitInfo;
+            }
+        }
+    }
+
+    void UpdateUnitInfo()
+    {
+        if (currentAgent == null)
+        {
+            // 정보 지움
+            if (unitNameText != null) unitNameText.text = "";
+            if (unitHealthText != null) unitHealthText.text = "";
+            if (unitAttackText != null) unitAttackText.text = "";
+            if (workerCountText != null) workerCountText.text = "";
+            return;
+        }
+
+        // 유닛 이름
+        string unitName = GetUnitName(currentAgent);
+        if (unitNameText != null)
+            unitNameText.text = unitName;
+
+        // 하이브인지 확인
+        var hive = currentAgent.GetComponent<Hive>();
+        CombatUnit combat = null;
+        
+        if (hive != null)
+        {
+            // 하이브인 경우: 하이브 GameObject의 CombatUnit만 표시
+            combat = hive.GetComponent<CombatUnit>();
+            
+            // 체력 표시
+            if (combat != null && unitHealthText != null)
+            {
+                unitHealthText.text = $"HP: {combat.health}/{combat.maxHealth}";
+            }
+            
+            // 하이브는 공격력 표시 안 함
+            if (unitAttackText != null)
+            {
+                unitAttackText.text = "";
+            }
+        }
+        else
+        {
+            // 일반 유닛인 경우: 유닛의 CombatUnit 표시
+            combat = currentAgent.GetComponent<CombatUnit>();
+            
+            // 체력 표시
+            if (combat != null)
+            {
+                if (unitHealthText != null)
+                    unitHealthText.text = $"HP: {combat.health}/{combat.maxHealth}";
+                
+                // 공격력 표시 (0보다 클 때만)
+                if (unitAttackText != null)
+                {
+                    if (combat.attack > 0)
+                        unitAttackText.text = $"공격력: {combat.attack}";
+                    else
+                        unitAttackText.text = "";
+                }
+            }
+            else
+            {
+                // CombatUnit이 없으면 숨김
+                if (unitHealthText != null)
+                    unitHealthText.text = "";
+                
+                if (unitAttackText != null)
+                    unitAttackText.text = "";
+            }
+        }
+
+        // 일꾼 수 정보 업데이트
+        if (workerCountText != null)
+        {
+            // 플레이어 하이브인 경우
+            if (hive != null && currentAgent.faction == Faction.Player)
+            {
+                int workerCount = hive.GetWorkers().Count;
+                workerCountText.text = $"일꾼 수: {workerCount}/{hive.maxWorkers}";
+            }
+            // 여왕벌인 경우 (전체 일꾼 수)
+            else if (currentAgent.faction == Faction.Player && currentAgent.isQueen)
+            {
+                int workerCount = 0;
+                foreach (var unit in FindObjectsOfType<UnitAgent>())
+                {
+                    if (unit.faction == Faction.Player && !unit.isQueen)
+                        workerCount++;
+                }
+                workerCountText.text = $"일꾼 수: {workerCount}";
+            }
+            else
+            {
+                workerCountText.text = ""; // 일반 유닛은 숨김
+            }
+        }
+    }
+
+    string GetUnitName(UnitAgent agent)
+    {
+        if (agent == null) return "알 수 없음";
+
+        // 하이브 체크 (플레이어 진영)
+        var hive = agent.GetComponent<Hive>();
+        if (hive != null)
+        {
+            if (agent.faction == Faction.Player)
+                return "꿀벌집";
+            else if (agent.faction == Faction.Enemy && agent.gameObject.name.Contains("Elite"))
+                return "장수말벌집";
+            else if (agent.faction == Faction.Enemy)
+                return "말벌집";
+        }
+
+        // 적 하이브 체크 (상대 진영)
+        var enemyHive = agent.GetComponent<EnemyHive>();
+        if(enemyHive != null)
+        {
+            if (agent.gameObject.name.Contains("Elite"))
+                return "장수말벌집";
+            else if(agent.gameObject.name.Contains("Normal"))
+                return "말벌집";
+        }
+
+        // 여왕벌/말벌 여왕 체크
+        if (agent.isQueen)
+        {
+            if (agent.faction == Faction.Player)
+                return "여왕벌";
+            else if (agent.faction == Faction.Enemy)
+                return "말벌 여왕";
+        }
+
+        // 일꾼 체크
+        if (agent.faction == Faction.Player && !agent.isQueen)
+            return "일꾼 꿀벌";
+
+        // 적 유닛 (말벌) - EliteWasp 구별 ?
+        if (agent.faction == Faction.Enemy && !agent.isQueen)
+        {
+            // GameObject 이름으로 EliteWasp 체크 ?
+            if (agent.gameObject.name.Contains("Lv2"))
+            {
+                return "장수말벌";
+            }
+            return "말벌";
+        }
+
+        // 중립 유닛
+        if (agent.faction == Faction.Neutral)
+            return "중립 유닛";
+
+        // 기본 (GameObject 이름)
+        return agent.gameObject.name;
     }
 
     void RebuildCommands()
@@ -45,6 +293,13 @@ public class UnitCommandPanel : MonoBehaviour
         foreach (Transform t in buttonContainer) Destroy(t.gameObject);
 
         if (currentAgent == null) return;
+
+        // Enemy 유닛은 명령 버튼 표시 안 함 (정보만 표시)
+        if (currentAgent.faction == Faction.Enemy)
+        {
+            Debug.Log("[명령 UI] 적 유닛은 명령을 내릴 수 없습니다.");
+            return;
+        }
 
         // get commands from provider (IUnitCommandProvider) if available
         List<ICommand> commands = new List<ICommand>();
@@ -76,9 +331,21 @@ public class UnitCommandPanel : MonoBehaviour
             var img = btnObj.GetComponentInChildren<UnityEngine.UI.Image>();
             var tmp = btnObj.GetComponentInChildren<TextMeshProUGUI>();
             var txt = btnObj.GetComponentInChildren<UnityEngine.UI.Text>();
+            
+            // 아이콘 설정
             if (img != null) img.sprite = command.Icon;
-            if (tmp != null) tmp.text = command.DisplayName;
-            else if (txt != null) txt.text = command.DisplayName;
+            
+            // 텍스트 설정 (이름 + 비용)
+            string buttonText = command.DisplayName;
+            if (!string.IsNullOrEmpty(command.CostText))
+            {
+                buttonText += $"\n{command.CostText}";
+            }
+            
+            if (tmp != null) 
+                tmp.text = buttonText;
+            else if (txt != null) 
+                txt.text = buttonText;
 
             // disable if not available
             bool avail = command.IsAvailable(currentAgent);
@@ -97,8 +364,9 @@ public class UnitCommandPanel : MonoBehaviour
     {
         OnCommandClicked(cmd);
 
-        // After command execution, refresh button states
+        // After command execution, refresh button states and unit info
         RefreshButtonStates();
+        UpdateUnitInfo(); // 체력 등이 변경될 수 있으므로 업데이트
     }
 
     void OnCommandClicked(ICommand cmd)
@@ -196,6 +464,21 @@ public class UnitCommandPanel : MonoBehaviour
                     }
                 }
             }
+        }
+    }
+
+    // 외부에서 유닛 정보 강제 업데이트 (체력 변경 시 등)
+    public void ForceUpdateUnitInfo()
+    {
+        UpdateUnitInfo();
+    }
+
+    void Update()
+    {
+        // 매 프레임마다 체력 업데이트 (실시간 반영)
+        if (currentAgent != null && panelRoot != null && panelRoot.activeSelf)
+        {
+            UpdateUnitInfo();
         }
     }
 }
