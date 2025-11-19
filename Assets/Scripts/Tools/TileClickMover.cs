@@ -190,185 +190,45 @@ public class TileClickMover : MonoBehaviour
             }
         }
 
-        var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        
-        // 모든 히트를 가져와서 렌더링 순서대로 정렬 ?
-        RaycastHit[] hits = Physics.RaycastAll(ray, 100f);
-        
-        if (hits.Length > 0)
-        {
-            // 렌더링 순서 기준으로 정렬 ?
-            System.Array.Sort(hits, (a, b) => {
-                var spriteA = a.collider.GetComponentInParent<SpriteRenderer>();
-                var spriteB = b.collider.GetComponentInParent<SpriteRenderer>();
-                
-                if (spriteA != null && spriteB != null)
-                {
-                    // 1. sortingOrder 비교 (높은 값이 위 = 먼저 선택) ?
-                    if (spriteA.sortingOrder != spriteB.sortingOrder)
-                    {
-                        return spriteB.sortingOrder.CompareTo(spriteA.sortingOrder);
-                    }
-                    
-                    // 2. 같은 sortingOrder면 UnitAgent ID로 비교 (낮은 ID = 나중 생성 = 먼저 선택) ?
-                    var unitA = a.collider.GetComponentInParent<UnitAgent>();
-                    var unitB = b.collider.GetComponentInParent<UnitAgent>();
-                    
-                    if (unitA != null && unitB != null)
-                    {
-                        // 낮은 ID가 먼저 (나중에 생성 = 위에 있음) ?
-                        return unitA.id.CompareTo(unitB.id);
-                    }
-                }
-                
-                // 3. 카메라 거리로 최종 정렬
-                return a.distance.CompareTo(b.distance);
-            });
+        // Try 2D - 모든 히트 수집 ?
+        Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        wp.z = 0f;
+        RaycastHit2D[] hits2D = Physics2D.RaycastAll(wp, Vector2.zero);
             
-            // 가장 가까운 것부터 순서대로 체크 ?
-            foreach (var hit in hits)
+        if (hits2D.Length > 0)
+        {   
+            // 바로 타일에 대한 명령
+            foreach (var hit2 in hits2D)
             {
-                // 유닛 우선 체크 (타일보다 우선)
-                var unit = hit.collider.GetComponentInParent<UnitAgent>();
-                if (unit != null)
-                {
-                    // 적 유닛 우클릭 시 공격 명령
-                    if (unit.faction == Faction.Enemy && selectedUnitInstance != null && selectedUnitInstance.faction == Faction.Player)
-                    {
-                        HandleAttackCommand(unit);
-                        return;
-                    }
-                    // 아군 유닛은 선택
-                    else if (unit.faction == Faction.Player)
-                    {
-                        SelectUnit(unit);
-                        return;
-                    }
-                }
-                
-                // Hive 체크
-                var hive = hit.collider.GetComponentInParent<Hive>();
-                if (hive != null)
-                {
-                    var hiveAgent = hive.GetComponent<UnitAgent>();
-                    if (hiveAgent != null)
-                    {
-                        SelectUnit(hiveAgent);
-                        return;
-                    }
-                }
-            }
-            
-            // 유닛이 없으면 타일 명령 (가장 가까운 타일)
-            foreach (var hit in hits)
-            {
-                var tile = hit.collider.GetComponentInParent<HexTile>();
-                if (tile != null)
+                var tile = hit2.collider.GetComponentInParent<HexTile>();
+                if (tile != null) 
                 {
                     OnTileCommand(tile);
                     return;
                 }
             }
         }
-        else
-        {
-            // Try 2D - 모든 히트 수집 ?
-            Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            RaycastHit2D[] hits2D = Physics2D.RaycastAll(wp, Vector2.zero);
-            
-            if (hits2D.Length > 0)
-            {
-                // 렌더링 순서로 정렬 (sortingOrder + UnitAgent ID) ?
-                System.Array.Sort(hits2D, (a, b) => {
-                    var spriteA = a.collider.GetComponentInParent<SpriteRenderer>();
-                    var spriteB = b.collider.GetComponentInParent<SpriteRenderer>();
-                    
-                    if (spriteA != null && spriteB != null)
-                    {
-                        // 1. sortingOrder 비교 (높은 값이 위 = 먼저 선택) ?
-                        if (spriteA.sortingOrder != spriteB.sortingOrder)
-                        {
-                            return spriteB.sortingOrder.CompareTo(spriteA.sortingOrder);
-                        }
-                        
-                        // 2. 같은 sortingOrder면 UnitAgent ID로 비교 (낮은 ID = 나중 생성 = 먼저 선택) ?
-                        var unitA = a.collider.GetComponentInParent<UnitAgent>();
-                        var unitB = b.collider.GetComponentInParent<UnitAgent>();
-                        
-                        if (unitA != null && unitB != null)
-                        {
-                            // 낮은 ID가 먼저 (나중에 생성 = 위에 있음) ?
-                            return unitA.id.CompareTo(unitB.id);
-                        }
-                    }
-                    
-                    return 0;
-                });
-                
-                // 가장 위에 있는 것부터 순서대로 체크 ?
-                foreach (var hit2 in hits2D)
-                {
-                    // 유닛 우선 체크
-                    var unit = hit2.collider.GetComponentInParent<UnitAgent>();
-                    if (unit != null)
-                    {
-                        // 적 유닛 우클릭 시 공격 명령
-                        if (unit.faction == Faction.Enemy && selectedUnitInstance != null && selectedUnitInstance.faction == Faction.Player)
-                        {
-                            HandleAttackCommand(unit);
-                            return;
-                        }
-                        // 아군 유닛은 선택
-                        else if (unit.faction == Faction.Player)
-                        {
-                            SelectUnit(unit);
-                            return;
-                        }
-                    }
-                    
-                    // Hive 체크
-                    var hive = hit2.collider.GetComponentInParent<Hive>();
-                    if (hive != null)
-                    {
-                        var hiveAgent = hive.GetComponent<UnitAgent>();
-                        if (hiveAgent != null)
-                        {
-                            SelectUnit(hiveAgent);
-                            return;
-                        }
-                    }
-                }
-                
-                // 유닛이 없으면 타일 명령 (가장 위에 있는 타일)
-                foreach (var hit2 in hits2D)
-                {
-                    var tile = hit2.collider.GetComponentInParent<HexTile>();
-                    if (tile != null) 
-                    {
-                        OnTileCommand(tile);
-                        return;
-                    }
-                }
-            }
-        }
+        
     }
 
     void HandleRightClickForMultipleUnits(List<UnitAgent> units)
     {
-        var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
         HexTile targetTile = null;
+        Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        wp.z = 0f;
+        RaycastHit2D[] hits2D = Physics2D.RaycastAll(wp, Vector2.zero);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+        if (hits2D.Length > 0)
         {
-            targetTile = hit.collider.GetComponentInParent<HexTile>();
-        }
-        else
-        {
-            Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            var hit2 = Physics2D.Raycast(wp, Vector2.zero);
-            if (hit2.collider != null)
+            // 타일 찾기
+            foreach (var hit2 in hits2D)
             {
-                targetTile = hit2.collider.GetComponentInParent<HexTile>();
+                var tile = hit2.collider.GetComponentInParent<HexTile>();
+                if (tile != null)
+                {
+                    targetTile = tile;
+                    break;
+                }
             }
         }
 
