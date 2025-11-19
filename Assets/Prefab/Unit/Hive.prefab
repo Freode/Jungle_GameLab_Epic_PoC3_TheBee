@@ -314,6 +314,7 @@ MonoBehaviour:
   attack: 0
   attackRange: 0
   attackCooldown: 2
+  isInvincible: 0
 --- !u!4 &7137265993117279580 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8356495950311495776, guid: fbd489a349676d34997f12e8c68a8424, type: 3}

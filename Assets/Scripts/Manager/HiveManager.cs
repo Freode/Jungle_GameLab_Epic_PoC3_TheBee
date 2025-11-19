@@ -430,7 +430,7 @@ public class HiveManager : MonoBehaviour
 
     public int GetMaxWorkers()
     {
-        return 10 + (maxWorkersLevel * 3);
+        return 1 + (maxWorkersLevel * 3);
     }
 
     public int GetGatherAmount()

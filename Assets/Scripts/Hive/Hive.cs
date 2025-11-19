@@ -531,8 +531,8 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             // 11. FogOfWar에 등록 (활성화 후)
             queenBee.RegisterWithFog();
             
-            // 12. 선택 가능 상태로 리셋
-            queenBee.SetSelected(false);
+            //// 12. 선택 가능 상태로 리셋
+            //queenBee.SetSelected(false);
             
             Debug.Log("[하이브 파괴] 여왕벌 완전 활성화 완료 - 이동 가능 상태, 모든 플래그 초기화");
         }
@@ -550,11 +550,21 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 worker.hasManualOrder = false;
                 worker.homeHive = null; // 하이브 참조 제거 ?
                 
-                // 현재 작업 취소
-                var behavior = worker.GetComponent<UnitBehaviorController>();
-                if (behavior != null)
+                // WorkerBehaviorController가 있으면 StartFollowingQueen 호출 ?
+                var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
+                if (workerBehavior != null)
                 {
-                    behavior.CancelCurrentTask();
+                    workerBehavior.StartFollowingQueen();
+                }
+                else
+                {
+                    // 기존 로직 (호환성 유지)
+                    // 현재 작업 취소
+                    var behavior = worker.GetComponent<UnitBehaviorController>();
+                    if (behavior != null)
+                    {
+                        behavior.CancelCurrentTask();
+                    }
                 }
                 
                 if (showDebugLogs)
@@ -583,6 +593,15 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             worker.isFollowingQueen = false;
             worker.hasManualOrder = false;
             
+            // WorkerBehaviorController가 있으면 OnHiveConstructed 호출 ?
+            var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
+            if (workerBehavior != null)
+            {
+                workerBehavior.OnHiveConstructed(this);
+                continue; // WorkerBehaviorController가 이동 처리
+            }
+            
+            // 기존 로직 (호환성 유지)
             // Move worker to new hive location
             var start = TileManager.Instance.GetTile(worker.q, worker.r);
             var dest = TileManager.Instance.GetTile(q, r);

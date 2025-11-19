@@ -33,7 +33,7 @@ public class UnitController : MonoBehaviour
     public void SetPath(List<HexTile> path)
     {
         if (path == null || path.Count == 0) return;
-        
+
         // 이미 이동 중이거나 대기 중인 경로가 있으면 큐잉 ?
         if (isMoving || pathQueue.Count > 0)
         {
@@ -42,7 +42,7 @@ public class UnitController : MonoBehaviour
             Debug.Log($"[UnitController] 경로 큐잉: 현재 이동 완료 후 ({queuedDestination.q}, {queuedDestination.r})로 이동 예정");
             return;
         }
-        
+
         // 새로운 경로 설정
         pathQueue.Clear();
         queuedDestination = null;
