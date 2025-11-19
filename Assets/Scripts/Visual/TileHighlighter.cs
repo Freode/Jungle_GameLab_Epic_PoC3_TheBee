@@ -28,29 +28,21 @@ public class TileHighlighter : MonoBehaviour
 
     void Update()
     {
-        // hover effect
         Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        // ensure z for 2D raycast
         wp.z = 0f;
-        var hit2 = Physics2D.Raycast(new Vector2(wp.x, wp.y), Vector2.zero);
-        if (hit2.collider != null)
-        {
-            var tile = hit2.collider.GetComponentInParent<HexTile>();
-            if (tile != null)
-            {
-                ShowHoverAt(tile);
-                return;
-            }
-        }
+        RaycastHit2D[] hits2D = Physics2D.RaycastAll(wp, Vector2.zero);
 
-        var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+        if (hits2D.Length > 0)
         {
-            var tile = hit.collider.GetComponentInParent<HexTile>();
-            if (tile != null)
+            // 타일 찾기
+            foreach (var hit2 in hits2D)
             {
-                ShowHoverAt(tile);
-                return;
+                var tile = hit2.collider.GetComponentInParent<HexTile>();
+                if (tile != null)
+                {
+                    ShowHoverAt(tile);
+                    return;
+                }
             }
         }
 
