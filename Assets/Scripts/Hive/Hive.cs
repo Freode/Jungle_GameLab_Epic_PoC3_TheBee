@@ -94,8 +94,8 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             Vector3 hivePos = TileHelper.HexToWorld(q, r, queenBee.hexSize);
             queenBee.transform.position = hivePos;
             
-            // 이동 불가능하게
-            queenBee.canMove = false;
+            //// 이동 불가능하게
+            //queenBee.canMove = false;
             
             // 여왕벌 무적 상태 활성화 ?
             var queenCombat = queenBee.GetComponent<CombatUnit>();
@@ -483,8 +483,8 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             if (showDebugLogs)
                 Debug.Log($"[하이브 파괴] 여왕벌 Transform 위치: {queenBee.transform.position}, 타일 좌표: ({queenBee.q}, {queenBee.r})");
             
-            // 4. 이동 가능하게 설정
-            queenBee.canMove = true;
+            //// 4. 이동 가능하게 설정
+            //queenBee.canMove = true;
             
             // 5. 여왕벌 플래그 초기화 ?
             queenBee.isFollowingQueen = false;
@@ -498,19 +498,19 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 queenBehavior.CancelCurrentTask(); // 모든 작업 취소
             }
             
-            // 7. 렌더러 재활성화 (활성화 전에!)
-            var queenRenderer = queenBee.GetComponent<Renderer>();
-            if (queenRenderer != null) queenRenderer.enabled = true;
+            //// 7. 렌더러 재활성화 (활성화 전에!)
+            //var queenRenderer = queenBee.GetComponent<Renderer>();
+            //if (queenRenderer != null) queenRenderer.enabled = true;
             
-            var queenSprite = queenBee.GetComponent<SpriteRenderer>();
-            if (queenSprite != null) queenSprite.enabled = true;
+            //var queenSprite = queenBee.GetComponent<SpriteRenderer>();
+            //if (queenSprite != null) queenSprite.enabled = true;
             
-            // 8. 컬라이더 재활성화 (클릭 가능하게)
-            var queenCollider2D = queenBee.GetComponent<Collider2D>();
-            if (queenCollider2D != null) queenCollider2D.enabled = true;
+            //// 8. 컬라이더 재활성화 (클릭 가능하게)
+            //var queenCollider2D = queenBee.GetComponent<Collider2D>();
+            //if (queenCollider2D != null) queenCollider2D.enabled = true;
             
-            var queenCollider3D = queenBee.GetComponent<Collider>();
-            if (queenCollider3D != null) queenCollider3D.enabled = true;
+            //var queenCollider3D = queenBee.GetComponent<Collider>();
+            //if (queenCollider3D != null) queenCollider3D.enabled = true;
             
             // 9. 여왕벌 무적 상태 해제
             var queenCombat = queenBee.GetComponent<CombatUnit>();

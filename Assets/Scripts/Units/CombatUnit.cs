@@ -94,6 +94,9 @@ public class CombatUnit : MonoBehaviour
     public void SetInvincible(bool invincible)
     {
         isInvincible = invincible;
+
+        // 현재 체력 회복
+        health = maxHealth;
         
         if (invincible)
             Debug.Log($"[무적] {gameObject.name} 무적 상태 활성화");

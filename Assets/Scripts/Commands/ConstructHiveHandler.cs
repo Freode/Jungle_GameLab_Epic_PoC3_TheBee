@@ -53,17 +53,12 @@ public class ConstructHiveHandler : MonoBehaviour
         hive.Initialize(q, r);
         
         // Transfer workers from old hive or find homeless workers
-        if (agent.isQueen && agent.homeHive != null)
+        if (agent.isQueen)
         {
             // Note: agent.homeHive는 이미 위에서 새 hive로 설정됨
             // 이전 하이브에서 일꾼 이전은 필요 없음 (새 하이브이므로)
             
             // homeHive가 없는 일꾼들을 찾아서 할당
-            AssignHomelessWorkersToHive(hive, q, r);
-        }
-        else if (agent.isQueen)
-        {
-            // 여왕벌이지만 이전 하이브가 없으면 주변의 homeHive 없는 일꾼들 찾기
             AssignHomelessWorkersToHive(hive, q, r);
         }
         
