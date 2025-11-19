@@ -175,14 +175,14 @@ public class EnemyHive : MonoBehaviour
     /// </summary>
     void SetAllRenderersEnabled(bool enabled)
     {
-        // 자신의 렌더러
+        // 자신의 레너더러
         var sprite = GetComponent<SpriteRenderer>();
         if (sprite != null) sprite.enabled = enabled;
         
         var renderer = GetComponent<Renderer>();
         if (renderer != null) renderer.enabled = enabled;
         
-        // 자식 렌더러
+        // 자식 레너더러
         var childRenderers = GetComponentsInChildren<Renderer>(true);
         foreach (var r in childRenderers)
         {
@@ -195,7 +195,7 @@ public class EnemyHive : MonoBehaviour
             s.enabled = enabled;
         }
         
-        // 부모 렌더러
+        // 부모 레너더러
         if (transform.parent != null)
         {
             var parentRenderer = transform.parent.GetComponent<Renderer>();
@@ -339,6 +339,46 @@ public class EnemyHive : MonoBehaviour
     {
         if (showDebugLogs)
             Debug.Log($"[적 하이브] 파괴: ({q}, {r})");
+
+        // ✅ 3. 타일을 자원 타일로 변환
+        if (TileManager.Instance != null)
+        {
+            var tile = TileManager.Instance.GetTile(q, r);
+            if (tile != null)
+            {
+                // 자원 타일로 설정
+                if (GameManager.Instance != null && GameManager.Instance.terrainTypes != null)
+                {
+                    // 자원이 있는 지형 타입 찾기 (resourceYield > 0인 첫 번째 지형)
+                    TerrainType resourceTerrain = null;
+                    foreach (var terrain in GameManager.Instance.terrainTypes)
+                    {
+                        if (terrain != null && terrain.resourceYield > 0)
+                        {
+                            resourceTerrain = terrain;
+                            break;
+                        }
+                    }
+
+                    // 자원 지형이 있으면 적용
+                    if (resourceTerrain != null)
+                    {
+                        tile.SetTerrain(resourceTerrain);
+                        tile.SetResourceAmount(500); // ✅ 자원량 500으로 설정
+                        
+                        if (showDebugLogs)
+                            Debug.Log($"[적 하이브] 타일을 자원 타일로 변환: ({q}, {r}), 자원량: 500");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[적 하이브] 자원 지형 타입을 찾을 수 없습니다.");
+                    }
+                }
+
+                // 타일의 enemyHive 참조 제거
+                tile.enemyHive = null;
+            }
+        }
 
         // 모든 말벌에게 하이브 파괴 알림
         foreach (var wasp in wasps)

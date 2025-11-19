@@ -5,6 +5,11 @@ public class UnitAgent : MonoBehaviour
     public int id;
     public int q;
     public int r;
+    
+    [Header("유닛 정보")]
+    [Tooltip("유닛 이름 (비어있으면 자동 생성)")]
+    public string unitName = "";
+    
     public int visionRange = 3;
     public float hexSize = 0.5f;
     public bool useSeqRenderLayerOrder = false;

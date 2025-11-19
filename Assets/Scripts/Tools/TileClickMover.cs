@@ -168,6 +168,13 @@ public class TileClickMover : MonoBehaviour
                     if (tile != null)
                     {
                         DeselectUnit();
+                        
+                        // ✅ 타일 정보를 SelectionInfoUI에 전달
+                        if (SelectionInfoUI.Instance != null)
+                        {
+                            SelectionInfoUI.Instance.SelectTile(tile);
+                        }
+                        
                         if (debugText != null) debugText.text = $"Tile: ({tile.q}, {tile.r})";
                         return;
                     }
@@ -281,6 +288,20 @@ public class TileClickMover : MonoBehaviour
         
         // Hide command UI
         UnitCommandPanel.Instance?.Hide();
+        
+        // ✅ SelectionInfoUI 선택 해제
+        if (SelectionInfoUI.Instance != null)
+        {
+            SelectionInfoUI.Instance.ClearSelection();
+        }
+    }
+
+    /// <summary>
+    /// 현재 선택된 유닛 가져오기 (SelectionInfoUI에서 사용)
+    /// </summary>
+    public UnitAgent GetSelectedUnit()
+    {
+        return selectedUnitInstance;
     }
 
     public void EnterMoveMode()

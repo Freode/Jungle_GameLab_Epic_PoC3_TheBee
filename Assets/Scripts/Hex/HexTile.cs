@@ -30,8 +30,25 @@ public class HexTile : MonoBehaviour
     private Color targetColor = Color.white;
     [SerializeField] private float colorLerpSpeed = 6f;
 
-    // 색 변화 시 사용할 고갈 색상
-    [SerializeField] private Color depletedColor = Color.gray;
+    // ✅ 2. 자원량에 따른 색상 단계 설정 (절대 수치 기반)
+    [Header("자원 색상 설정")]
+    [Tooltip("자원량 400 이상")]
+    [SerializeField] private Color resourceVeryHighColor = new Color(1.0f, 0.9f, 0.0f); // 진한 노란색
+    
+    [Tooltip("자원량 300~399")]
+    [SerializeField] private Color resourceHighColor = new Color(1.0f, 1.0f, 0.3f); // 밝은 노란색
+    
+    [Tooltip("자원량 200~299")]
+    [SerializeField] private Color resourceMediumColor = new Color(1.0f, 0.9f, 0.5f); // 연한 노란색
+    
+    [Tooltip("자원량 100~199")]
+    [SerializeField] private Color resourceLowColor = new Color(1.0f, 0.7f, 0.2f); // 주황색
+    
+    [Tooltip("자원량 1~99")]
+    [SerializeField] private Color resourceVeryLowColor = new Color(1.0f, 0.5f, 0.1f); // 진한 주황색
+    
+    [Tooltip("자원 고갈 (0)")]
+    [SerializeField] private Color depletedColor = new Color(0.8f, 0.4f, 0.2f); // 갈색
 
     // 렌더러 캐시
     private Renderer cachedRenderer;
@@ -146,12 +163,38 @@ public class HexTile : MonoBehaviour
             return baseColor;
         }
 
-        // 리소스가 남아있는 경우
+        // ✅ 리소스가 남아있는 경우 - 절대 수치 기반 단계별 색상
         if (resourceAmount > 0)
         {
-            float t = (float)resourceAmount / (float)initialResource;
-            // t==1 => full resource => baseColor; t==0 => depletedColor에 가까움
-            return Color.Lerp(depletedColor, baseColor, t);
+            // 400 이상: 매우 높음 (진한 노란색)
+            if (resourceAmount >= 400)
+            {
+                return resourceVeryHighColor;
+            }
+            // 300~399: 높음 (밝은 노란색)
+            else if (resourceAmount >= 300)
+            {
+                float t = (resourceAmount - 300) / 100f;
+                return Color.Lerp(resourceHighColor, resourceVeryHighColor, t);
+            }
+            // 200~299: 중간 (연한 노란색)
+            else if (resourceAmount >= 200)
+            {
+                float t = (resourceAmount - 200) / 100f;
+                return Color.Lerp(resourceMediumColor, resourceHighColor, t);
+            }
+            // 100~199: 낮음 (주황색)
+            else if (resourceAmount >= 100)
+            {
+                float t = (resourceAmount - 100) / 100f;
+                return Color.Lerp(resourceLowColor, resourceMediumColor, t);
+            }
+            // 1~99: 매우 낮음 (진한 주황색)
+            else
+            {
+                float t = resourceAmount / 100f;
+                return Color.Lerp(resourceVeryLowColor, resourceLowColor, t);
+            }
         }
         else
         {
@@ -203,5 +246,21 @@ public class HexTile : MonoBehaviour
         if (resourceAmount < 0) resourceAmount = 0;
         UpdateTargetColor();
         return taken;
+    }
+
+    /// <summary>
+    /// ✅ 자원량 직접 설정 (말벌집 파괴 등)
+    /// </summary>
+    public void SetResourceAmount(int amount)
+    {
+        resourceAmount = Mathf.Max(0, amount);
+        
+        // initialResource도 업데이트하여 색상 계산이 정확하도록
+        if (resourceAmount > initialResource)
+        {
+            initialResource = resourceAmount;
+        }
+        
+        UpdateTargetColor();
     }
 }
