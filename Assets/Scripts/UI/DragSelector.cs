@@ -2,31 +2,31 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// ¸¶¿ì½º µå·¡±×·Î ¿©·¯ À¯´ÖÀ» ¼±ÅÃÇÏ´Â ±â´É
+/// ë§ˆìš°ìŠ¤ ë“œë˜ê·¸ë¡œ ì—¬ëŸ¬ ìœ ë‹›ì„ ì„ íƒí•˜ëŠ” ê¸°ëŠ¥
 /// </summary>
 public class DragSelector : MonoBehaviour
 {
     public static DragSelector Instance { get; private set; }
 
-    [Header("µå·¡±× ¼³Á¤")]
-    [Tooltip("µå·¡±× ¼±ÅÃ È°¼ºÈ­")]
+    [Header("ë“œë˜ê·¸ ì„¤ì •")]
+    [Tooltip("ë“œë˜ê·¸ ì„ íƒ í™œì„±í™”")]
     public bool enableDragSelection = true;
 
-    [Tooltip("ÃÖ¼Ò µå·¡±× °Å¸® (ÇÈ¼¿)")]
+    [Tooltip("ìµœì†Œ ë“œë˜ê·¸ ê±°ë¦¬ (í”½ì…€)")]
     public float minDragDistance = 10f;
 
-    [Header("¼±ÅÃ ¹Ú½º ºñÁÖ¾ó")]
-    public Color selectionBoxColor = new Color(0, 1, 0, 0.2f); // ¹İÅõ¸í ÃÊ·Ï»ö
+    [Header("ì„ íƒ ë°•ìŠ¤ ë¹„ì£¼ì–¼")]
+    public Color selectionBoxColor = new Color(0, 1, 0, 0.2f); // ë°˜íˆ¬ëª… ì´ˆë¡ìƒ‰
     public Color selectionBoxBorderColor = Color.green;
     public float borderWidth = 2f;
 
     private Vector2 dragStartPos;
     private Vector2 currentMousePos;
     private bool isDragging = false;
-    private bool wasDragging = false; // µå·¡±× ¿Ï·á ¿©ºÎ ÃßÀû
+    private bool wasDragging = false; // ë“œë˜ê·¸ ì™„ë£Œ ì—¬ë¶€ ì¶”ì 
     private List<UnitAgent> selectedUnits = new List<UnitAgent>();
     
-    // UI ·»´õ¸µ¿ë
+    // UI ë Œë”ë§ìš©
     private Texture2D boxTexture;
     private Texture2D borderTexture;
 
@@ -42,7 +42,7 @@ public class DragSelector : MonoBehaviour
 
     void Start()
     {
-        // ¼±ÅÃ ¹Ú½º¿ë ÅØ½ºÃ³ »ı¼º
+        // ì„ íƒ ë°•ìŠ¤ìš© í…ìŠ¤ì²˜ ìƒì„±
         CreateTextures();
     }
 
@@ -55,14 +55,14 @@ public class DragSelector : MonoBehaviour
 
     void HandleDragSelection()
     {
-        // ¿ŞÂÊ ¸¶¿ì½º ¹öÆ° ´©¸§
+        // ì™¼ìª½ ë§ˆìš°ìŠ¤ ë²„íŠ¼ ëˆ„ë¦„
         if (Input.GetMouseButtonDown(0))
         {
-            // UI À§¿¡¼­ Å¬¸¯ÇÏ¸é ¹«½Ã ?
+            // UI ìœ„ì—ì„œ í´ë¦­í•˜ë©´ ë¬´ì‹œ ?
             if (UnityEngine.EventSystems.EventSystem.current != null &&
                 UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
             {
-                return; // UI Å¬¸¯Àº ¹«½ÃÇÏ°í µå·¡±× ½ÃÀÛ ¾È ÇÔ ?
+                return; // UI í´ë¦­ì€ ë¬´ì‹œí•˜ê³  ë“œë˜ê·¸ ì‹œì‘ ì•ˆ í•¨ ?
             }
 
             dragStartPos = Input.mousePosition;
@@ -70,10 +70,10 @@ public class DragSelector : MonoBehaviour
             wasDragging = false;
         }
 
-        // µå·¡±× Áß
+        // ë“œë˜ê·¸ ì¤‘
         if (Input.GetMouseButton(0))
         {
-            // UI À§¿¡¼­ µå·¡±× ÁßÀÌ¸é ¹«½Ã ?
+            // UI ìœ„ì—ì„œ ë“œë˜ê·¸ ì¤‘ì´ë©´ ë¬´ì‹œ ?
             if (UnityEngine.EventSystems.EventSystem.current != null &&
                 UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
             {
@@ -82,17 +82,17 @@ public class DragSelector : MonoBehaviour
             
             currentMousePos = Input.mousePosition;
             
-            // ÃÖ¼Ò °Å¸® ÀÌ»ó µå·¡±×Çß´ÂÁö È®ÀÎ
+            // ìµœì†Œ ê±°ë¦¬ ì´ìƒ ë“œë˜ê·¸í–ˆëŠ”ì§€ í™•ì¸
             float dragDistance = Vector2.Distance(dragStartPos, currentMousePos);
             if (!isDragging && dragDistance > minDragDistance)
             {
                 isDragging = true;
                 wasDragging = true;
                 
-                // µå·¡±× ½ÃÀÛ ½Ã ¸ğµç ¼±ÅÃ ÇØÁ¦ (ÇÏÀÌºê Æ÷ÇÔ)
+                // ë“œë˜ê·¸ ì‹œì‘ ì‹œ ëª¨ë“  ì„ íƒ í•´ì œ (í•˜ì´ë¸Œ í¬í•¨)
                 DeselectAll();
                 
-                // TileClickMoverÀÇ ¼±ÅÃµµ ÇØÁ¦
+                // TileClickMoverì˜ ì„ íƒë„ í•´ì œ
                 if (TileClickMover.Instance != null)
                 {
                     TileClickMover.Instance.DeselectUnit();
@@ -100,18 +100,18 @@ public class DragSelector : MonoBehaviour
             }
         }
 
-        // ¸¶¿ì½º ¹öÆ° ¶À
+        // ë§ˆìš°ìŠ¤ ë²„íŠ¼ ë—Œ
         if (Input.GetMouseButtonUp(0))
         {
             if (isDragging)
             {
-                // µå·¡±× ¿µ¿ª ³»ÀÇ À¯´Ö ¼±ÅÃ
+                // ë“œë˜ê·¸ ì˜ì—­ ë‚´ì˜ ìœ ë‹› ì„ íƒ
                 SelectUnitsInDragArea();
                 isDragging = false;
             }
             else if (!wasDragging)
             {
-                // µå·¡±× ¾øÀÌ ´Ü¼ø Å¬¸¯ÀÎ °æ¿ì
+                // ë“œë˜ê·¸ ì—†ì´ ë‹¨ìˆœ í´ë¦­ì¸ ê²½ìš°
                 HandleSingleClick();
             }
             
@@ -121,14 +121,14 @@ public class DragSelector : MonoBehaviour
 
     void HandleSingleClick()
     {
-        // UI À§¿¡¼­ Å¬¸¯ÇÏ¸é ¹«½Ã ?
+        // UI ìœ„ì—ì„œ í´ë¦­í•˜ë©´ ë¬´ì‹œ ?
         if (UnityEngine.EventSystems.EventSystem.current != null &&
             UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
-            return; // UI Å¬¸¯Àº ¹«½Ã ?
+            return; // UI í´ë¦­ì€ ë¬´ì‹œ ?
         }
 
-        // Raycast·Î À¯´ÖÀ» Å¬¸¯Çß´ÂÁö È®ÀÎ
+        // Raycastë¡œ ìœ ë‹›ì„ í´ë¦­í–ˆëŠ”ì§€ í™•ì¸
         bool clickedOnUnit = false;
         UnitAgent clickedUnit = null;
         
@@ -139,7 +139,7 @@ public class DragSelector : MonoBehaviour
             if (unit != null)
             {
                 clickedUnit = unit;
-                // ÇÃ·¹ÀÌ¾î ¼Ò¼Ó ÀÏ²Û¸¸ µå·¡±× ¼±ÅÃ °¡´É
+                // í”Œë ˆì´ì–´ ì†Œì† ì¼ê¾¼ë§Œ ë“œë˜ê·¸ ì„ íƒ ê°€ëŠ¥
                 if (unit.faction == Faction.Player && !unit.isQueen)
                 {
                     clickedOnUnit = true;
@@ -148,7 +148,7 @@ public class DragSelector : MonoBehaviour
         }
         else
         {
-            // 2D Raycastµµ ½Ãµµ
+            // 2D Raycastë„ ì‹œë„
             Vector3 wp = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             var hit2 = Physics2D.Raycast(wp, Vector2.zero);
             if (hit2.collider != null)
@@ -165,14 +165,14 @@ public class DragSelector : MonoBehaviour
             }
         }
 
-        // ´Ù¸¥ °Í(ÀÏ²Û ¾Æ´Ñ °Í)À» Å¬¸¯ÇÏ°Å³ª ºó °÷ Å¬¸¯ ½Ã µå·¡±× ¼±ÅÃ ÇØÁ¦
+        // ë‹¤ë¥¸ ê²ƒ(ì¼ê¾¼ ì•„ë‹Œ ê²ƒ)ì„ í´ë¦­í•˜ê±°ë‚˜ ë¹ˆ ê³³ í´ë¦­ ì‹œ ë“œë˜ê·¸ ì„ íƒ í•´ì œ
         if (selectedUnits.Count > 0)
         {
-            // ÀÏ²ÛÀ» Å¬¸¯ÇÑ °æ¿ì°¡ ¾Æ´Ï¸é ¸ğµÎ ÇØÁ¦
+            // ì¼ê¾¼ì„ í´ë¦­í•œ ê²½ìš°ê°€ ì•„ë‹ˆë©´ ëª¨ë‘ í•´ì œ
             if (!clickedOnUnit)
             {
                 DeselectAll();
-                Debug.Log("[µå·¡±× ¼±ÅÃ] ¸ğµç À¯´Ö ÇØÁ¦ (´Ù¸¥ °Í ¶Ç´Â ºó °÷ Å¬¸¯)");
+                Debug.Log("[ë“œë˜ê·¸ ì„ íƒ] ëª¨ë“  ìœ ë‹› í•´ì œ (ë‹¤ë¥¸ ê²ƒ ë˜ëŠ” ë¹ˆ ê³³ í´ë¦­)");
             }
         }
     }
@@ -181,11 +181,11 @@ public class DragSelector : MonoBehaviour
     {
         if (TileManager.Instance == null) return;
 
-        // µå·¡±× ½ÃÀÛ/³¡ ÁÂÇ¥·Î ¼±ÅÃ ¿µ¿ª »ı¼º (YÃà º¯È¯ ¾øÀÌ)
+        // ë“œë˜ê·¸ ì‹œì‘/ë ì¢Œí‘œë¡œ ì„ íƒ ì˜ì—­ ìƒì„± (Yì¶• ë³€í™˜ ì—†ì´)
         Vector2 startPos = dragStartPos;
         Vector2 endPos = currentMousePos;
         
-        // ÃÖ¼Ò/ÃÖ´ë ÁÂÇ¥ °è»ê
+        // ìµœì†Œ/ìµœëŒ€ ì¢Œí‘œ ê³„ì‚°
         float minX = Mathf.Min(startPos.x, endPos.x);
         float maxX = Mathf.Max(startPos.x, endPos.x);
         float minY = Mathf.Min(startPos.y, endPos.y);
@@ -194,26 +194,26 @@ public class DragSelector : MonoBehaviour
         Rect selectionRect = new Rect(minX, minY, maxX - minX, maxY - minY);
         List<UnitAgent> unitsInRect = new List<UnitAgent>();
 
-        // ¸ğµç À¯´ÖÀ» È®ÀÎ
+        // ëª¨ë“  ìœ ë‹›ì„ í™•ì¸
         foreach (var unit in TileManager.Instance.GetAllUnits())
         {
             if (unit == null) continue;
 
-            // ÇÃ·¹ÀÌ¾î ¼Ò¼Ó ÀÏ²Û¸¸ ¼±ÅÃ °¡´É
+            // í”Œë ˆì´ì–´ ì†Œì† ì¼ê¾¼ë§Œ ì„ íƒ ê°€ëŠ¥
             if (unit.faction != Faction.Player) continue;
-            if (unit.isQueen) continue; // ¿©¿Õ¹úÀº Á¦¿Ü
+            if (unit.isQueen) continue; // ì—¬ì™•ë²Œì€ ì œì™¸
             
-            // ÇÏÀÌºê(¹úÁı)µµ Á¦¿Ü
+            // í•˜ì´ë¸Œ(ë²Œì§‘)ë„ ì œì™¸
             var hive = unit.GetComponent<Hive>();
             if (hive != null) continue;
 
-            // À¯´ÖÀÇ È­¸é ÁÂÇ¥ °è»ê
+            // ìœ ë‹›ì˜ í™”ë©´ ì¢Œí‘œ ê³„ì‚°
             Vector3 screenPos = Camera.main.WorldToScreenPoint(unit.transform.position);
             
-            // È­¸é ¹ÛÀÌ°Å³ª Ä«¸Ş¶ó µÚ¿¡ ÀÖÀ¸¸é Á¦¿Ü
+            // í™”ë©´ ë°–ì´ê±°ë‚˜ ì¹´ë©”ë¼ ë’¤ì— ìˆìœ¼ë©´ ì œì™¸
             if (screenPos.z < 0) continue;
 
-            // ¼±ÅÃ ¿µ¿ª ¾È¿¡ ÀÖ´ÂÁö È®ÀÎ (YÃà ±×´ë·Î »ç¿ë)
+            // ì„ íƒ ì˜ì—­ ì•ˆì— ìˆëŠ”ì§€ í™•ì¸ (Yì¶• ê·¸ëŒ€ë¡œ ì‚¬ìš©)
             Vector2 screenPos2D = new Vector2(screenPos.x, screenPos.y);
             if (selectionRect.Contains(screenPos2D))
             {
@@ -221,24 +221,24 @@ public class DragSelector : MonoBehaviour
             }
         }
 
-        // ¼±ÅÃµÈ À¯´Öµé ¾÷µ¥ÀÌÆ®
+        // ì„ íƒëœ ìœ ë‹›ë“¤ ì—…ë°ì´íŠ¸
         if (unitsInRect.Count > 0)
         {
             selectedUnits.Clear();
             selectedUnits.AddRange(unitsInRect);
 
-            // °¢ À¯´Ö¿¡ ¼±ÅÃ Ç¥½Ã
+            // ê° ìœ ë‹›ì— ì„ íƒ í‘œì‹œ
             foreach (var unit in selectedUnits)
             {
                 unit.SetSelected(true);
             }
 
-            Debug.Log($"[µå·¡±× ¼±ÅÃ] {selectedUnits.Count}°³ÀÇ ÀÏ²Û ¼±ÅÃµÊ");
+            Debug.Log($"[ë“œë˜ê·¸ ì„ íƒ] {selectedUnits.Count}ê°œì˜ ì¼ê¾¼ ì„ íƒë¨");
         }
     }
 
     /// <summary>
-    /// ¸ğµç ¼±ÅÃ ÇØÁ¦
+    /// ëª¨ë“  ì„ íƒ í•´ì œ
     /// </summary>
     public void DeselectAll()
     {
@@ -250,7 +250,7 @@ public class DragSelector : MonoBehaviour
         selectedUnits.Clear();
     }
 
-    // ¿ÜºÎ¿¡¼­ ¼±ÅÃ ÇØÁ¦ È£Ãâ °¡´É
+    // ì™¸ë¶€ì—ì„œ ì„ íƒ í•´ì œ í˜¸ì¶œ ê°€ëŠ¥
     public void ClearSelection()
     {
         DeselectAll();
@@ -260,27 +260,27 @@ public class DragSelector : MonoBehaviour
     {
         if (!isDragging) return;
 
-        // ¼±ÅÃ ¹Ú½º ±×¸®±â
+        // ì„ íƒ ë°•ìŠ¤ ê·¸ë¦¬ê¸°
         Rect rect = GetScreenRect(dragStartPos, currentMousePos);
         DrawScreenRect(rect, selectionBoxColor, borderTexture);
         DrawScreenRectBorder(rect, borderWidth, selectionBoxBorderColor);
     }
 
-    // µÎ Á¡À¸·Î È­¸é Rect »ı¼º (YÃà ¹İÀü Ã³¸®)
+    // ë‘ ì ìœ¼ë¡œ í™”ë©´ Rect ìƒì„± (Yì¶• ë°˜ì „ ì²˜ë¦¬)
     Rect GetScreenRect(Vector2 screenPos1, Vector2 screenPos2)
     {
-        // YÃà ¹İÀü (Unity ½ºÅ©¸° ÁÂÇ¥°è´Â ÁÂÇÏ´ÜÀÌ ¿øÁ¡)
+        // Yì¶• ë°˜ì „ (Unity ìŠ¤í¬ë¦° ì¢Œí‘œê³„ëŠ” ì¢Œí•˜ë‹¨ì´ ì›ì )
         screenPos1.y = Screen.height - screenPos1.y;
         screenPos2.y = Screen.height - screenPos2.y;
 
-        // µÎ Á¡À¸·Î »ç°¢Çü ¸¸µé±â
+        // ë‘ ì ìœ¼ë¡œ ì‚¬ê°í˜• ë§Œë“¤ê¸°
         Vector2 topLeft = Vector2.Min(screenPos1, screenPos2);
         Vector2 bottomRight = Vector2.Max(screenPos1, screenPos2);
 
         return new Rect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
     }
 
-    // Ã¤¿öÁø »ç°¢Çü ±×¸®±â
+    // ì±„ì›Œì§„ ì‚¬ê°í˜• ê·¸ë¦¬ê¸°
     void DrawScreenRect(Rect rect, Color color, Texture2D texture)
     {
         GUI.color = color;
@@ -288,24 +288,24 @@ public class DragSelector : MonoBehaviour
         GUI.color = Color.white;
     }
 
-    // »ç°¢Çü Å×µÎ¸® ±×¸®±â
+    // ì‚¬ê°í˜• í…Œë‘ë¦¬ ê·¸ë¦¬ê¸°
     void DrawScreenRectBorder(Rect rect, float thickness, Color color)
     {
         GUI.color = color;
         
-        // »ó´Ü
+        // ìƒë‹¨
         GUI.DrawTexture(new Rect(rect.xMin, rect.yMin, rect.width, thickness), borderTexture);
-        // ÇÏ´Ü
+        // í•˜ë‹¨
         GUI.DrawTexture(new Rect(rect.xMin, rect.yMax - thickness, rect.width, thickness), borderTexture);
-        // ÁÂÃø
+        // ì¢Œì¸¡
         GUI.DrawTexture(new Rect(rect.xMin, rect.yMin, thickness, rect.height), borderTexture);
-        // ¿ìÃø
+        // ìš°ì¸¡
         GUI.DrawTexture(new Rect(rect.xMax - thickness, rect.yMin, thickness, rect.height), borderTexture);
         
         GUI.color = Color.white;
     }
 
-    // ÅØ½ºÃ³ »ı¼º
+    // í…ìŠ¤ì²˜ ìƒì„±
     void CreateTextures()
     {
         boxTexture = new Texture2D(1, 1);
@@ -317,19 +317,19 @@ public class DragSelector : MonoBehaviour
         borderTexture.Apply();
     }
 
-    // ÇöÀç ¼±ÅÃµÈ À¯´Öµé °¡Á®¿À±â
+    // í˜„ì¬ ì„ íƒëœ ìœ ë‹›ë“¤ ê°€ì ¸ì˜¤ê¸°
     public List<UnitAgent> GetSelectedUnits()
     {
         return new List<UnitAgent>(selectedUnits);
     }
 
-    // Æ¯Á¤ À¯´ÖÀÌ ¼±ÅÃµÇ¾ú´ÂÁö È®ÀÎ
+    // íŠ¹ì • ìœ ë‹›ì´ ì„ íƒë˜ì—ˆëŠ”ì§€ í™•ì¸
     public bool IsUnitSelected(UnitAgent unit)
     {
         return selectedUnits.Contains(unit);
     }
 
-    // ¼±ÅÃµÈ À¯´Ö ¼ö
+    // ì„ íƒëœ ìœ ë‹› ìˆ˜
     public int GetSelectedCount()
     {
         return selectedUnits.Count;

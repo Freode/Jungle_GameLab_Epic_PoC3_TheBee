@@ -4,8 +4,8 @@ using UnityEngine;
 public enum UnitTaskType { Idle, Move, Attack, Gather, ReturnToHive, FollowQueen }
 
 /// <summary>
-/// ±âº» À¯´Ö Çàµ¿ ÄÁÆ®·Ñ·¯ (ºÎ¸ğ Å¬·¡½º)
-/// - QueenBehaviorController, WorkerBehaviorController°¡ »ó¼Ó
+/// ê¸°ë³¸ ìœ ë‹› í–‰ë™ ì»¨íŠ¸ë¡¤ëŸ¬ (ë¶€ëª¨ í´ë˜ìŠ¤)
+/// - QueenBehaviorController, WorkerBehaviorControllerê°€ ìƒì†
 /// </summary>
 public class UnitBehaviorController : MonoBehaviour
 {
@@ -42,7 +42,7 @@ public class UnitBehaviorController : MonoBehaviour
     }
 
     /// <summary>
-    /// ÁÖº¯ ¹üÀ§ ³» Àû À¯´Ö Ã£±â
+    /// ì£¼ë³€ ë²”ìœ„ ë‚´ ì  ìœ ë‹› ì°¾ê¸°
     /// </summary>
     protected UnitAgent FindNearbyEnemy(int range)
     {
@@ -52,22 +52,22 @@ public class UnitBehaviorController : MonoBehaviour
         {
             if (unit == null || unit == agent) continue;
             
-            // Àû À¯´Ö¸¸
+            // ì  ìœ ë‹›ë§Œ
             if (unit.faction == agent.faction) continue;
             if (unit.faction == Faction.Neutral) continue;
             
-            // ¹«Àû À¯´ÖÀº Á¦¿Ü
+            // ë¬´ì  ìœ ë‹›ì€ ì œì™¸
             var combat = unit.GetComponent<CombatUnit>();
             if (combat != null && combat.isInvincible)
             {
                 continue;
             }
             
-            // °Å¸® Ã¼Å©
+            // ê±°ë¦¬ ì²´í¬
             int distance = Pathfinder.AxialDistance(agent.q, agent.r, unit.q, unit.r);
             if (distance <= range)
             {
-                // ÇÏÀÌºê°¡ ÀÖ´Â °æ¿ì È°µ¿ ¹üÀ§ Ã¼Å©
+                // í•˜ì´ë¸Œê°€ ìˆëŠ” ê²½ìš° í™œë™ ë²”ìœ„ ì²´í¬
                 if (agent.homeHive != null)
                 {
                     int distanceToHive = Pathfinder.AxialDistance(agent.homeHive.q, agent.homeHive.r, unit.q, unit.r);
@@ -76,7 +76,7 @@ public class UnitBehaviorController : MonoBehaviour
                         continue;
                     }
                 }
-                // ÇÏÀÌºê°¡ ¾ø´Â °æ¿ì (¿©¿Õ¹ú ¸ğµå)
+                // í•˜ì´ë¸Œê°€ ì—†ëŠ” ê²½ìš° (ì—¬ì™•ë²Œ ëª¨ë“œ)
                 else if (agent.isQueen)
                 {
                     if (distance > 1)
@@ -84,7 +84,7 @@ public class UnitBehaviorController : MonoBehaviour
                         continue;
                     }
                 }
-                // ÇÏÀÌºêµµ ¾ø°í ¿©¿Õ¹úµµ ¾Æ´Ñ °æ¿ì (ÀÏ¹İ ÀÏ²Û)
+                // í•˜ì´ë¸Œë„ ì—†ê³  ì—¬ì™•ë²Œë„ ì•„ë‹Œ ê²½ìš° (ì¼ë°˜ ì¼ê¾¼)
                 else
                 {
                     UnitAgent queen = FindQueenInScene();
@@ -110,7 +110,7 @@ public class UnitBehaviorController : MonoBehaviour
     }
 
     /// <summary>
-    /// ¿©¿Õ¹ú Ã£±â
+    /// ì—¬ì™•ë²Œ ì°¾ê¸°
     /// </summary>
     protected UnitAgent FindQueenInScene()
     {
@@ -126,7 +126,7 @@ public class UnitBehaviorController : MonoBehaviour
     }
 
     /// <summary>
-    /// Å¸ÀÏ¿¡¼­ Àû Ã£±â
+    /// íƒ€ì¼ì—ì„œ ì  ì°¾ê¸°
     /// </summary>
     protected UnitAgent FindEnemyOnTile(HexTile tile)
     {
@@ -149,11 +149,11 @@ public class UnitBehaviorController : MonoBehaviour
     }
 
     /// <summary>
-    /// Å¸ÀÏ·Î ÀÌµ¿ ¸í·É (virtual - ¿À¹ö¶óÀÌµå °¡´É)
+    /// íƒ€ì¼ë¡œ ì´ë™ ëª…ë ¹ (virtual - ì˜¤ë²„ë¼ì´ë“œ ê°€ëŠ¥)
     /// </summary>
     public virtual void IssueCommandToTile(HexTile tile)
     {
-        // ±âº» ±¸Çö: Å¸ÀÏ·Î ÀÌµ¿¸¸
+        // ê¸°ë³¸ êµ¬í˜„: íƒ€ì¼ë¡œ ì´ë™ë§Œ
         if (tile == null) return;
         
         var start = TileManager.Instance.GetTile(agent.q, agent.r);
@@ -167,11 +167,11 @@ public class UnitBehaviorController : MonoBehaviour
     }
 
     /// <summary>
-    /// Àû °ø°İ ¸í·É (virtual - ¿À¹ö¶óÀÌµå °¡´É)
+    /// ì  ê³µê²© ëª…ë ¹ (virtual - ì˜¤ë²„ë¼ì´ë“œ ê°€ëŠ¥)
     /// </summary>
     public virtual void IssueAttackCommand(UnitAgent enemy)
     {
-        // ±âº» ±¸Çö: Àû¿¡°Ô ÀÌµ¿ ÈÄ °ø°İ
+        // ê¸°ë³¸ êµ¬í˜„: ì ì—ê²Œ ì´ë™ í›„ ê³µê²©
         if (enemy == null) return;
         
         var start = TileManager.Instance.GetTile(agent.q, agent.r);
@@ -187,7 +187,7 @@ public class UnitBehaviorController : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç ÀÛ¾÷ Ãë¼Ò (virtual - ¿À¹ö¶óÀÌµå °¡´É)
+    /// í˜„ì¬ ì‘ì—… ì·¨ì†Œ (virtual - ì˜¤ë²„ë¼ì´ë“œ ê°€ëŠ¥)
     /// </summary>
     public virtual void CancelCurrentTask()
     {
@@ -200,6 +200,6 @@ public class UnitBehaviorController : MonoBehaviour
             mover.ClearPath();
         }
         
-        Debug.Log($"[Çàµ¿] {agent.name}ÀÇ ÀÛ¾÷ÀÌ Ãë¼ÒµÇ¾ú½À´Ï´Ù.");
+        Debug.Log($"[í–‰ë™] {agent.name}ì˜ ì‘ì—…ì´ ì·¨ì†Œë˜ì—ˆìŠµë‹ˆë‹¤.");
     }
 }

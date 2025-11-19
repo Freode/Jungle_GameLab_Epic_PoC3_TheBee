@@ -8,7 +8,7 @@ public interface ICommand
     bool RequiresTarget { get; }
     bool HidePanelOnClick { get; }
     
-    // ¸í·É ºñ¿ë Á¤º¸
+    // ëª…ë ¹ ë¹„ìš© ì •ë³´
     int ResourceCost { get; }
     string CostText { get; }
 

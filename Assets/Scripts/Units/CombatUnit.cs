@@ -2,22 +2,22 @@ using UnityEngine;
 
 public class CombatUnit : MonoBehaviour
 {
-    [Header("±âº» ´É·ÂÄ¡")]
+    [Header("ê¸°ë³¸ ëŠ¥ë ¥ì¹˜")]
     public int maxHealth = 10;
     public int health;
     public int attack = 2;
-    public float attackRange = 0.1f; // °ø°İ ¹üÀ§ (Å¸ÀÏ °Å¸® ±âÁØ)
+    public float attackRange = 0.1f; // ê³µê²© ë²”ìœ„ (íƒ€ì¼ ê±°ë¦¬ ê¸°ì¤€)
 
-    [Header("°ø°İ ÄğÅ¸ÀÓ")]
-    public float attackCooldown = 2f; // °ø°İ ÄğÅ¸ÀÓ (ÃÊ)
+    [Header("ê³µê²© ì¿¨íƒ€ì„")]
+    public float attackCooldown = 2f; // ê³µê²© ì¿¨íƒ€ì„ (ì´ˆ)
     
-    [Header("¹«Àû »óÅÂ")]
-    public bool isInvincible = false; // ¹«Àû »óÅÂ ?
+    [Header("ë¬´ì  ìƒíƒœ")]
+    public bool isInvincible = false; // ë¬´ì  ìƒíƒœ ?
     
-    private float lastAttackTime = -999f; // ¸¶Áö¸· °ø°İ ½Ã°£
+    private float lastAttackTime = -999f; // ë§ˆì§€ë§‰ ê³µê²© ì‹œê°„
     private UnitAgent agent;
     
-    // Ã¼·Â/°ø°İ·Â º¯°æ ÀÌº¥Æ®
+    // ì²´ë ¥/ê³µê²©ë ¥ ë³€ê²½ ì´ë²¤íŠ¸
     public event System.Action OnStatsChanged;
 
     void Awake()
@@ -27,7 +27,7 @@ public class CombatUnit : MonoBehaviour
     }
 
     /// <summary>
-    /// °ø°İ °¡´ÉÇÑÁö È®ÀÎ
+    /// ê³µê²© ê°€ëŠ¥í•œì§€ í™•ì¸
     /// </summary>
     public bool CanAttack()
     {
@@ -35,7 +35,7 @@ public class CombatUnit : MonoBehaviour
     }
 
     /// <summary>
-    /// ´ÙÀ½ °ø°İ±îÁö ³²Àº ½Ã°£
+    /// ë‹¤ìŒ ê³µê²©ê¹Œì§€ ë‚¨ì€ ì‹œê°„
     /// </summary>
     public float GetAttackCooldownRemaining()
     {
@@ -44,23 +44,23 @@ public class CombatUnit : MonoBehaviour
     }
 
     /// <summary>
-    /// Å¸°Ù °ø°İ (ÄğÅ¸ÀÓ Ã¼Å© Æ÷ÇÔ)
+    /// íƒ€ê²Ÿ ê³µê²© (ì¿¨íƒ€ì„ ì²´í¬ í¬í•¨)
     /// </summary>
     public bool TryAttack(CombatUnit target)
     {
         if (target == null) return false;
         
-        // ¹«Àû »óÅÂ Ã¼Å© ?
+        // ë¬´ì  ìƒíƒœ ì²´í¬ ?
         if (target.isInvincible)
         {
-            Debug.Log($"[ÀüÅõ] {target.name}Àº(´Â) ¹«Àû »óÅÂÀÔ´Ï´Ù. °ø°İ ºÒ°¡!");
+            Debug.Log($"[ì „íˆ¬] {target.name}ì€(ëŠ”) ë¬´ì  ìƒíƒœì…ë‹ˆë‹¤. ê³µê²© ë¶ˆê°€!");
             return false;
         }
         
-        // ÄğÅ¸ÀÓ Ã¼Å©
+        // ì¿¨íƒ€ì„ ì²´í¬
         if (!CanAttack()) return false;
         
-        // °ø°İ ½ÇÇà
+        // ê³µê²© ì‹¤í–‰
         target.TakeDamage(attack);
         lastAttackTime = Time.time;
         
@@ -69,16 +69,16 @@ public class CombatUnit : MonoBehaviour
 
     public void TakeDamage(int dmg)
     {
-        // ¹«Àû »óÅÂ¸é µ¥¹ÌÁö ¹«½Ã ?
+        // ë¬´ì  ìƒíƒœë©´ ë°ë¯¸ì§€ ë¬´ì‹œ ?
         if (isInvincible)
         {
-            Debug.Log($"[ÀüÅõ] {gameObject.name}Àº(´Â) ¹«Àû »óÅÂ¶ó µ¥¹ÌÁö¸¦ ¹ŞÁö ¾Ê½À´Ï´Ù!");
+            Debug.Log($"[ì „íˆ¬] {gameObject.name}ì€(ëŠ”) ë¬´ì  ìƒíƒœë¼ ë°ë¯¸ì§€ë¥¼ ë°›ì§€ ì•ŠìŠµë‹ˆë‹¤!");
             return;
         }
         
         health -= dmg;
         
-        // ÀÌº¥Æ® ¹ß»ı
+        // ì´ë²¤íŠ¸ ë°œìƒ
         OnStatsChanged?.Invoke();
         
         if (health <= 0)
@@ -89,23 +89,23 @@ public class CombatUnit : MonoBehaviour
     }
 
     /// <summary>
-    /// ¹«Àû »óÅÂ ¼³Á¤ ?
+    /// ë¬´ì  ìƒíƒœ ì„¤ì • ?
     /// </summary>
     public void SetInvincible(bool invincible)
     {
         isInvincible = invincible;
 
-        // ÇöÀç Ã¼·Â È¸º¹
+        // í˜„ì¬ ì²´ë ¥ íšŒë³µ
         health = maxHealth;
         
         if (invincible)
-            Debug.Log($"[¹«Àû] {gameObject.name} ¹«Àû »óÅÂ È°¼ºÈ­");
+            Debug.Log($"[ë¬´ì ] {gameObject.name} ë¬´ì  ìƒíƒœ í™œì„±í™”");
         else
-            Debug.Log($"[¹«Àû] {gameObject.name} ¹«Àû »óÅÂ ÇØÁ¦");
+            Debug.Log($"[ë¬´ì ] {gameObject.name} ë¬´ì  ìƒíƒœ í•´ì œ");
     }
 
     /// <summary>
-    /// Ã¼·Â ¼³Á¤ (ÀÌº¥Æ® ¹ß»ı)
+    /// ì²´ë ¥ ì„¤ì • (ì´ë²¤íŠ¸ ë°œìƒ)
     /// </summary>
     public void SetHealth(int newHealth)
     {
@@ -114,7 +114,7 @@ public class CombatUnit : MonoBehaviour
     }
 
     /// <summary>
-    /// ÃÖ´ë Ã¼·Â ¼³Á¤ (ÀÌº¥Æ® ¹ß»ı)
+    /// ìµœëŒ€ ì²´ë ¥ ì„¤ì • (ì´ë²¤íŠ¸ ë°œìƒ)
     /// </summary>
     public void SetMaxHealth(int newMaxHealth)
     {
@@ -124,7 +124,7 @@ public class CombatUnit : MonoBehaviour
     }
 
     /// <summary>
-    /// °ø°İ·Â ¼³Á¤ (ÀÌº¥Æ® ¹ß»ı)
+    /// ê³µê²©ë ¥ ì„¤ì • (ì´ë²¤íŠ¸ ë°œìƒ)
     /// </summary>
     public void SetAttack(int newAttack)
     {
@@ -134,11 +134,11 @@ public class CombatUnit : MonoBehaviour
 
     void Die()
     {
-        // ÇÃ·¹ÀÌ¾î ÇÏÀÌºêÀÎ °æ¿ì DestroyHive() È£Ãâ
+        // í”Œë ˆì´ì–´ í•˜ì´ë¸Œì¸ ê²½ìš° DestroyHive() í˜¸ì¶œ
         var hive = GetComponent<Hive>();
         if (hive != null)
         {
-            // HiveÀÇ DestroyHive() ¸Ş¼­µå¸¦ ¸®ÇÃ·º¼ÇÀ¸·Î È£Ãâ
+            // Hiveì˜ DestroyHive() ë©”ì„œë“œë¥¼ ë¦¬í”Œë ‰ì…˜ìœ¼ë¡œ í˜¸ì¶œ
             var destroyMethod = typeof(Hive).GetMethod("DestroyHive", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             
@@ -148,21 +148,21 @@ public class CombatUnit : MonoBehaviour
             }
             else
             {
-                // DestroyHive ¸Ş¼­µå°¡ ¾øÀ¸¸é Á÷Á¢ ÆÄ±«
+                // DestroyHive ë©”ì„œë“œê°€ ì—†ìœ¼ë©´ ì§ì ‘ íŒŒê´´
                 Destroy(gameObject);
             }
         }
-        // Àû ÇÏÀÌºêÀÎ °æ¿ì EnemyHive.DestroyHive() È£Ãâ
+        // ì  í•˜ì´ë¸Œì¸ ê²½ìš° EnemyHive.DestroyHive() í˜¸ì¶œ
         else
         {
             var enemyHive = GetComponent<EnemyHive>();
             if (enemyHive != null)
             {
-                enemyHive.DestroyHive(); // public ¸Ş¼­µåÀÌ¹Ç·Î Á÷Á¢ È£Ãâ
+                enemyHive.DestroyHive(); // public ë©”ì„œë“œì´ë¯€ë¡œ ì§ì ‘ í˜¸ì¶œ
             }
             else
             {
-                // ÀÏ¹İ À¯´ÖÀº ¹Ù·Î ÆÄ±«
+                // ì¼ë°˜ ìœ ë‹›ì€ ë°”ë¡œ íŒŒê´´
                 Destroy(gameObject);
             }
         }

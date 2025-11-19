@@ -4,14 +4,14 @@ using UnityEngine;
 using UnityEditor;
 
 /// <summary>
-/// ¿¡µğÅÍ ¸Ş´º¿¡¼­ 7°¡Áö ¾÷±×·¹ÀÌµå ¸í·ÉÀ» ÀÚµ¿À¸·Î »ı¼ºÇÏ´Â µµ±¸
+/// ì—ë””í„° ë©”ë‰´ì—ì„œ 7ê°€ì§€ ì—…ê·¸ë ˆì´ë“œ ëª…ë ¹ì„ ìë™ìœ¼ë¡œ ìƒì„±í•˜ëŠ” ë„êµ¬
 /// </summary>
 public class UpgradeCommandCreator
 {
-    [MenuItem("Tools/¾÷±×·¹ÀÌµå/7°¡Áö ¾÷±×·¹ÀÌµå ¸í·É »ı¼º")]
+    [MenuItem("Tools/ì—…ê·¸ë ˆì´ë“œ/7ê°€ì§€ ì—…ê·¸ë ˆì´ë“œ ëª…ë ¹ ìƒì„±")]
     public static void CreateAllUpgradeCommands()
     {
-        // ScriptableObjects/Commands/Upgrades Æú´õ »ı¼º
+        // ScriptableObjects/Commands/Upgrades í´ë” ìƒì„±
         if (!AssetDatabase.IsValidFolder("Assets/ScriptableObjects"))
             AssetDatabase.CreateFolder("Assets", "ScriptableObjects");
         if (!AssetDatabase.IsValidFolder("Assets/ScriptableObjects/Commands"))
@@ -19,66 +19,66 @@ public class UpgradeCommandCreator
         if (!AssetDatabase.IsValidFolder("Assets/ScriptableObjects/Commands/Upgrades"))
             AssetDatabase.CreateFolder("Assets/ScriptableObjects/Commands", "Upgrades");
 
-        // 7°¡Áö ¾÷±×·¹ÀÌµå ¸í·É »ı¼º
+        // 7ê°€ì§€ ì—…ê·¸ë ˆì´ë“œ ëª…ë ¹ ìƒì„±
         CreateUpgradeCommand(
             "Upgrade_HiveRange",
-            "È°µ¿ ¹üÀ§ È®Àå",
+            "í™œë™ ë²”ìœ„ í™•ì¥",
             "upgrade_hive_range",
-            "ÇÏÀÌºêÀÇ È°µ¿ ¹üÀ§¸¦ 1Å¸ÀÏ Áõ°¡½ÃÅµ´Ï´Ù.",
+            "í•˜ì´ë¸Œì˜ í™œë™ ë²”ìœ„ë¥¼ 1íƒ€ì¼ ì¦ê°€ì‹œí‚µë‹ˆë‹¤.",
             UpgradeType.HiveRange,
             20
         );
 
         CreateUpgradeCommand(
             "Upgrade_WorkerAttack",
-            "³¯Ä«·Î¿î Ä§",
+            "ë‚ ì¹´ë¡œìš´ ì¹¨",
             "upgrade_worker_attack",
-            "ÀÏ²Û ²Ü¹úÀÇ °ø°İ·ÂÀ» 1 Áõ°¡½ÃÅµ´Ï´Ù.",
+            "ì¼ê¾¼ ê¿€ë²Œì˜ ê³µê²©ë ¥ì„ 1 ì¦ê°€ì‹œí‚µë‹ˆë‹¤.",
             UpgradeType.WorkerAttack,
             15
         );
 
         CreateUpgradeCommand(
             "Upgrade_WorkerHealth",
-            "°­È­ ¿Ü°ñ°İ",
+            "ê°•í™” ì™¸ê³¨ê²©",
             "upgrade_worker_health",
-            "ÀÏ²Û ²Ü¹úÀÇ Ã¼·ÂÀ» 5 Áõ°¡½ÃÅµ´Ï´Ù.",
+            "ì¼ê¾¼ ê¿€ë²Œì˜ ì²´ë ¥ì„ 5 ì¦ê°€ì‹œí‚µë‹ˆë‹¤.",
             UpgradeType.WorkerHealth,
             20
         );
 
         CreateUpgradeCommand(
             "Upgrade_WorkerSpeed",
-            "ºü¸¥ ³¯°³",
+            "ë¹ ë¥¸ ë‚ ê°œ",
             "upgrade_worker_speed",
-            "ÀÏ²Û ²Ü¹úÀÇ ÀÌµ¿ ¼Óµµ¸¦ 1 Áõ°¡½ÃÅµ´Ï´Ù.",
+            "ì¼ê¾¼ ê¿€ë²Œì˜ ì´ë™ ì†ë„ë¥¼ 1 ì¦ê°€ì‹œí‚µë‹ˆë‹¤.",
             UpgradeType.WorkerSpeed,
             15
         );
 
         CreateUpgradeCommand(
             "Upgrade_HiveHealth",
-            "°­È­ ¹úÁı",
+            "ê°•í™” ë²Œì§‘",
             "upgrade_hive_health",
-            "ÇÏÀÌºêÀÇ Ã¼·ÂÀ» 30 Áõ°¡½ÃÅµ´Ï´Ù.",
+            "í•˜ì´ë¸Œì˜ ì²´ë ¥ì„ 30 ì¦ê°€ì‹œí‚µë‹ˆë‹¤.",
             UpgradeType.HiveHealth,
             25
         );
 
         CreateUpgradeCommand(
             "Upgrade_MaxWorkers",
-            "È®Àå ±ºÁı",
+            "í™•ì¥ êµ°ì§‘",
             "upgrade_max_workers",
-            "ÃÖ´ë ÀÏ²Û ¼ö¸¦ 5 Áõ°¡½ÃÅµ´Ï´Ù.",
+            "ìµœëŒ€ ì¼ê¾¼ ìˆ˜ë¥¼ 5 ì¦ê°€ì‹œí‚µë‹ˆë‹¤.",
             UpgradeType.MaxWorkers,
             30
         );
 
         CreateUpgradeCommand(
             "Upgrade_GatherAmount",
-            "È¿À²Àû Ã¤Áı",
+            "íš¨ìœ¨ì  ì±„ì§‘",
             "upgrade_gather_amount",
-            "ÀÚ¿ø Ã¤Ãë·®À» 2 Áõ°¡½ÃÅµ´Ï´Ù.",
+            "ìì› ì±„ì·¨ëŸ‰ì„ 2 ì¦ê°€ì‹œí‚µë‹ˆë‹¤.",
             UpgradeType.GatherAmount,
             20
         );
@@ -86,9 +86,9 @@ public class UpgradeCommandCreator
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("[¾÷±×·¹ÀÌµå »ı¼º±â] 7°¡Áö ¾÷±×·¹ÀÌµå ¸í·ÉÀÌ Assets/ScriptableObjects/Commands/Upgrades/¿¡ »ı¼ºµÇ¾ú½À´Ï´Ù!");
+        Debug.Log("[ì—…ê·¸ë ˆì´ë“œ ìƒì„±ê¸°] 7ê°€ì§€ ì—…ê·¸ë ˆì´ë“œ ëª…ë ¹ì´ Assets/ScriptableObjects/Commands/Upgrades/ì— ìƒì„±ë˜ì—ˆìŠµë‹ˆë‹¤!");
         
-        // »ı¼ºµÈ Æú´õ¸¦ Project Ã¢¿¡¼­ ¼±ÅÃ
+        // ìƒì„±ëœ í´ë”ë¥¼ Project ì°½ì—ì„œ ì„ íƒ
         var folder = AssetDatabase.LoadAssetAtPath<Object>("Assets/ScriptableObjects/Commands/Upgrades");
         if (folder != null)
         {
@@ -107,26 +107,26 @@ public class UpgradeCommandCreator
     {
         string path = $"Assets/ScriptableObjects/Commands/Upgrades/{fileName}.asset";
 
-        // ÀÌ¹Ì Á¸ÀçÇÏ¸é µ¤¾î¾²±â È®ÀÎ
+        // ì´ë¯¸ ì¡´ì¬í•˜ë©´ ë®ì–´ì“°ê¸° í™•ì¸
         if (AssetDatabase.LoadAssetAtPath<SOUpgradeCommand>(path) != null)
         {
             if (!EditorUtility.DisplayDialog(
-                "¾÷±×·¹ÀÌµå ¸í·É »ı¼º",
-                $"{fileName}ÀÌ(°¡) ÀÌ¹Ì Á¸ÀçÇÕ´Ï´Ù.\nµ¤¾î¾²½Ã°Ú½À´Ï±î?",
-                "µ¤¾î¾²±â",
-                "°Ç³Ê¶Ù±â"))
+                "ì—…ê·¸ë ˆì´ë“œ ëª…ë ¹ ìƒì„±",
+                $"{fileName}ì´(ê°€) ì´ë¯¸ ì¡´ì¬í•©ë‹ˆë‹¤.\në®ì–´ì“°ì‹œê² ìŠµë‹ˆê¹Œ?",
+                "ë®ì–´ì“°ê¸°",
+                "ê±´ë„ˆë›°ê¸°"))
             {
-                Debug.Log($"[¾÷±×·¹ÀÌµå »ı¼º±â] {fileName} °Ç³Ê¶Ù±â");
+                Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ ìƒì„±ê¸°] {fileName} ê±´ë„ˆë›°ê¸°");
                 return;
             }
 
             AssetDatabase.DeleteAsset(path);
         }
 
-        // SOUpgradeCommand ÀÎ½ºÅÏ½º »ı¼º
+        // SOUpgradeCommand ì¸ìŠ¤í„´ìŠ¤ ìƒì„±
         SOUpgradeCommand upgrade = ScriptableObject.CreateInstance<SOUpgradeCommand>();
         
-        // ±âº» ¼³Á¤
+        // ê¸°ë³¸ ì„¤ì •
         upgrade.displayName = displayName;
         upgrade.id = id;
         upgrade.requiresTarget = false;
@@ -134,30 +134,30 @@ public class UpgradeCommandCreator
         upgrade.resourceCost = cost;
         upgrade.upgradeType = upgradeType;
 
-        // ¿¡¼ÂÀ¸·Î ÀúÀå
+        // ì—ì…‹ìœ¼ë¡œ ì €ì¥
         AssetDatabase.CreateAsset(upgrade, path);
         
-        Debug.Log($"[¾÷±×·¹ÀÌµå »ı¼º±â] {displayName} »ı¼º ¿Ï·á: {path}");
+        Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ ìƒì„±ê¸°] {displayName} ìƒì„± ì™„ë£Œ: {path}");
     }
 
-    [MenuItem("Tools/¾÷±×·¹ÀÌµå/¾÷±×·¹ÀÌµå Æú´õ ¿­±â")]
+    [MenuItem("Tools/ì—…ê·¸ë ˆì´ë“œ/ì—…ê·¸ë ˆì´ë“œ í´ë” ì—´ê¸°")]
     public static void OpenUpgradesFolder()
     {
-        // Æú´õ°¡ ¾øÀ¸¸é »ı¼º
+        // í´ë”ê°€ ì—†ìœ¼ë©´ ìƒì„±
         if (!AssetDatabase.IsValidFolder("Assets/ScriptableObjects/Commands/Upgrades"))
         {
             if (EditorUtility.DisplayDialog(
-                "Æú´õ ¾øÀ½",
-                "¾÷±×·¹ÀÌµå Æú´õ°¡ ¾ø½À´Ï´Ù.\n¸ÕÀú '7°¡Áö ¾÷±×·¹ÀÌµå ¸í·É »ı¼º'À» ½ÇÇàÇÏ¼¼¿ä.",
-                "»ı¼ºÇÏ±â",
-                "Ãë¼Ò"))
+                "í´ë” ì—†ìŒ",
+                "ì—…ê·¸ë ˆì´ë“œ í´ë”ê°€ ì—†ìŠµë‹ˆë‹¤.\në¨¼ì € '7ê°€ì§€ ì—…ê·¸ë ˆì´ë“œ ëª…ë ¹ ìƒì„±'ì„ ì‹¤í–‰í•˜ì„¸ìš”.",
+                "ìƒì„±í•˜ê¸°",
+                "ì·¨ì†Œ"))
             {
                 CreateAllUpgradeCommands();
             }
             return;
         }
 
-        // Æú´õ ¼±ÅÃ
+        // í´ë” ì„ íƒ
         var folder = AssetDatabase.LoadAssetAtPath<Object>("Assets/ScriptableObjects/Commands/Upgrades");
         if (folder != null)
         {
@@ -166,14 +166,14 @@ public class UpgradeCommandCreator
         }
     }
 
-    [MenuItem("Tools/¾÷±×·¹ÀÌµå/¾÷±×·¹ÀÌµå ¸í·É »èÁ¦")]
+    [MenuItem("Tools/ì—…ê·¸ë ˆì´ë“œ/ì—…ê·¸ë ˆì´ë“œ ëª…ë ¹ ì‚­ì œ")]
     public static void DeleteAllUpgradeCommands()
     {
         if (!EditorUtility.DisplayDialog(
-            "¾÷±×·¹ÀÌµå ¸í·É »èÁ¦",
-            "¸ğµç ¾÷±×·¹ÀÌµå ¸í·ÉÀ» »èÁ¦ÇÏ½Ã°Ú½À´Ï±î?\nÀÌ ÀÛ¾÷Àº µÇµ¹¸± ¼ö ¾ø½À´Ï´Ù!",
-            "»èÁ¦",
-            "Ãë¼Ò"))
+            "ì—…ê·¸ë ˆì´ë“œ ëª…ë ¹ ì‚­ì œ",
+            "ëª¨ë“  ì—…ê·¸ë ˆì´ë“œ ëª…ë ¹ì„ ì‚­ì œí•˜ì‹œê² ìŠµë‹ˆê¹Œ?\nì´ ì‘ì—…ì€ ë˜ëŒë¦´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!",
+            "ì‚­ì œ",
+            "ì·¨ì†Œ"))
         {
             return;
         }
@@ -182,11 +182,11 @@ public class UpgradeCommandCreator
         
         if (!AssetDatabase.IsValidFolder(folderPath))
         {
-            Debug.Log("[¾÷±×·¹ÀÌµå »ı¼º±â] »èÁ¦ÇÒ ¾÷±×·¹ÀÌµå Æú´õ°¡ ¾ø½À´Ï´Ù.");
+            Debug.Log("[ì—…ê·¸ë ˆì´ë“œ ìƒì„±ê¸°] ì‚­ì œí•  ì—…ê·¸ë ˆì´ë“œ í´ë”ê°€ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
-        // Æú´õ ³»ÀÇ ¸ğµç ¿¡¼Â »èÁ¦
+        // í´ë” ë‚´ì˜ ëª¨ë“  ì—ì…‹ ì‚­ì œ
         string[] guids = AssetDatabase.FindAssets("t:SOUpgradeCommand", new[] { folderPath });
         int deletedCount = 0;
 
@@ -200,7 +200,7 @@ public class UpgradeCommandCreator
         }
 
         AssetDatabase.Refresh();
-        Debug.Log($"[¾÷±×·¹ÀÌµå »ı¼º±â] {deletedCount}°³ÀÇ ¾÷±×·¹ÀÌµå ¸í·ÉÀ» »èÁ¦Çß½À´Ï´Ù.");
+        Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ ìƒì„±ê¸°] {deletedCount}ê°œì˜ ì—…ê·¸ë ˆì´ë“œ ëª…ë ¹ì„ ì‚­ì œí–ˆìŠµë‹ˆë‹¤.");
     }
 }
 #endif

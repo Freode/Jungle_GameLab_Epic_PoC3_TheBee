@@ -12,45 +12,45 @@ public static class TileHelper
     }
 
     /// <summary>
-    /// Å¸ÀÏ ³»ºÎÀÇ ·£´ıÇÑ World À§Ä¡ ¹İÈ¯ (À°°¢Çü ¹üÀ§ ³»)
+    /// íƒ€ì¼ ë‚´ë¶€ì˜ ëœë¤í•œ World ìœ„ì¹˜ ë°˜í™˜ (ìœ¡ê°í˜• ë²”ìœ„ ë‚´)
     /// </summary>
     public static Vector3 GetRandomPositionInTile(int q, int r, float hexSize, float margin = 0.2f)
     {
-        // Å¸ÀÏ Áß½É À§Ä¡
+        // íƒ€ì¼ ì¤‘ì‹¬ ìœ„ì¹˜
         Vector3 center = HexToWorld(q, r, hexSize);
         
-        // À°°¢Çü ³»ºÎ ·£´ı À§Ä¡ »ı¼º
-        // Pointy-top hexagonÀÇ °æ¿ì, ¹İÁö¸§ ³»¿¡¼­ ·£´ı ¼±ÅÃ
+        // ìœ¡ê°í˜• ë‚´ë¶€ ëœë¤ ìœ„ì¹˜ ìƒì„±
+        // Pointy-top hexagonì˜ ê²½ìš°, ë°˜ì§€ë¦„ ë‚´ì—ì„œ ëœë¤ ì„ íƒ
         float maxRadius = hexSize * (1f - margin);
         
-        // À°°¢ÇüÀÇ 6°³ ¼½¼Ç Áß ÇÏ³ª¸¦ ¼±ÅÃÇÏ¿© ÇØ´ç ¹üÀ§ ³»¿¡¼­¸¸ ÀÌµ¿
-        // ÀÌ·¸°Ô ÇÏ¸é ´õ ±ÕµîÇÏ°Ô ºĞÆ÷µÊ
-        float sectorAngle = 60f * Mathf.Deg2Rad; // À°°¢ÇüÀº 6°³ ¼½ÅÍ
+        // ìœ¡ê°í˜•ì˜ 6ê°œ ì„¹ì…˜ ì¤‘ í•˜ë‚˜ë¥¼ ì„ íƒí•˜ì—¬ í•´ë‹¹ ë²”ìœ„ ë‚´ì—ì„œë§Œ ì´ë™
+        // ì´ë ‡ê²Œ í•˜ë©´ ë” ê· ë“±í•˜ê²Œ ë¶„í¬ë¨
+        float sectorAngle = 60f * Mathf.Deg2Rad; // ìœ¡ê°í˜•ì€ 6ê°œ ì„¹í„°
         int sector = Random.Range(0, 6);
         float angle = (sector * sectorAngle) + Random.Range(-sectorAngle * 0.5f, sectorAngle * 0.5f);
         
-        // À°°¢Çü °æ°è¸¦ °í·ÁÇÑ ÃÖ´ë °Å¸® °è»ê
-        // À°°¢ÇüÀÇ °æ¿ì °¢µµ¿¡ µû¶ó ÃÖ´ë °Å¸®°¡ ´Ù¸§
+        // ìœ¡ê°í˜• ê²½ê³„ë¥¼ ê³ ë ¤í•œ ìµœëŒ€ ê±°ë¦¬ ê³„ì‚°
+        // ìœ¡ê°í˜•ì˜ ê²½ìš° ê°ë„ì— ë”°ë¼ ìµœëŒ€ ê±°ë¦¬ê°€ ë‹¤ë¦„
         float angleOffset = Mathf.Abs(Mathf.Repeat(angle, sectorAngle) - sectorAngle * 0.5f);
         float maxDistAtAngle = maxRadius / Mathf.Cos(angleOffset);
         float distance = Random.Range(0f, Mathf.Min(Random.Range(0f, maxRadius), maxDistAtAngle));
         
-        // 2D Æò¸é¿¡¼­ X, Y ÁÂÇ¥ °è»ê (Z´Â 0À¸·Î °íÁ¤)
+        // 2D í‰ë©´ì—ì„œ X, Y ì¢Œí‘œ ê³„ì‚° (ZëŠ” 0ìœ¼ë¡œ ê³ ì •)
         float randomX = Mathf.Cos(angle) * distance;
         float randomY = Mathf.Sin(angle) * distance;
         
-        // 2D °ÔÀÓÀÌ¹Ç·Î X, Y Æò¸é »ç¿ë (Z´Â Ç×»ó 0)
+        // 2D ê²Œì„ì´ë¯€ë¡œ X, Y í‰ë©´ ì‚¬ìš© (ZëŠ” í•­ìƒ 0)
         return new Vector3(center.x + randomX, center.y + randomY, 0f);
     }
 
     /// <summary>
-    /// ÇöÀç À§Ä¡¿¡¼­ Å¸ÀÏ ³»ºÎ ´Ù¸¥ ·£´ı À§Ä¡·Î ÀÌµ¿
+    /// í˜„ì¬ ìœ„ì¹˜ì—ì„œ íƒ€ì¼ ë‚´ë¶€ ë‹¤ë¥¸ ëœë¤ ìœ„ì¹˜ë¡œ ì´ë™
     /// </summary>
     public static Vector3 GetRandomPositionInCurrentTile(Vector3 currentPos, int q, int r, float hexSize, float margin = 0.2f)
     {
         Vector3 newPos = GetRandomPositionInTile(q, r, hexSize, margin);
         
-        // ÇöÀç À§Ä¡¿Í ³Ê¹« °¡±î¿ì¸é ´Ù½Ã »ı¼º (ÃÖ´ë 3¹ø ½Ãµµ)
+        // í˜„ì¬ ìœ„ì¹˜ì™€ ë„ˆë¬´ ê°€ê¹Œìš°ë©´ ë‹¤ì‹œ ìƒì„± (ìµœëŒ€ 3ë²ˆ ì‹œë„)
         int attempts = 0;
         while (Vector3.Distance(currentPos, newPos) < hexSize * 0.15f && attempts < 3)
         {
@@ -62,18 +62,18 @@ public static class TileHelper
     }
 
     /// <summary>
-    /// À§Ä¡°¡ Å¸ÀÏ ³»ºÎ¿¡ ÀÖ´ÂÁö È®ÀÎ
+    /// ìœ„ì¹˜ê°€ íƒ€ì¼ ë‚´ë¶€ì— ìˆëŠ”ì§€ í™•ì¸
     /// </summary>
     public static bool IsPositionInTile(Vector3 worldPos, int q, int r, float hexSize)
     {
         Vector3 center = HexToWorld(q, r, hexSize);
         
-        // 2D Æò¸é¿¡¼­ °Å¸® °è»ê (X, Y¸¸ »ç¿ë)
+        // 2D í‰ë©´ì—ì„œ ê±°ë¦¬ ê³„ì‚° (X, Yë§Œ ì‚¬ìš©)
         Vector2 worldPos2D = new Vector2(worldPos.x, worldPos.y);
         Vector2 center2D = new Vector2(center.x, center.y);
         float distance = Vector2.Distance(worldPos2D, center2D);
         
-        // À°°¢Çü ¹İÁö¸§ ³»ºÎÀÎÁö È®ÀÎ
-        return distance <= hexSize * 0.95f; // ¾à°£ÀÇ ¿©À¯ (5%)
+        // ìœ¡ê°í˜• ë°˜ì§€ë¦„ ë‚´ë¶€ì¸ì§€ í™•ì¸
+        return distance <= hexSize * 0.95f; // ì•½ê°„ì˜ ì—¬ìœ  (5%)
     }
 }

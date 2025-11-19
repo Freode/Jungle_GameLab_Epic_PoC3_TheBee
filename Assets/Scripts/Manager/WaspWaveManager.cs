@@ -3,25 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// ¸»¹úÁı¿¡¼­ ²Ü¹úÁıÀ» ÇâÇÑ ÁÖ±âÀû ¿şÀÌºê °ø°İ °ü¸®
-/// - EnemyHive¸¦ »ç¿ëÇÏ¿© ÇÃ·¹ÀÌ¾î Hive¿Í ¿ÏÀü ºĞ¸®
-/// - °¡Àå °¡±î¿î ¸»¹úÁı¿¡¼­ 80ÃÊ¸¶´Ù 1¸¶¸® °ø°İ
-/// - ¸»¹úÁı ÆÄ±« ½Ã ´ÙÀ½ °¡±î¿î °÷¿¡¼­ ´©Àû °ø°İ (1¸¶¸® Ãß°¡)
+/// ë§ë²Œì§‘ì—ì„œ ê¿€ë²Œì§‘ì„ í–¥í•œ ì£¼ê¸°ì  ì›¨ì´ë¸Œ ê³µê²© ê´€ë¦¬
+/// - EnemyHiveë¥¼ ì‚¬ìš©í•˜ì—¬ í”Œë ˆì´ì–´ Hiveì™€ ì™„ì „ ë¶„ë¦¬
+/// - ê°€ì¥ ê°€ê¹Œìš´ ë§ë²Œì§‘ì—ì„œ 80ì´ˆë§ˆë‹¤ 1ë§ˆë¦¬ ê³µê²©
+/// - ë§ë²Œì§‘ íŒŒê´´ ì‹œ ë‹¤ìŒ ê°€ê¹Œìš´ ê³³ì—ì„œ ëˆ„ì  ê³µê²© (1ë§ˆë¦¬ ì¶”ê°€)
 /// </summary>
 public class WaspWaveManager : MonoBehaviour
 {
     public static WaspWaveManager Instance { get; private set; }
 
-    [Header("ÀÏ¹İ ¸»¹ú ¿şÀÌºê ¼³Á¤")]
-    public float normalWaveInterval = 80f; // 80ÃÊ¸¶´Ù
-    public int baseWaspCount = 1; // ±âº» 1¸¶¸®
+    [Header("ì¼ë°˜ ë§ë²Œ ì›¨ì´ë¸Œ ì„¤ì •")]
+    public float normalWaveInterval = 80f; // 80ì´ˆë§ˆë‹¤
+    public int baseWaspCount = 1; // ê¸°ë³¸ 1ë§ˆë¦¬
     
-    [Header("Àå¼ö¸»¹ú ¿şÀÌºê ¼³Á¤")]
-    public float bossWaveInterval = 180f; // 180ÃÊ¸¶´Ù
-    public int bossWaveNumber = 0; // ÇöÀç ¿şÀÌºê ¹øÈ£
+    [Header("ì¥ìˆ˜ë§ë²Œ ì›¨ì´ë¸Œ ì„¤ì •")]
+    public float bossWaveInterval = 180f; // 180ì´ˆë§ˆë‹¤
+    public int bossWaveNumber = 0; // í˜„ì¬ ì›¨ì´ë¸Œ ë²ˆí˜¸
     
-    private List<EnemyHive> enemyHives = new List<EnemyHive>(); // Hive ¡æ EnemyHive ?
-    private int destroyedHivesCount = 0; // ÆÄ±«µÈ ¸»¹úÁı ¼ö
+    private List<EnemyHive> enemyHives = new List<EnemyHive>(); // Hive â†’ EnemyHive ?
+    private int destroyedHivesCount = 0; // íŒŒê´´ëœ ë§ë²Œì§‘ ìˆ˜
     
     void Awake()
     {
@@ -39,18 +39,18 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Àû ÇÏÀÌºê µî·Ï (EnemyHive Å¸ÀÔ) ?
+    /// ì  í•˜ì´ë¸Œ ë“±ë¡ (EnemyHive íƒ€ì…) ?
     /// </summary>
     public void RegisterEnemyHive(EnemyHive hive)
     {
         if (hive == null || enemyHives.Contains(hive)) return;
         
         enemyHives.Add(hive);
-        Debug.Log($"[¿şÀÌºê] Àû ÇÏÀÌºê µî·Ï: {hive.name} at ({hive.q}, {hive.r})");
+        Debug.Log($"[ì›¨ì´ë¸Œ] ì  í•˜ì´ë¸Œ ë“±ë¡: {hive.name} at ({hive.q}, {hive.r})");
     }
 
     /// <summary>
-    /// Àû ÇÏÀÌºê Á¦°Å (ÆÄ±« ½Ã) ?
+    /// ì  í•˜ì´ë¸Œ ì œê±° (íŒŒê´´ ì‹œ) ?
     /// </summary>
     public void UnregisterEnemyHive(EnemyHive hive)
     {
@@ -58,21 +58,21 @@ public class WaspWaveManager : MonoBehaviour
         {
             enemyHives.Remove(hive);
             destroyedHivesCount++;
-            Debug.Log($"[¿şÀÌºê] Àû ÇÏÀÌºê ÆÄ±«! ÃÑ ÆÄ±«: {destroyedHivesCount}");
+            Debug.Log($"[ì›¨ì´ë¸Œ] ì  í•˜ì´ë¸Œ íŒŒê´´! ì´ íŒŒê´´: {destroyedHivesCount}");
         }
     }
 
     /// <summary>
-    /// ¿şÀÌºê °ø°İ ·çÆ¾
+    /// ì›¨ì´ë¸Œ ê³µê²© ë£¨í‹´
     /// </summary>
     IEnumerator WaveAttackRoutine()
     {
-        // °ÔÀÓ ½ÃÀÛ ÈÄ Ã¹ ¿şÀÌºê±îÁö ´ë±â
+        // ê²Œì„ ì‹œì‘ í›„ ì²« ì›¨ì´ë¸Œê¹Œì§€ ëŒ€ê¸°
         yield return new WaitForSeconds(normalWaveInterval);
 
         while (true)
         {
-            // ÀÏ¹İ ¸»¹ú ¿şÀÌºê
+            // ì¼ë°˜ ë§ë²Œ ì›¨ì´ë¸Œ
             LaunchNormalWaspWave();
             
             yield return new WaitForSeconds(normalWaveInterval);
@@ -80,32 +80,32 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀÏ¹İ ¸»¹ú ¿şÀÌºê ¹ßµ¿
+    /// ì¼ë°˜ ë§ë²Œ ì›¨ì´ë¸Œ ë°œë™
     /// </summary>
     void LaunchNormalWaspWave()
     {
-        // ÇÃ·¹ÀÌ¾î ÇÏÀÌºê Ã£±â
+        // í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ì°¾ê¸°
         Hive playerHive = FindNearestPlayerHive();
         if (playerHive == null)
         {
-            Debug.Log("[¿şÀÌºê] ÇÃ·¹ÀÌ¾î ÇÏÀÌºê°¡ ¾ø½À´Ï´Ù.");
+            Debug.Log("[ì›¨ì´ë¸Œ] í”Œë ˆì´ì–´ í•˜ì´ë¸Œê°€ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
-        // °¡Àå °¡±î¿î Àû ÇÏÀÌºê Ã£±â
+        // ê°€ì¥ ê°€ê¹Œìš´ ì  í•˜ì´ë¸Œ ì°¾ê¸°
         EnemyHive nearestEnemyHive = FindNearestEnemyHive(playerHive);
         if (nearestEnemyHive == null)
         {
-            Debug.Log("[¿şÀÌºê] Àû ÇÏÀÌºê°¡ ¾ø½À´Ï´Ù.");
+            Debug.Log("[ì›¨ì´ë¸Œ] ì  í•˜ì´ë¸Œê°€ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
-        // °ø°İÇÒ ¸»¹ú ¼ö = ±âº» 1¸¶¸® + ÆÄ±«µÈ ÇÏÀÌºê ¼ö
+        // ê³µê²©í•  ë§ë²Œ ìˆ˜ = ê¸°ë³¸ 1ë§ˆë¦¬ + íŒŒê´´ëœ í•˜ì´ë¸Œ ìˆ˜
         int waspCount = baseWaspCount + destroyedHivesCount;
         
-        Debug.Log($"[¿şÀÌºê] ÀÏ¹İ ¸»¹ú {waspCount}¸¶¸® °ø°İ ½ÃÀÛ!");
+        Debug.Log($"[ì›¨ì´ë¸Œ] ì¼ë°˜ ë§ë²Œ {waspCount}ë§ˆë¦¬ ê³µê²© ì‹œì‘!");
         
-        // ¸»¹ú »ı¼º ¹× °ø°İ ¸í·É
+        // ë§ë²Œ ìƒì„± ë° ê³µê²© ëª…ë ¹
         for (int i = 0; i < waspCount; i++)
         {
             SpawnAndAttackWasp(nearestEnemyHive, playerHive, false);
@@ -113,25 +113,25 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Àå¼ö¸»¹ú ¿şÀÌºê ¹ßµ¿ (¿ÜºÎ¿¡¼­ È£Ãâ)
+    /// ì¥ìˆ˜ë§ë²Œ ì›¨ì´ë¸Œ ë°œë™ (ì™¸ë¶€ì—ì„œ í˜¸ì¶œ)
     /// </summary>
     public void LaunchBossWaspWave()
     {
         Hive playerHive = FindNearestPlayerHive();
         if (playerHive == null) return;
 
-        // Àå¼ö¸»¹ú ÇÏÀÌºê Ã£±â (Æ¯Á¤ ÅÂ±×³ª ¼Ó¼ºÀ¸·Î ±¸ºĞ)
+        // ì¥ìˆ˜ë§ë²Œ í•˜ì´ë¸Œ ì°¾ê¸° (íŠ¹ì • íƒœê·¸ë‚˜ ì†ì„±ìœ¼ë¡œ êµ¬ë¶„)
         EnemyHive bossHive = FindBossHive();
         if (bossHive == null)
         {
-            Debug.Log("[¿şÀÌºê] Àå¼ö¸»¹ú ÇÏÀÌºê°¡ ¾ø½À´Ï´Ù.");
+            Debug.Log("[ì›¨ì´ë¸Œ] ì¥ìˆ˜ë§ë²Œ í•˜ì´ë¸Œê°€ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
         bossWaveNumber++;
         int bossCount = bossWaveNumber * 2; // 2, 4, 6, 8...
 
-        Debug.Log($"[¿şÀÌºê] Àå¼ö¸»¹ú ¿şÀÌºê {bossWaveNumber}: {bossCount}¸¶¸® °ø°İ!");
+        Debug.Log($"[ì›¨ì´ë¸Œ] ì¥ìˆ˜ë§ë²Œ ì›¨ì´ë¸Œ {bossWaveNumber}: {bossCount}ë§ˆë¦¬ ê³µê²©!");
 
         for (int i = 0; i < bossCount; i++)
         {
@@ -140,21 +140,21 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ¸»¹ú »ı¼º ¹× °ø°İ ¸í·É ?
+    /// ë§ë²Œ ìƒì„± ë° ê³µê²© ëª…ë ¹ ?
     /// </summary>
     void SpawnAndAttackWasp(EnemyHive fromHive, Hive targetHive, bool isBoss)
     {
         if (fromHive == null || targetHive == null) return;
 
-        // ¸»¹ú »ı¼º
-        GameObject waspPrefab = fromHive.waspPrefab; // workerPrefab ¡æ waspPrefab ?
+        // ë§ë²Œ ìƒì„±
+        GameObject waspPrefab = fromHive.waspPrefab; // workerPrefab â†’ waspPrefab ?
         if (waspPrefab == null)
         {
-            Debug.LogWarning("[¿şÀÌºê] ¸»¹ú ÇÁ¸®ÆÕÀÌ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning("[ì›¨ì´ë¸Œ] ë§ë²Œ í”„ë¦¬íŒ¹ì´ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
-        // ÇÏÀÌºê À§Ä¡¿¡¼­ ·£´ı »ı¼º
+        // í•˜ì´ë¸Œ ìœ„ì¹˜ì—ì„œ ëœë¤ ìƒì„±
         Vector3 spawnPos = TileHelper.GetRandomPositionInTile(fromHive.q, fromHive.r, 0.5f, 0.15f);
         GameObject waspObj = Instantiate(waspPrefab, spawnPos, Quaternion.identity);
         
@@ -164,40 +164,40 @@ public class WaspWaveManager : MonoBehaviour
             agent.SetPosition(fromHive.q, fromHive.r);
             agent.faction = Faction.Enemy;
             agent.canMove = true;
-            agent.homeHive = null; // EnemyHive´Â Hive°¡ ¾Æ´Ï¹Ç·Î null ?
+            agent.homeHive = null; // EnemyHiveëŠ” Hiveê°€ ì•„ë‹ˆë¯€ë¡œ null ?
 
-            // Àå¼ö¸»¹ú °­È­ (º¸½º)
+            // ì¥ìˆ˜ë§ë²Œ ê°•í™” (ë³´ìŠ¤)
             if (isBoss)
             {
                 var combat = waspObj.GetComponent<CombatUnit>();
                 if (combat != null)
                 {
-                    combat.maxHealth *= 2; // Ã¼·Â 2¹è
+                    combat.maxHealth *= 2; // ì²´ë ¥ 2ë°°
                     combat.health = combat.maxHealth;
-                    combat.attack = Mathf.RoundToInt(combat.attack * 1.5f); // °ø°İ·Â 1.5¹è
+                    combat.attack = Mathf.RoundToInt(combat.attack * 1.5f); // ê³µê²©ë ¥ 1.5ë°°
                 }
                 
-                // Å©±â Áõ°¡ (½Ã°¢Àû ±¸ºĞ)
+                // í¬ê¸° ì¦ê°€ (ì‹œê°ì  êµ¬ë¶„)
                 waspObj.transform.localScale *= 1.3f;
             }
 
-            // AI ¼³Á¤
+            // AI ì„¤ì •
             var enemyAI = waspObj.GetComponent<EnemyAI>();
             if (enemyAI == null)
             {
                 enemyAI = waspObj.AddComponent<EnemyAI>();
             }
 
-            enemyAI.visionRange = isBoss ? 5 : 3; // ½Ã¾ß ¹üÀ§
-            enemyAI.activityRange = isBoss ? 10 : fromHive.activityRange; // È°µ¿ ¹üÀ§ ?
-            enemyAI.attackRange = 0; // ±ÙÁ¢ ÀüÅõ
+            enemyAI.visionRange = isBoss ? 5 : 3; // ì‹œì•¼ ë²”ìœ„
+            enemyAI.activityRange = isBoss ? 10 : fromHive.activityRange; // í™œë™ ë²”ìœ„ ?
+            enemyAI.attackRange = 0; // ê·¼ì ‘ ì „íˆ¬
             enemyAI.showDebugLogs = false;
 
-            // Å¸°Ù ÇÏÀÌºê·Î ÀÌµ¿ ¸í·É
+            // íƒ€ê²Ÿ í•˜ì´ë¸Œë¡œ ì´ë™ ëª…ë ¹
             StartCoroutine(MoveToTargetHive(agent, targetHive));
         }
 
-        // ¸»¹ú »ı¼º Áï½Ã ¼û±è
+        // ë§ë²Œ ìƒì„± ì¦‰ì‹œ ìˆ¨ê¹€
         if (EnemyVisibilityController.Instance != null)
         {
             StartCoroutine(HideWaspOnSpawn(agent));
@@ -205,11 +205,11 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ¸»¹úÀ» Å¸°Ù ÇÏÀÌºê·Î ÀÌµ¿
+    /// ë§ë²Œì„ íƒ€ê²Ÿ í•˜ì´ë¸Œë¡œ ì´ë™
     /// </summary>
     IEnumerator MoveToTargetHive(UnitAgent wasp, Hive target)
     {
-        yield return null; // ÃÊ±âÈ­ ´ë±â
+        yield return null; // ì´ˆê¸°í™” ëŒ€ê¸°
 
         if (wasp == null || target == null) yield break;
 
@@ -229,13 +229,13 @@ public class WaspWaveManager : MonoBehaviour
             {
                 controller.agent = wasp;
                 controller.SetPath(path);
-                Debug.Log($"[¿şÀÌºê] ¸»¹úÀÌ ÇÃ·¹ÀÌ¾î ÇÏÀÌºê·Î ÀÌµ¿ ½ÃÀÛ!");
+                Debug.Log($"[ì›¨ì´ë¸Œ] ë§ë²Œì´ í”Œë ˆì´ì–´ í•˜ì´ë¸Œë¡œ ì´ë™ ì‹œì‘!");
             }
         }
     }
 
     /// <summary>
-    /// ¸»¹ú »ı¼º Áï½Ã ¼û±è
+    /// ë§ë²Œ ìƒì„± ì¦‰ì‹œ ìˆ¨ê¹€
     /// </summary>
     IEnumerator HideWaspOnSpawn(UnitAgent agent)
     {
@@ -248,7 +248,7 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Àå¼ö¸»¹ú ¿şÀÌºê ½ÃÀÛ (¿ÜºÎ È£Ãâ¿ë)
+    /// ì¥ìˆ˜ë§ë²Œ ì›¨ì´ë¸Œ ì‹œì‘ (ì™¸ë¶€ í˜¸ì¶œìš©)
     /// </summary>
     public void StartBossWaveRoutine()
     {
@@ -256,7 +256,7 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Àå¼ö¸»¹ú ¿şÀÌºê ·çÆ¾
+    /// ì¥ìˆ˜ë§ë²Œ ì›¨ì´ë¸Œ ë£¨í‹´
     /// </summary>
     IEnumerator BossWaveRoutine()
     {
@@ -270,7 +270,7 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// °¡Àå °¡±î¿î ÇÃ·¹ÀÌ¾î ÇÏÀÌºê Ã£±â
+    /// ê°€ì¥ ê°€ê¹Œìš´ í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ì°¾ê¸°
     /// </summary>
     Hive FindNearestPlayerHive()
     {
@@ -283,7 +283,7 @@ public class WaspWaveManager : MonoBehaviour
             var agent = hive.GetComponent<UnitAgent>();
             if (agent != null && agent.faction == Faction.Player)
             {
-                // Ã¹ ¹øÂ° ÇÃ·¹ÀÌ¾î ÇÏÀÌºê ¹İÈ¯
+                // ì²« ë²ˆì§¸ í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ë°˜í™˜
                 return hive;
             }
         }
@@ -292,13 +292,13 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ÇÏÀÌºê¿¡¼­ °¡Àå °¡±î¿î Àû ÇÏÀÌºê Ã£±â ?
+    /// í”Œë ˆì´ì–´ í•˜ì´ë¸Œì—ì„œ ê°€ì¥ ê°€ê¹Œìš´ ì  í•˜ì´ë¸Œ ì°¾ê¸° ?
     /// </summary>
     EnemyHive FindNearestEnemyHive(Hive playerHive)
     {
         if (playerHive == null || enemyHives.Count == 0) return null;
 
-        // null Á¦°Å
+        // null ì œê±°
         enemyHives.RemoveAll(h => h == null);
 
         EnemyHive nearest = null;
@@ -320,7 +320,7 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Àå¼ö¸»¹ú ÇÏÀÌºê Ã£±â (ÅÂ±×³ª ÀÌ¸§À¸·Î ±¸ºĞ) ?
+    /// ì¥ìˆ˜ë§ë²Œ í•˜ì´ë¸Œ ì°¾ê¸° (íƒœê·¸ë‚˜ ì´ë¦„ìœ¼ë¡œ êµ¬ë¶„) ?
     /// </summary>
     EnemyHive FindBossHive()
     {
@@ -328,8 +328,8 @@ public class WaspWaveManager : MonoBehaviour
         {
             if (hive == null) continue;
             
-            // ÀÌ¸§¿¡ "Boss" Æ÷ÇÔ ¶Ç´Â Æ¯Á¤ ÅÂ±×
-            if (hive.name.Contains("Boss") || hive.name.Contains("Àå¼ö"))
+            // ì´ë¦„ì— "Boss" í¬í•¨ ë˜ëŠ” íŠ¹ì • íƒœê·¸
+            if (hive.name.Contains("Boss") || hive.name.Contains("ì¥ìˆ˜"))
             {
                 return hive;
             }
@@ -339,7 +339,7 @@ public class WaspWaveManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç µî·ÏµÈ Àû ÇÏÀÌºê ¼ö (µğ¹ö±×¿ë)
+    /// í˜„ì¬ ë“±ë¡ëœ ì  í•˜ì´ë¸Œ ìˆ˜ (ë””ë²„ê·¸ìš©)
     /// </summary>
     public int GetEnemyHiveCount()
     {

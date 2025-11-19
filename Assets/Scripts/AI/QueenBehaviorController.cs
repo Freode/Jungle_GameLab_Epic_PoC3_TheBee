@@ -1,48 +1,48 @@
 using UnityEngine;
 
 /// <summary>
-/// ¿©¿Õ¹ú Àü¿ë Çàµ¿ ÄÁÆ®·Ñ·¯
-/// - ¿ìÅ¬¸¯À¸·Î ÀÌµ¿¸¸ °¡´É
-/// - ÀÌµ¿ Áß ´Ù¸¥ Å¸ÀÏ Å¬¸¯ ½Ã Áï½Ã °æ·Î Àç°è»ê
+/// ì—¬ì™•ë²Œ ì „ìš© í–‰ë™ ì»¨íŠ¸ë¡¤ëŸ¬
+/// - ìš°í´ë¦­ìœ¼ë¡œ ì´ë™ë§Œ ê°€ëŠ¥
+/// - ì´ë™ ì¤‘ ë‹¤ë¥¸ íƒ€ì¼ í´ë¦­ ì‹œ ì¦‰ì‹œ ê²½ë¡œ ì¬ê³„ì‚°
 /// </summary>
 public class QueenBehaviorController : UnitBehaviorController
 {
     void Update()
     {
-        // ±âº» Update´Â ½ÇÇàÇÏÁö ¾ÊÀ½ (Idle ÀÌµ¿, Àû °¨Áö µî ºÒÇÊ¿ä)
+        // ê¸°ë³¸ UpdateëŠ” ì‹¤í–‰í•˜ì§€ ì•ŠìŒ (Idle ì´ë™, ì  ê°ì§€ ë“± ë¶ˆí•„ìš”)
     }
 
     /// <summary>
-    /// ¿©¿Õ¹ú ÀÌµ¿ ¸í·É (¿ìÅ¬¸¯)
+    /// ì—¬ì™•ë²Œ ì´ë™ ëª…ë ¹ (ìš°í´ë¦­)
     /// </summary>
     public void MoveToTile(HexTile targetTile)
     {
         if (targetTile == null || agent == null || mover == null) return;
 
-        // ÇöÀç À§Ä¡¿¡¼­ ¸ñÇ¥ Å¸ÀÏ±îÁö °æ·Î Ã£±â
+        // í˜„ì¬ ìœ„ì¹˜ì—ì„œ ëª©í‘œ íƒ€ì¼ê¹Œì§€ ê²½ë¡œ ì°¾ê¸°
         var currentTile = TileManager.Instance.GetTile(agent.q, agent.r);
         if (currentTile == null) return;
 
-        // °æ·Î °è»ê
+        // ê²½ë¡œ ê³„ì‚°
         var path = Pathfinder.FindPath(currentTile, targetTile);
         if (path != null && path.Count > 0)
         {
-            // ÀÌµ¿ ÁßÀÌ¾îµµ Áï½Ã »õ °æ·Î·Î °»½Å ?
+            // ì´ë™ ì¤‘ì´ì–´ë„ ì¦‰ì‹œ ìƒˆ ê²½ë¡œë¡œ ê°±ì‹  ?
             mover.SetPath(path);
             
             currentTask = UnitTaskType.Move;
             this.targetTile = targetTile;
             
-            Debug.Log($"[¿©¿Õ¹ú] {agent.name} ÀÌµ¿ ¸í·É: ({currentTile.q}, {currentTile.r}) ¡æ ({targetTile.q}, {targetTile.r})");
+            Debug.Log($"[ì—¬ì™•ë²Œ] {agent.name} ì´ë™ ëª…ë ¹: ({currentTile.q}, {currentTile.r}) â†’ ({targetTile.q}, {targetTile.r})");
         }
         else
         {
-            Debug.LogWarning($"[¿©¿Õ¹ú] °æ·Î¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù: ({currentTile.q}, {currentTile.r}) ¡æ ({targetTile.q}, {targetTile.r})");
+            Debug.LogWarning($"[ì—¬ì™•ë²Œ] ê²½ë¡œë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: ({currentTile.q}, {currentTile.r}) â†’ ({targetTile.q}, {targetTile.r})");
         }
     }
 
     /// <summary>
-    /// Å¸ÀÏ ¸í·É (¿ìÅ¬¸¯) - ÀÌµ¿¸¸ ¼öÇà
+    /// íƒ€ì¼ ëª…ë ¹ (ìš°í´ë¦­) - ì´ë™ë§Œ ìˆ˜í–‰
     /// </summary>
     public override void IssueCommandToTile(HexTile tile)
     {

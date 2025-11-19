@@ -8,37 +8,37 @@ public class HexTile : MonoBehaviour
     public int q;
     public int r;
 
-    // ÁöÇü Å¸ÀÔ
+    // ì§€í˜• íƒ€ì…
     public TerrainType terrain;
 
     // resource amount on this tile (dynamic)
     public int resourceAmount = 0;
     private int initialResource = 0;
 
-    // Fog of war »óÅÂ
+    // Fog of war ìƒíƒœ
     public enum FogState { Hidden, Revealed, Visible }
     public FogState fogState = FogState.Hidden;
 
-    // Å¸ÀÏ À§ÀÇ EnemyHive (ÀÖÀ¸¸é ¼³Á¤) ?
+    // íƒ€ì¼ ìœ„ì˜ EnemyHive (ìˆìœ¼ë©´ ì„¤ì •) ?
     public EnemyHive enemyHive;
 
-    // ±âº» »ö»ó(ÁöÇü Å¸ÀÔ¿¡¼­ °¡Á®¿È)
+    // ê¸°ë³¸ ìƒ‰ìƒ(ì§€í˜• íƒ€ì…ì—ì„œ ê°€ì ¸ì˜´)
     private Color baseColor = Color.white;
 
-    // ÇöÀç/¸ñÇ¥ »ö»ó ¹× º¸°£ ¼Óµµ
+    // í˜„ì¬/ëª©í‘œ ìƒ‰ìƒ ë° ë³´ê°„ ì†ë„
     private Color currentColor = Color.white;
     private Color targetColor = Color.white;
     [SerializeField] private float colorLerpSpeed = 6f;
 
-    // »ö º¯È­ ½Ã »ç¿ëÇÒ °í°¥ »ö»ó
+    // ìƒ‰ ë³€í™” ì‹œ ì‚¬ìš©í•  ê³ ê°ˆ ìƒ‰ìƒ
     [SerializeField] private Color depletedColor = Color.gray;
 
-    // ·»´õ·¯ Ä³½Ã
+    // ë Œë”ëŸ¬ ìºì‹œ
     private Renderer cachedRenderer;
     private SpriteRenderer cachedSprite;
     private MaterialPropertyBlock mpb;
 
-    // 6°³ÀÇ ÀÌ¿ô ¹æÇâ (pointy-top axial)
+    // 6ê°œì˜ ì´ì›ƒ ë°©í–¥ (pointy-top axial)
     public static readonly Vector2Int[] NeighborDirections = new Vector2Int[]
     {
         new Vector2Int(+1, 0),
@@ -106,13 +106,13 @@ public class HexTile : MonoBehaviour
         UpdateTargetColor();
     }
 
-    // ÅëÇÕµÈ »ö»ó ¾÷µ¥ÀÌÆ® ¸Ş¼­µå
+    // í†µí•©ëœ ìƒ‰ìƒ ì—…ë°ì´íŠ¸ ë©”ì„œë“œ
     void UpdateTargetColor()
     {
-        // 1´Ü°è: ±âº» Å¸ÀÏ »ö»ó °áÁ¤ (¸®¼Ò½º »óÅÂ ¹İ¿µ)
+        // 1ë‹¨ê³„: ê¸°ë³¸ íƒ€ì¼ ìƒ‰ìƒ ê²°ì • (ë¦¬ì†ŒìŠ¤ ìƒíƒœ ë°˜ì˜)
         Color tileColor = GetTileBaseColor();
         
-        // 2´Ü°è: Fog »óÅÂ¿¡ µû¶ó ÃÖÁ¾ »ö»ó °áÁ¤
+        // 2ë‹¨ê³„: Fog ìƒíƒœì— ë”°ë¼ ìµœì¢… ìƒ‰ìƒ ê²°ì •
         switch (fogState)
         {
             case FogState.Hidden:
@@ -132,7 +132,7 @@ public class HexTile : MonoBehaviour
         }
     }
 
-    // ¸®¼Ò½º »óÅÂ¸¦ ¹İ¿µÇÑ Å¸ÀÏÀÇ ±âº» »ö»ó °è»ê
+    // ë¦¬ì†ŒìŠ¤ ìƒíƒœë¥¼ ë°˜ì˜í•œ íƒ€ì¼ì˜ ê¸°ë³¸ ìƒ‰ìƒ ê³„ì‚°
     Color GetTileBaseColor()
     {
         if (terrain == null)
@@ -140,22 +140,22 @@ public class HexTile : MonoBehaviour
             return Color.white;
         }
 
-        // ¸®¼Ò½º°¡ Á¤ÀÇµÇÁö ¾ÊÀº Å¸ÀÏÀº ÁöÇü »ö»ó ±×´ë·Î ¹İÈ¯
+        // ë¦¬ì†ŒìŠ¤ê°€ ì •ì˜ë˜ì§€ ì•Šì€ íƒ€ì¼ì€ ì§€í˜• ìƒ‰ìƒ ê·¸ëŒ€ë¡œ ë°˜í™˜
         if (initialResource <= 0)
         {
             return baseColor;
         }
 
-        // ¸®¼Ò½º°¡ ³²¾ÆÀÖ´Â °æ¿ì
+        // ë¦¬ì†ŒìŠ¤ê°€ ë‚¨ì•„ìˆëŠ” ê²½ìš°
         if (resourceAmount > 0)
         {
             float t = (float)resourceAmount / (float)initialResource;
-            // t==1 => full resource => baseColor; t==0 => depletedColor¿¡ °¡±î¿ò
+            // t==1 => full resource => baseColor; t==0 => depletedColorì— ê°€ê¹Œì›€
             return Color.Lerp(depletedColor, baseColor, t);
         }
         else
         {
-            // ¸®¼Ò½º°¡ °í°¥µÈ °æ¿ì: normalTerrain »ö»ó »ç¿ë
+            // ë¦¬ì†ŒìŠ¤ê°€ ê³ ê°ˆëœ ê²½ìš°: normalTerrain ìƒ‰ìƒ ì‚¬ìš©
             var gm = GameManager.Instance;
             if (gm != null && gm.normalTerrain != null)
             {

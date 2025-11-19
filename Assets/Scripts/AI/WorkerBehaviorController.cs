@@ -1,21 +1,22 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// ÀÏ²Û ²Ü¹ú »óÅÂ
+/// ì¼ê¾¼ ê¿€ë²Œ ìƒíƒœ
 /// </summary>
 public enum WorkerState
 {
-    Idle,           // ´ë±â »óÅÂ
-    Moving,         // ÀÌµ¿ »óÅÂ
-    Gathering,      // ÀÚ¿ø Ã¤Ãë »óÅÂ
-    Attacking,      // °ø°İ »óÅÂ
-    FollowingQueen, // ¿©¿Õ¹ú ÂÑ´Â »óÅÂ
-    Scouting        // Á¤Âû »óÅÂ
+    Idle,
+    Moving,
+    Gathering,
+    Attacking,
+    FollowingQueen,
+    Scouting
 }
 
 /// <summary>
-/// ÀÏ²Û ²Ü¹ú Àü¿ë Çàµ¿ ÄÁÆ®·Ñ·¯ (State Machine)
+/// ì¼ê¾¼ ê¿€ë²Œ ì „ìš© í–‰ë™ ì»¨íŠ¸ë¡¤ëŸ¬ (State Machine)
 /// </summary>
 public class WorkerBehaviorController : UnitBehaviorController
 {
@@ -32,7 +33,9 @@ public class WorkerBehaviorController : UnitBehaviorController
     [SerializeField] private float workerEnemyDetectionInterval = 0.2f;
     
     private Coroutine currentStateCoroutine = null;
+    private List<Coroutine> activeCoroutines = new List<Coroutine>(); // âœ… ì‹¤í–‰ ì¤‘ì¸ ëª¨ë“  ì½”ë£¨í‹´ ì¶”ì 
     private bool isCarryingResource = false;
+    private HexTile lastGatherTile = null; // âœ… ë§ˆì§€ë§‰ ìì› ì±„ì·¨ íƒ€ì¼
     
     protected override void Start()
     {
@@ -41,24 +44,41 @@ public class WorkerBehaviorController : UnitBehaviorController
     }
 
     /// <summary>
-    /// »óÅÂ ÀüÈ¯
+    /// ìƒíƒœ ì „í™˜
     /// </summary>
     void TransitionToState(WorkerState newState)
     {
+        // âœ… 1. ì´ì „ ìƒíƒœì˜ ëª¨ë“  ì½”ë£¨í‹´ ì¤‘ì§€
         if (currentStateCoroutine != null)
         {
             StopCoroutine(currentStateCoroutine);
             currentStateCoroutine = null;
         }
+        
+        foreach (var coroutine in activeCoroutines)
+        {
+            if (coroutine != null)
+            {
+                StopCoroutine(coroutine);
+            }
+        }
+        activeCoroutines.Clear();
 
         if (currentState != WorkerState.Attacking)
         {
             previousState = currentState;
         }
 
+        // âœ… 3. ì—¬ì™•ë²Œ ì«“ê¸°/ì •ì°° ìƒíƒœë¡œ ì „í™˜ ì‹œ ìì› ì±„ì·¨ íƒ€ì¼ ì´ˆê¸°í™”
+        if (newState == WorkerState.FollowingQueen || newState == WorkerState.Scouting)
+        {
+            lastGatherTile = null;
+            Debug.Log($"[Worker State] ìì› ì±„ì·¨ íƒ€ì¼ ì´ˆê¸°í™” (ìƒíƒœ: {newState})");
+        }
+
         currentState = newState;
 
-        Debug.Log($"[Worker State] {agent.name}: {previousState} ¡æ {currentState}");
+        Debug.Log($"[Worker State] {agent.name}: {previousState} â†’ {currentState}");
 
         switch (newState)
         {
@@ -89,7 +109,6 @@ public class WorkerBehaviorController : UnitBehaviorController
     {
         while (currentState == WorkerState.Idle)
         {
-            // 1. Àû °¨Áö
             var enemy = FindNearbyEnemy(1);
             if (enemy != null)
             {
@@ -98,7 +117,6 @@ public class WorkerBehaviorController : UnitBehaviorController
                 yield break;
             }
 
-            // 2. ÀÚ¿ø µé°í ÀÖÀ¸¸é ÇÏÀÌºê·Î ÀÌµ¿
             if (isCarryingResource && agent.homeHive != null)
             {
                 targetTile = TileManager.Instance.GetTile(agent.homeHive.q, agent.homeHive.r);
@@ -106,13 +124,11 @@ public class WorkerBehaviorController : UnitBehaviorController
                 yield break;
             }
 
-            // 3. ·£´ı ´ë±â ÈÄ Å¸ÀÏ ³» ·£´ı ÀÌµ¿
             float waitTime = Random.Range(idleRandomMoveMinDelay, idleRandomMoveMaxDelay);
             float elapsed = 0f;
 
             while (elapsed < waitTime)
             {
-                // ´ë±â Áß Àû °¨Áö
                 enemy = FindNearbyEnemy(1);
                 if (enemy != null)
                 {
@@ -125,11 +141,11 @@ public class WorkerBehaviorController : UnitBehaviorController
                 yield return null;
             }
 
-            // Å¸ÀÏ ³» ·£´ı À§Ä¡·Î ÀÌµ¿
             if (agent != null)
             {
                 Vector3 randomPos = TileHelper.GetRandomPositionInTile(agent.q, agent.r, agent.hexSize, 0.3f);
-                StartCoroutine(MoveToPositionSmooth(randomPos, 0.5f));
+                var moveCoroutine = StartCoroutine(MoveToPositionSmooth(randomPos, 0.5f));
+                activeCoroutines.Add(moveCoroutine);
             }
 
             yield return new WaitForSeconds(0.5f);
@@ -144,47 +160,64 @@ public class WorkerBehaviorController : UnitBehaviorController
             yield break;
         }
 
-        // °æ·Î Ã£±â
         var currentTile = TileManager.Instance.GetTile(agent.q, agent.r);
         var path = Pathfinder.FindPath(currentTile, targetTile);
 
         if (path == null || path.Count == 0)
         {
-            Debug.LogWarning($"[Worker State] °æ·Î ¾øÀ½: ({currentTile.q}, {currentTile.r}) ¡æ ({targetTile.q}, {targetTile.r})");
+            Debug.LogWarning($"[Worker State] ê²½ë¡œ ì—†ìŒ: ({currentTile.q}, {currentTile.r}) â†’ ({targetTile.q}, {targetTile.r})");
             TransitionToState(WorkerState.Idle);
             yield break;
         }
 
         mover.SetPath(path);
 
-        // ¸ñÀûÁö µµ´Ş ´ë±â
-        Vector3 destination = TileHelper.HexToWorld(targetTile.q, targetTile.r, agent.hexSize);
+        // âœ… íƒ€ì¼ ì¢Œí‘œ ê¸°ë°˜ìœ¼ë¡œ ë„ì°© ì²´í¬ (ëœë¤ ìœ„ì¹˜ ë•Œë¬¸ì— World ì¢Œí‘œëŠ” ë¶€ì •í™•)
         float timeout = 15f;
         float elapsed = 0f;
+        float checkInterval = 0.1f; // 0.1ì´ˆë§ˆë‹¤ ì²´í¬
+        float lastCheckTime = 0f;
 
-        while (Vector3.Distance(transform.position, destination) > 0.2f && elapsed < timeout)
+        while (elapsed < timeout)
         {
-            //// ÀÌµ¿ Áß Àû °¨Áö
-            //var enemy = FindNearbyEnemy(1);
-            //if (enemy != null)
-            //{
-            //    targetUnit = enemy;
-            //    TransitionToState(WorkerState.Attacking);
-            //    yield break;
-            //}
+            // âœ… íƒ€ì¼ ì¢Œí‘œê°€ ëª©í‘œ íƒ€ì¼ê³¼ ê°™ìœ¼ë©´ ë„ì°©
+            if (agent.q == targetTile.q && agent.r == targetTile.r)
+            {
+                Debug.Log($"[Worker State] ëª©í‘œ íƒ€ì¼ ë„ì°©: ({targetTile.q}, {targetTile.r})");
+                break;
+            }
+
+            // âœ… ì´ë™ì´ ì™„ì „íˆ ë©ˆì·„ëŠ”ì§€ ì²´í¬ (ê²½ë¡œ íê°€ ë¹„ê³  ì´ë™ ì¤‘ì´ ì•„ë‹˜)
+            if (!mover.IsMoving())
+            {
+                // íƒ€ì¼ ì¢Œí‘œëŠ” ëª©í‘œì™€ ë‹¤ë¥¸ë° ì´ë™ì´ ë©ˆì·„ìœ¼ë©´ íƒ€ì„ì•„ì›ƒ
+                if (agent.q != targetTile.q || agent.r != targetTile.r)
+                {
+                    Debug.LogWarning($"[Worker State] ì´ë™ ì¤‘ë‹¨ë¨: í˜„ì¬ ({agent.q}, {agent.r}), ëª©í‘œ ({targetTile.q}, {targetTile.r})");
+                    break;
+                }
+            }
 
             elapsed += Time.deltaTime;
+            lastCheckTime += Time.deltaTime;
+            
+            // ì²´í¬ ê°„ê²©ë§ˆë‹¤ ë¡œê·¸
+            if (lastCheckTime >= checkInterval)
+            {
+                lastCheckTime = 0f;
+                // Debug.Log($"[Worker State] ì´ë™ ì¤‘: ({agent.q}, {agent.r}) â†’ ({targetTile.q}, {targetTile.r}), IsMoving: {mover.IsMoving()}");
+            }
+            
             yield return null;
         }
 
         if (elapsed >= timeout)
         {
-            Debug.LogWarning($"[Worker State] ÀÌµ¿ Å¸ÀÓ¾Æ¿ô");
+            Debug.LogWarning($"[Worker State] ì´ë™ íƒ€ì„ì•„ì›ƒ: í˜„ì¬ ({agent.q}, {agent.r}), ëª©í‘œ ({targetTile.q}, {targetTile.r})");
             TransitionToState(WorkerState.Idle);
             yield break;
         }
 
-        // µµÂø ÈÄ Ã³¸®
         var finalEnemy = FindNearbyEnemy(1);
         if (finalEnemy != null)
         {
@@ -193,20 +226,47 @@ public class WorkerBehaviorController : UnitBehaviorController
             yield break;
         }
 
-        // ÀÚ¿ø µé°í ÀÖ°í ÇÏÀÌºê µµÂø
+        // âœ… 4. ìì› ë“¤ê³  í•˜ì´ë¸Œ ë„ì°© ì‹œ ì²˜ë¦¬
         if (isCarryingResource && agent.homeHive != null &&
             targetTile.q == agent.homeHive.q && targetTile.r == agent.homeHive.r)
         {
-            // ÀÚ¿ø Àü´Ş
+            // ìì› ì „ë‹¬
             if (HiveManager.Instance != null)
             {
                 HiveManager.Instance.AddResources(gatherAmount);
-                Debug.Log($"[Worker State] ÀÚ¿ø Àü´Ş: {gatherAmount}");
+                Debug.Log($"[Worker State] ìì› ì „ë‹¬: {gatherAmount}");
             }
             isCarryingResource = false;
+
+            // âœ… 4. ì´ì „ ì±„ì·¨ íƒ€ì¼ì´ ìˆê³  í™œë™ ë²”ìœ„ ë‚´ë©´ ë³µê·€
+            if (lastGatherTile != null && lastGatherTile.resourceAmount > 0)
+            {
+                int distanceToHive = Pathfinder.AxialDistance(
+                    agent.homeHive.q, agent.homeHive.r,
+                    lastGatherTile.q, lastGatherTile.r
+                );
+
+                if (distanceToHive <= activityRadius)
+                {
+                    Debug.Log($"[Worker State] ì´ì „ ì±„ì·¨ íƒ€ì¼ë¡œ ë³µê·€: í•˜ì´ë¸Œ ({agent.homeHive.q}, {agent.homeHive.r}) â†’ ìì› ({lastGatherTile.q}, {lastGatherTile.r})");
+                    
+                    // âœ… ìˆœê°„ ì´ë™ ë°©ì§€: agent.SetPosition() í˜¸ì¶œí•˜ì§€ ì•ŠìŒ
+                    // UnitControllerê°€ ì´ë¯¸ agent ìœ„ì¹˜ë¥¼ ì—…ë°ì´íŠ¸í–ˆìœ¼ë¯€ë¡œ
+                    // ë‹¨ìˆœíˆ targetTileë§Œ ì„¤ì •í•˜ê³  ê²½ë¡œ ì¬ê³„ì‚°
+                    
+                    targetTile = lastGatherTile;
+                    TransitionToState(WorkerState.Moving);
+                    yield break;
+                }
+                else
+                {
+                    Debug.Log($"[Worker State] ì´ì „ ì±„ì·¨ íƒ€ì¼ì´ í™œë™ ë²”ìœ„ ë°–: {distanceToHive}/{activityRadius}");
+                    lastGatherTile = null;
+                }
+            }
         }
 
-        // ÀÚ¿ø ÀÖ´Â Å¸ÀÏ + ÇÏÀÌºê Á¸Àç
+        // ìì› ìˆëŠ” íƒ€ì¼ + í•˜ì´ë¸Œ ì¡´ì¬
         if (targetTile.resourceAmount > 0 && agent.homeHive != null && !agent.homeHive.isRelocating)
         {
             TransitionToState(WorkerState.Gathering);
@@ -224,7 +284,11 @@ public class WorkerBehaviorController : UnitBehaviorController
             yield break;
         }
 
-        Debug.Log($"[Worker State] ÀÚ¿ø Ã¤Ãë ½ÃÀÛ: ({targetTile.q}, {targetTile.r})");
+        // âœ… 2. í˜„ì¬ ìì› ì±„ì·¨ íƒ€ì¼ ê¸°ì–µ
+        lastGatherTile = targetTile;
+        Debug.Log($"[Worker State] ìì› ì±„ì·¨ íƒ€ì¼ ì €ì¥: ({lastGatherTile.q}, {lastGatherTile.r})");
+
+        Debug.Log($"[Worker State] ìì› ì±„ì·¨ ì‹œì‘: ({targetTile.q}, {targetTile.r})");
 
         float elapsed = 0f;
         while (elapsed < gatheringDuration)
@@ -240,18 +304,37 @@ public class WorkerBehaviorController : UnitBehaviorController
             if (elapsed % 0.5f < 0.1f)
             {
                 Vector3 randomPos = TileHelper.GetRandomPositionInTile(targetTile.q, targetTile.r, agent.hexSize, 0.2f);
-                StartCoroutine(MoveToPositionSmooth(randomPos, 0.3f));
+                var moveCoroutine = StartCoroutine(MoveToPositionSmooth(randomPos, 0.3f));
+                activeCoroutines.Add(moveCoroutine);
             }
 
             elapsed += Time.deltaTime;
             yield return null;
         }
 
+        // âœ… 5. ìì› ì±„ì·¨ ì‹œë„
         int gathered = targetTile.TakeResource(gatherAmount);
         if (gathered > 0)
         {
             isCarryingResource = true;
-            Debug.Log($"[Worker State] ÀÚ¿ø Ã¤Ãë ¿Ï·á: {gathered}");
+            Debug.Log($"[Worker State] ìì› ì±„ì·¨ ì™„ë£Œ: {gathered}");
+        }
+        else
+        {
+            // âœ… 5. ìì› ì±„ì·¨ ì‹¤íŒ¨ (ìì›ëŸ‰ 0) - í•˜ì´ë¸Œë¡œ ë³µê·€
+            Debug.Log($"[Worker State] ìì› ì±„ì·¨ ì‹¤íŒ¨ (ìì› ì—†ìŒ), í•˜ì´ë¸Œë¡œ ë³µê·€");
+            lastGatherTile = null; // íƒ€ì¼ ì •ë³´ ì´ˆê¸°í™”
+            
+            if (agent.homeHive != null)
+            {
+                targetTile = TileManager.Instance.GetTile(agent.homeHive.q, agent.homeHive.r);
+                TransitionToState(WorkerState.Moving);
+            }
+            else
+            {
+                TransitionToState(WorkerState.Idle);
+            }
+            yield break;
         }
 
         if (agent.homeHive != null)
@@ -287,17 +370,16 @@ public class WorkerBehaviorController : UnitBehaviorController
             yield break;
         }
 
-        Debug.Log($"[Worker State] °ø°İ ½ÃÀÛ: {targetUnit.name}");
+        Debug.Log($"[Worker State] ê³µê²© ì‹œì‘: {targetUnit.name}");
 
         while (targetUnit != null && enemyCombat != null && enemyCombat.health > 0)
         {
-            // È°µ¿ ¹üÀ§ Ã¼Å©
             if (agent.homeHive != null)
             {
                 int distanceToHive = Pathfinder.AxialDistance(agent.homeHive.q, agent.homeHive.r, agent.q, agent.r);
                 if (distanceToHive > activityRadius)
                 {
-                    Debug.Log($"[Worker State] È°µ¿ ¹üÀ§ ¹ş¾î³²");
+                    Debug.Log($"[Worker State] í™œë™ ë²”ìœ„ ë²—ì–´ë‚¨");
                     targetTile = TileManager.Instance.GetTile(agent.homeHive.q, agent.homeHive.r);
                     TransitionToState(WorkerState.Moving);
                     yield break;
@@ -309,10 +391,12 @@ public class WorkerBehaviorController : UnitBehaviorController
                 bool attacked = myCombat.TryAttack(enemyCombat);
                 if (attacked)
                 {
-                    Debug.Log($"[Worker State] °ø°İ ¼º°ø: {myCombat.attack} µ¥¹ÌÁö");
+                    Debug.Log($"[Worker State] ê³µê²© ì„±ê³µ: {myCombat.attack} ë°ë¯¸ì§€");
                 }
 
-                yield return StartCoroutine(EvadeCoroutine());
+                var evadeCoroutine = StartCoroutine(EvadeCoroutine());
+                activeCoroutines.Add(evadeCoroutine);
+                yield return evadeCoroutine;
 
                 if (currentState == WorkerState.Attacking && targetUnit != null)
                 {
@@ -327,7 +411,7 @@ public class WorkerBehaviorController : UnitBehaviorController
             yield return null;
         }
 
-        Debug.Log($"[Worker State] °ø°İ Á¾·á, {previousState}·Î º¹±Í");
+        Debug.Log($"[Worker State] ê³µê²© ì¢…ë£Œ, {previousState}ë¡œ ë³µê·€");
         TransitionToState(previousState);
     }
 
@@ -343,7 +427,8 @@ public class WorkerBehaviorController : UnitBehaviorController
             if (elapsed % 0.3f < 0.1f)
             {
                 Vector3 evadePos = TileHelper.GetRandomPositionInTile(agent.q, agent.r, agent.hexSize, 0.4f);
-                StartCoroutine(MoveToPositionSmooth(evadePos, 0.2f));
+                var moveCoroutine = StartCoroutine(MoveToPositionSmooth(evadePos, 0.2f));
+                activeCoroutines.Add(moveCoroutine);
             }
 
             elapsed += Time.deltaTime;
@@ -360,11 +445,15 @@ public class WorkerBehaviorController : UnitBehaviorController
             yield break;
         }
 
-        Debug.Log($"[Worker State] ¿©¿Õ¹ú ÃßÀû ½ÃÀÛ");
+        Debug.Log($"[Worker State] ì—¬ì™•ë²Œ ì¶”ì  ì‹œì‘");
+
+        // âœ… 3. ì—¬ì™•ë²Œì˜ ì´ì „ ìœ„ì¹˜ ì €ì¥
+        int lastQueenQ = queen.q;
+        int lastQueenR = queen.r;
 
         while (currentState == WorkerState.FollowingQueen)
         {
-            // Àû °¨Áö
+            // ì  ê°ì§€
             var enemy = FindNearbyEnemy(1);
             if (enemy != null)
             {
@@ -373,7 +462,7 @@ public class WorkerBehaviorController : UnitBehaviorController
                 yield break;
             }
 
-            // ¿©¿Õ¹ú À§Ä¡ È®ÀÎ
+            // ì—¬ì™•ë²Œ ìœ„ì¹˜ í™•ì¸
             queen = FindQueenInScene();
             if (queen == null)
             {
@@ -381,24 +470,38 @@ public class WorkerBehaviorController : UnitBehaviorController
                 yield break;
             }
 
-            // ¿©¿Õ¹ú°ú °°Àº Å¸ÀÏÀÌ¸é ´ë±â
+            // âœ… 3. ì—¬ì™•ë²Œ ìœ„ì¹˜ê°€ ë³€ê²½ë˜ì—ˆëŠ”ì§€ ì²´í¬
+            bool queenMoved = (queen.q != lastQueenQ || queen.r != lastQueenR);
+            
+            if (queenMoved)
+            {
+                Debug.Log($"[Worker State] ì—¬ì™•ë²Œ ìœ„ì¹˜ ë³€ê²½ ê°ì§€: ({lastQueenQ}, {lastQueenR}) â†’ ({queen.q}, {queen.r})");
+                lastQueenQ = queen.q;
+                lastQueenR = queen.r;
+            }
+
+            // ì—¬ì™•ë²Œê³¼ ê°™ì€ íƒ€ì¼ì´ë©´ ëŒ€ê¸°
             if (agent.q == queen.q && agent.r == queen.r)
             {
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(0.5f); // âœ… ëŒ€ê¸° ì‹œê°„ ë‹¨ì¶• (1s â†’ 0.5s)
                 continue;
             }
 
-            // ¿©¿Õ¹ú À§Ä¡·Î ÀÌµ¿
-            var currentTile = TileManager.Instance.GetTile(agent.q, agent.r);
-            var queenTile = TileManager.Instance.GetTile(queen.q, queen.r);
-            var path = Pathfinder.FindPath(currentTile, queenTile);
-
-            if (path != null && path.Count > 0)
+            // âœ… 3. ì—¬ì™•ë²Œ ìœ„ì¹˜ê°€ ë³€ê²½ë˜ì—ˆê±°ë‚˜ ì•„ì§ ë„ì°©í•˜ì§€ ì•Šì•˜ìœ¼ë©´ ê²½ë¡œ ì¬ê³„ì‚°
+            if (queenMoved || !mover.IsMoving())
             {
-                mover.SetPath(path);
+                var currentTile = TileManager.Instance.GetTile(agent.q, agent.r);
+                var queenTile = TileManager.Instance.GetTile(queen.q, queen.r);
+                var path = Pathfinder.FindPath(currentTile, queenTile);
+
+                if (path != null && path.Count > 0)
+                {
+                    mover.SetPath(path);
+                    Debug.Log($"[Worker State] ì—¬ì™•ë²Œ ì¶”ì  ê²½ë¡œ ê°±ì‹ : ({agent.q}, {agent.r}) â†’ ({queen.q}, {queen.r})");
+                }
             }
 
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.3f); // âœ… ì²´í¬ ê°„ê²© ë‹¨ì¶• (1s â†’ 0.3s)
         }
     }
 
@@ -410,7 +513,7 @@ public class WorkerBehaviorController : UnitBehaviorController
             yield break;
         }
 
-        Debug.Log($"[Worker State] Á¤Âû ½ÃÀÛ: ({targetTile.q}, {targetTile.r})");
+        Debug.Log($"[Worker State] ì •ì°° ì‹œì‘: ({targetTile.q}, {targetTile.r})");
 
         var currentTile = TileManager.Instance.GetTile(agent.q, agent.r);
         var path = Pathfinder.FindPath(currentTile, targetTile);
@@ -419,14 +522,36 @@ public class WorkerBehaviorController : UnitBehaviorController
         {
             mover.SetPath(path);
 
-            Vector3 destination = TileHelper.HexToWorld(targetTile.q, targetTile.r, agent.hexSize);
+            // âœ… íƒ€ì¼ ì¢Œí‘œ ê¸°ë°˜ìœ¼ë¡œ ë„ì°© ì²´í¬
             float timeout = 15f;
             float elapsed = 0f;
 
-            while (Vector3.Distance(transform.position, destination) > 0.2f && elapsed < timeout)
+            while (elapsed < timeout)
             {
+                // âœ… íƒ€ì¼ ì¢Œí‘œê°€ ëª©í‘œì™€ ê°™ìœ¼ë©´ ë„ì°©
+                if (agent.q == targetTile.q && agent.r == targetTile.r)
+                {
+                    Debug.Log($"[Worker State] ì •ì°° ëª©í‘œ ë„ì°©: ({targetTile.q}, {targetTile.r})");
+                    break;
+                }
+
+                // âœ… ì´ë™ì´ ë©ˆì·„ëŠ”ì§€ ì²´í¬
+                if (!mover.IsMoving())
+                {
+                    if (agent.q != targetTile.q || agent.r != targetTile.r)
+                    {
+                        Debug.LogWarning($"[Worker State] ì •ì°° ì´ë™ ì¤‘ë‹¨: í˜„ì¬ ({agent.q}, {agent.r}), ëª©í‘œ ({targetTile.q}, {targetTile.r})");
+                        break;
+                    }
+                }
+
                 elapsed += Time.deltaTime;
                 yield return null;
+            }
+
+            if (elapsed >= timeout)
+            {
+                Debug.LogWarning($"[Worker State] ì •ì°° íƒ€ì„ì•„ì›ƒ");
             }
         }
 
@@ -456,7 +581,8 @@ public class WorkerBehaviorController : UnitBehaviorController
         }
 
         Vector3 randomPos = TileHelper.GetRandomPositionInTile(agent.q, agent.r, agent.hexSize, 0.3f);
-        StartCoroutine(MoveToPositionSmooth(randomPos, 0.5f));
+        var moveCoroutine = StartCoroutine(MoveToPositionSmooth(randomPos, 0.5f));
+        activeCoroutines.Add(moveCoroutine);
 
         yield return new WaitForSeconds(0.5f);
 
@@ -502,7 +628,7 @@ public class WorkerBehaviorController : UnitBehaviorController
 
         if (!agent.CanMoveToTile(tile.q, tile.r))
         {
-            Debug.Log($"[Worker State] È°µ¿ ¹üÀ§ ¹Û: ({tile.q}, {tile.r})");
+            Debug.Log($"[Worker State] í™œë™ ë²”ìœ„ ë°–: ({tile.q}, {tile.r})");
             return;
         }
 
@@ -534,7 +660,7 @@ public class WorkerBehaviorController : UnitBehaviorController
         targetTile = TileManager.Instance.GetTile(newHive.q, newHive.r);
         TransitionToState(WorkerState.Moving);
 
-        Debug.Log($"[Worker State] »õ ÇÏÀÌºê °Ç¼³ ¿Ï·á, ÀÌµ¿ ½ÃÀÛ");
+        Debug.Log($"[Worker State] ìƒˆ í•˜ì´ë¸Œ ê±´ì„¤ ì™„ë£Œ, ì´ë™ ì‹œì‘");
     }
 
     public void StartFollowingQueen()
@@ -550,6 +676,7 @@ public class WorkerBehaviorController : UnitBehaviorController
         targetTile = null;
         targetUnit = null;
         isCarryingResource = false;
+        lastGatherTile = null;
 
         if (mover != null)
         {

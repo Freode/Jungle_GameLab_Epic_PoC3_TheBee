@@ -34,7 +34,7 @@ public class TileHighlighter : MonoBehaviour
 
         if (hits2D.Length > 0)
         {
-            // Å¸ÀÏ Ã£±â
+            // íƒ€ì¼ ì°¾ê¸°
             foreach (var hit2 in hits2D)
             {
                 var tile = hit2.collider.GetComponentInParent<HexTile>();

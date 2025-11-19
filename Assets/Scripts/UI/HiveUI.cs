@@ -17,6 +17,6 @@ public class HiveUI : MonoBehaviour
         if (hiveManager == null || storedText == null) return;
         
         // Display player's total stored resources
-        storedText.text = $"<color=#00FF00>²Ü</color> : {hiveManager.playerStoredResources}";
+        storedText.text = $"<color=#00FF00>ê¿€</color> : {hiveManager.playerStoredResources}";
     }
 }

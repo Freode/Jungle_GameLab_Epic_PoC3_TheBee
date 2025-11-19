@@ -59,7 +59,7 @@ public class HexBoundaryHighlighter : MonoBehaviour
             return;
         }
 
-        // Enemy ÇÏÀÌºê´Â È°µ¿ ¹üÀ§ Ç¥½Ã ¾È ÇÔ
+        // Enemy í•˜ì´ë¸ŒëŠ” í™œë™ ë²”ìœ„ í‘œì‹œ ì•ˆ í•¨
         var agent = hive.GetComponent<UnitAgent>();
         if (agent != null && agent.faction == Faction.Enemy)
         {
@@ -217,12 +217,12 @@ public class HexBoundaryHighlighter : MonoBehaviour
             
             // Get the two corners that form this edge
             // Mapping:
-            // side 0: 30¡Æ ¡æ 330¡Æ   (corner 0 ¡æ corner 5)
-            // side 1: 330¡Æ ¡æ 270¡Æ  (corner 5 ¡æ corner 4)
-            // side 2: 270¡Æ ¡æ 210¡Æ  (corner 4 ¡æ corner 3)
-            // side 3: 210¡Æ ¡æ 150¡Æ  (corner 3 ¡æ corner 2)
-            // side 4: 150¡Æ ¡æ 90¡Æ   (corner 2 ¡æ corner 1)
-            // side 5: 90¡Æ ¡æ 30¡Æ    (corner 1 ¡æ corner 0)
+            // side 0: 30Â° â†’ 330Â°   (corner 0 â†’ corner 5)
+            // side 1: 330Â° â†’ 270Â°  (corner 5 â†’ corner 4)
+            // side 2: 270Â° â†’ 210Â°  (corner 4 â†’ corner 3)
+            // side 3: 210Â° â†’ 150Â°  (corner 3 â†’ corner 2)
+            // side 4: 150Â° â†’ 90Â°   (corner 2 â†’ corner 1)
+            // side 5: 90Â° â†’ 30Â°    (corner 1 â†’ corner 0)
             // Pattern: side i goes from corner (6-i)%6 to corner (5-i+6)%6
             int corner1 = (6 - cside2) % 6;
             int corner2 = (5 - cside2 + 6) % 6;
@@ -326,7 +326,7 @@ public class HexBoundaryHighlighter : MonoBehaviour
 
     Vector3 GetHexCorner(float size, int i)
     {
-        // use counter-clockwise ordering: angle = 60 * i + 30 (30¡Æ, 90¡Æ, 150¡Æ, 210¡Æ, 270¡Æ, 330¡Æ)
+        // use counter-clockwise ordering: angle = 60 * i + 30 (30Â°, 90Â°, 150Â°, 210Â°, 270Â°, 330Â°)
         // Pointy-top hexagon
         float angleDeg = 60f * i + 30f;
         float angleRad = Mathf.Deg2Rad * angleDeg;

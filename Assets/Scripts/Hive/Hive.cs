@@ -9,14 +9,14 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
 
     public GameObject workerPrefab;
     public float spawnInterval = 10f; // seconds
-    public int maxWorkers = 10; // ÇÃ·¹ÀÌ¾î ÇÏÀÌºê ±âº»°ª ?
+    public int maxWorkers = 10; // í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ê¸°ë³¸ê°’ ?
 
     // Deprecated: Use HiveManager.playerStoredResources instead
     // public int storedResources = 0;
 
     // Relocation state
     public bool isRelocating = false;
-    public UnitAgent queenBee; // ¿©¿Õ¹ú ÂüÁ¶ (ÀÌ¹Ì ¾À¿¡ Á¸Àç)
+    public UnitAgent queenBee; // ì—¬ì™•ë²Œ ì°¸ì¡° (ì´ë¯¸ ì”¬ì— ì¡´ì¬)
     
     private List<UnitAgent> workers = new List<UnitAgent>();
     private Coroutine spawnRoutine;
@@ -27,10 +27,10 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     public SOCommand[] hiveCommands; // All hive commands (including relocate)
     
     [Header("Debug")]
-    public bool showDebugLogs = false; // µğ¹ö±× ·Î±× Ç¥½Ã
+    public bool showDebugLogs = false; // ë””ë²„ê·¸ ë¡œê·¸ í‘œì‹œ
     
     [Header("UI")]
-    public TMPro.TextMeshProUGUI relocateTimerText; // ÀÌ»ç ÁØºñ Å¸ÀÌ¸Ó ÅØ½ºÆ®?
+    public TMPro.TextMeshProUGUI relocateTimerText; // ì´ì‚¬ ì¤€ë¹„ íƒ€ì´ë¨¸ í…ìŠ¤íŠ¸?
 
     void OnEnable()
     {
@@ -49,10 +49,10 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             HiveManager.Instance.RegisterHive(this);
         }
 
-        // ? ÇÃ·¹ÀÌ¾î ÇÏÀÌºê´Â WaspWaveManager¿¡ µî·ÏÇÏÁö ¾ÊÀ½
-        // (EnemyHive¸¸ µî·Ï)
+        // ? í”Œë ˆì´ì–´ í•˜ì´ë¸ŒëŠ” WaspWaveManagerì— ë“±ë¡í•˜ì§€ ì•ŠìŒ
+        // (EnemyHiveë§Œ ë“±ë¡)
         
-        // UI ÅØ½ºÆ® ÃÊ±âÈ­
+        // UI í…ìŠ¤íŠ¸ ì´ˆê¸°í™”
         if (relocateTimerText != null)
         {
             relocateTimerText.gameObject.SetActive(false);
@@ -76,7 +76,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             HiveManager.Instance.UnregisterHive(this);
         }
 
-        // ? ÇÃ·¹ÀÌ¾î ÇÏÀÌºê´Â WaspWaveManager¿¡ µî·Ï ÇØÁ¦ ºÒÇÊ¿ä
+        // ? í”Œë ˆì´ì–´ í•˜ì´ë¸ŒëŠ” WaspWaveManagerì— ë“±ë¡ í•´ì œ ë¶ˆí•„ìš”
     }
 
     public void Initialize(int q, int r)
@@ -86,39 +86,39 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         // Note: queenBee should be assigned externally when constructing the hive
         // The queen already exists in the scene
         
-        // ¿©¿Õ¹ú ºñÈ°¼ºÈ­ (ÇÏÀÌºê ¾ÈÀ¸·Î µé¾î°¨)
+        // ì—¬ì™•ë²Œ ë¹„í™œì„±í™” (í•˜ì´ë¸Œ ì•ˆìœ¼ë¡œ ë“¤ì–´ê°)
         if (queenBee != null)
         {
-            // ¿©¿Õ¹úÀ» ÇÏÀÌºê À§Ä¡·Î ÀÌµ¿
+            // ì—¬ì™•ë²Œì„ í•˜ì´ë¸Œ ìœ„ì¹˜ë¡œ ì´ë™
             queenBee.SetPosition(q, r);
             Vector3 hivePos = TileHelper.HexToWorld(q, r, queenBee.hexSize);
             queenBee.transform.position = hivePos;
             
-            //// ÀÌµ¿ ºÒ°¡´ÉÇÏ°Ô
+            //// ì´ë™ ë¶ˆê°€ëŠ¥í•˜ê²Œ
             //queenBee.canMove = false;
             
-            // ¿©¿Õ¹ú ¹«Àû »óÅÂ È°¼ºÈ­ ?
+            // ì—¬ì™•ë²Œ ë¬´ì  ìƒíƒœ í™œì„±í™” ?
             var queenCombat = queenBee.GetComponent<CombatUnit>();
             if (queenCombat != null)
             {
                 queenCombat.SetInvincible(true);
             }
             
-            // GameObject ÀÚÃ¼¸¦ ºñÈ°¼ºÈ­
+            // GameObject ìì²´ë¥¼ ë¹„í™œì„±í™”
             queenBee.gameObject.SetActive(false);
             
             if (showDebugLogs)
-                Debug.Log("[ÇÏÀÌºê ÃÊ±âÈ­] ¿©¿Õ¹ú ºñÈ°¼ºÈ­ (ÇÏÀÌºê ¾ÈÀ¸·Î µé¾î°¨) - ¹«Àû »óÅÂ È°¼ºÈ­");
+                Debug.Log("[í•˜ì´ë¸Œ ì´ˆê¸°í™”] ì—¬ì™•ë²Œ ë¹„í™œì„±í™” (í•˜ì´ë¸Œ ì•ˆìœ¼ë¡œ ë“¤ì–´ê°) - ë¬´ì  ìƒíƒœ í™œì„±í™”");
         }
         
-        // Apply upgrades: hive health (¸ÕÀú ¼³Á¤)
+        // Apply upgrades: hive health (ë¨¼ì € ì„¤ì •)
         var combat = GetComponent<CombatUnit>();
         if (combat != null && HiveManager.Instance != null)
         {
             combat.maxHealth = HiveManager.Instance.GetHiveMaxHealth();
-            combat.health = combat.maxHealth; // ÃÖ´ë Ã¼·ÂÀ¸·Î ¼³Á¤            
+            combat.health = combat.maxHealth; // ìµœëŒ€ ì²´ë ¥ìœ¼ë¡œ ì„¤ì •            
             if (showDebugLogs)
-                Debug.Log($"[ÇÏÀÌºê ÃÊ±âÈ­] Ã¼·Â ¼³Á¤: {combat.health}/{combat.maxHealth}");
+                Debug.Log($"[í•˜ì´ë¸Œ ì´ˆê¸°í™”] ì²´ë ¥ ì„¤ì •: {combat.health}/{combat.maxHealth}");
         }
         
         // Apply upgrades: max workers
@@ -127,24 +127,24 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             maxWorkers = HiveManager.Instance.GetMaxWorkers();
         }
         
-        // ±âÁ¸ ÀÏ²Û ¼ö Ä«¿îÆ® (¿©¿Õ¹ú Á¦¿Ü)
+        // ê¸°ì¡´ ì¼ê¾¼ ìˆ˜ ì¹´ìš´íŠ¸ (ì—¬ì™•ë²Œ ì œì™¸)
         int existingWorkerCount = 0;
         if (TileManager.Instance != null)
         {
-            // ÇÏÀÌºê ÀÚ½ÅÀÇ UnitAgent
+            // í•˜ì´ë¸Œ ìì‹ ì˜ UnitAgent
             var hiveAgent = GetComponent<UnitAgent>();
             
             foreach (var unit in TileManager.Instance.GetAllUnits())
             {
                 if (unit != null && unit.faction == Faction.Player && !unit.isQueen)
                 {
-                    // ÇÏÀÌºê ÀÚ½ÅÀº Á¦¿Ü
+                    // í•˜ì´ë¸Œ ìì‹ ì€ ì œì™¸
                     if (hiveAgent != null && unit == hiveAgent)
                     {
                         continue;
                     }
                     
-                    // Hive ÄÄÆ÷³ÍÆ®°¡ ÀÖ´Â À¯´ÖÀº Á¦¿Ü
+                    // Hive ì»´í¬ë„ŒíŠ¸ê°€ ìˆëŠ” ìœ ë‹›ì€ ì œì™¸
                     var unitHive = unit.GetComponent<Hive>();
                     if (unitHive != null)
                     {
@@ -153,17 +153,17 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                     
                     existingWorkerCount++;
                     
-                    // ±âÁ¸ ÀÏ²ÛÀ» workers ¸®½ºÆ®¿¡ Ãß°¡
+                    // ê¸°ì¡´ ì¼ê¾¼ì„ workers ë¦¬ìŠ¤íŠ¸ì— ì¶”ê°€
                     if (!workers.Contains(unit))
                     {
                         workers.Add(unit);
                         unit.homeHive = this;
                         
-                        // ¼öµ¿ ¸í·É ÇÃ·¡±× ÃÊ±âÈ­
+                        // ìˆ˜ë™ ëª…ë ¹ í”Œë˜ê·¸ ì´ˆê¸°í™”
                         unit.hasManualOrder = false;
                         unit.isFollowingQueen = false;
                         
-                        // UnitBehaviorController ÃÊ±âÈ­
+                        // UnitBehaviorController ì´ˆê¸°í™”
                         var behavior = unit.GetComponent<UnitBehaviorController>();
                         if (behavior != null)
                         {
@@ -175,7 +175,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         }
         
         if (showDebugLogs)
-            Debug.Log($"[ÇÏÀÌºê ÃÊ±âÈ­] ±âÁ¸ ÀÏ²Û ¼ö: {existingWorkerCount}, ÃÖ´ë ÀÏ²Û ¼ö: {maxWorkers}");
+            Debug.Log($"[í•˜ì´ë¸Œ ì´ˆê¸°í™”] ê¸°ì¡´ ì¼ê¾¼ ìˆ˜: {existingWorkerCount}, ìµœëŒ€ ì¼ê¾¼ ìˆ˜: {maxWorkers}");
         
         // start spawning
         if (spawnRoutine != null) StopCoroutine(spawnRoutine);
@@ -196,25 +196,25 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         {
             yield return new WaitForSeconds(spawnInterval);
             
-            // ÀÏ²Û ¸®½ºÆ® Á¤¸® (null Á¦°Å)
+            // ì¼ê¾¼ ë¦¬ìŠ¤íŠ¸ ì •ë¦¬ (null ì œê±°)
             workers.RemoveAll(w => w == null);
             
-            // ½Ç½Ã°£À¸·Î HiveManager¿¡¼­ ÃÖ´ë ÀÏ²Û ¼ö °¡Á®¿À±â ?
+            // ì‹¤ì‹œê°„ìœ¼ë¡œ HiveManagerì—ì„œ ìµœëŒ€ ì¼ê¾¼ ìˆ˜ ê°€ì ¸ì˜¤ê¸° ?
             if (HiveManager.Instance != null)
             {
                 int currentMaxWorkers = HiveManager.Instance.GetMaxWorkers();
                 
-                // maxWorkers ¾÷µ¥ÀÌÆ® (¾÷±×·¹ÀÌµå ¹İ¿µ) ?
+                // maxWorkers ì—…ë°ì´íŠ¸ (ì—…ê·¸ë ˆì´ë“œ ë°˜ì˜) ?
 //                 if (currentMaxWorkers != maxWorkers)
 //                 {
 //                     if (showDebugLogs)
-//                         Debug.Log($"[ÇÏÀÌºê] maxWorkers ¾÷µ¥ÀÌÆ®: {maxWorkers} ¡æ {currentMaxWorkers}");
+//                         Debug.Log($"[í•˜ì´ë¸Œ] maxWorkers ì—…ë°ì´íŠ¸: {maxWorkers} â†’ {currentMaxWorkers}");
                     
 //                     maxWorkers = currentMaxWorkers;
 //                 }
             }
             
-            // MaxWorkers Ã¼Å©
+            // MaxWorkers ì²´í¬
             if (!isRelocating && workers.Count < maxWorkers)
             {
                 SpawnWorker();
@@ -222,7 +222,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             else if (workers.Count >= maxWorkers)
             {
                 if (showDebugLogs)
-                    Debug.Log($"[ÇÏÀÌºê] ÃÖ´ë ÀÏ²Û ¼ö µµ´Ş: {workers.Count}/{maxWorkers}");
+                    Debug.Log($"[í•˜ì´ë¸Œ] ìµœëŒ€ ì¼ê¾¼ ìˆ˜ ë„ë‹¬: {workers.Count}/{maxWorkers}");
             }
         }
     }
@@ -231,14 +231,14 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     {
         if (workerPrefab == null) return;
         
-        // Ãß°¡ ¾ÈÀüÀåÄ¡: ÃÖ´ë ÀÏ²Û ¼ö Ã¼Å© ?
+        // ì¶”ê°€ ì•ˆì „ì¥ì¹˜: ìµœëŒ€ ì¼ê¾¼ ìˆ˜ ì²´í¬ ?
 //         if (workers.Count >= maxWorkers)
 //         {
-//             Debug.LogWarning($"[ÇÏÀÌºê] ÀÌ¹Ì ÃÖ´ë ÀÏ²Û ¼ö¿¡ µµ´ŞÇß½À´Ï´Ù: {workers.Count}/{maxWorkers}");
+//             Debug.LogWarning($"[í•˜ì´ë¸Œ] ì´ë¯¸ ìµœëŒ€ ì¼ê¾¼ ìˆ˜ì— ë„ë‹¬í–ˆìŠµë‹ˆë‹¤: {workers.Count}/{maxWorkers}");
 //             return;
 //         }
         
-        // Å¸ÀÏ ³»ºÎ ·£´ı À§Ä¡·Î »ı¼º
+        // íƒ€ì¼ ë‚´ë¶€ ëœë¤ ìœ„ì¹˜ë¡œ ìƒì„±
         Vector3 pos = TileHelper.GetRandomPositionInTile(q, r, 0.5f, 0.15f);
         
         var go = Instantiate(workerPrefab, pos, Quaternion.identity);
@@ -249,7 +249,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         agent.homeHive = this;
         agent.canMove = true;
         
-        // ÇÏÀÌºêÀÇ faction »ó¼Ó
+        // í•˜ì´ë¸Œì˜ faction ìƒì†
         var hiveAgent = GetComponent<UnitAgent>();
         if (hiveAgent != null)
         {
@@ -257,15 +257,15 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         }
         else
         {
-            agent.faction = Faction.Player; // ±âº»°ª
+            agent.faction = Faction.Player; // ê¸°ë³¸ê°’
         }
         
         agent.isQueen = false;
         workers.Add(agent);
         
-        Debug.Log($"[ÇÏÀÌºê ½ºÆù] ÀÏ²Û »ı¼º: {workers.Count}/{maxWorkers}");
+        Debug.Log($"[í•˜ì´ë¸Œ ìŠ¤í°] ì¼ê¾¼ ìƒì„±: {workers.Count}/{maxWorkers}");
         
-        // Apply upgrades to newly spawned worker (Player¸¸)
+        // Apply upgrades to newly spawned worker (Playerë§Œ)
         if (agent.faction == Faction.Player && HiveManager.Instance != null)
         {
             var combat = go.GetComponent<CombatUnit>();
@@ -289,7 +289,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             }
         }
         
-        // Enemy À¯´Ö¿¡ AI Ãß°¡
+        // Enemy ìœ ë‹›ì— AI ì¶”ê°€
         if (agent.faction == Faction.Enemy)
         {
             var enemyAI = go.GetComponent<EnemyAI>();
@@ -298,30 +298,30 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 enemyAI = go.AddComponent<EnemyAI>();
             }
             
-            // AI ¼³Á¤ (±âº» °ª)
-            enemyAI.visionRange = 1;        // ½Ã¾ß ¹üÀ§: 1Ä­
-            enemyAI.activityRange = 3;       // È°µ¿ ¹üÀ§: 3Ä­
-            enemyAI.attackRange = 0;         // °ø°İ ¹üÀ§: 0Ä­ (°°Àº Å¸ÀÏ)
+            // AI ì„¤ì • (ê¸°ë³¸ ê°’)
+            enemyAI.visionRange = 1;        // ì‹œì•¼ ë²”ìœ„: 1ì¹¸
+            enemyAI.activityRange = 3;       // í™œë™ ë²”ìœ„: 3ì¹¸
+            enemyAI.attackRange = 0;         // ê³µê²© ë²”ìœ„: 0ì¹¸ (ê°™ì€ íƒ€ì¼)
             enemyAI.showDebugLogs = false;
             
-            // Enemy À¯´Ö »ı¼º Áï½Ã °¡½Ã¼º Ã¼Å©ÇÏ¿© ¼û±è
+            // Enemy ìœ ë‹› ìƒì„± ì¦‰ì‹œ ê°€ì‹œì„± ì²´í¬í•˜ì—¬ ìˆ¨ê¹€
             if (EnemyVisibilityController.Instance != null)
             {
-                // ´ÙÀ½ ÇÁ·¹ÀÓ¿¡ °¡½Ã¼º ¾÷µ¥ÀÌÆ® (À¯´Ö ¿ÏÀü ÃÊ±âÈ­ ÈÄ)
+                // ë‹¤ìŒ í”„ë ˆì„ì— ê°€ì‹œì„± ì—…ë°ì´íŠ¸ (ìœ ë‹› ì™„ì „ ì´ˆê¸°í™” í›„)
                 StartCoroutine(HideEnemyOnSpawn(agent));
             }
         }
     }
 
     /// <summary>
-    /// Enemy »ı¼º Áï½Ã °¡½Ã¼º Ã¼Å©ÇÏ¿© ÇÃ·¹ÀÌ¾î ½Ã¾ß ¹ÛÀÌ¸é ¼û±è
+    /// Enemy ìƒì„± ì¦‰ì‹œ ê°€ì‹œì„± ì²´í¬í•˜ì—¬ í”Œë ˆì´ì–´ ì‹œì•¼ ë°–ì´ë©´ ìˆ¨ê¹€
     /// </summary>
     System.Collections.IEnumerator HideEnemyOnSpawn(UnitAgent agent)
     {
-        // ÇÑ ÇÁ·¹ÀÓ ´ë±â (Agent ¿ÏÀüÈ÷ ÃÊ±âÈ­)
+        // í•œ í”„ë ˆì„ ëŒ€ê¸° (Agent ì™„ì „íˆ ì´ˆê¸°í™”)
         yield return null;
         
-        // Áï½Ã °¡½Ã¼º ¾÷µ¥ÀÌÆ® ½ÇÇà
+        // ì¦‰ì‹œ ê°€ì‹œì„± ì—…ë°ì´íŠ¸ ì‹¤í–‰
         if (EnemyVisibilityController.Instance != null)
         {
             EnemyVisibilityController.Instance.ForceUpdateVisibility();
@@ -355,50 +355,50 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     }
 
     /// <summary>
-    /// ÇÏÀÌºê ÀÌ»ç ½ÃÀÛ (ÀÚ¿ø Ã¼Å©´Â SOCommand.IsAvailable¿¡¼­ ¿Ï·á)
+    /// í•˜ì´ë¸Œ ì´ì‚¬ ì‹œì‘ (ìì› ì²´í¬ëŠ” SOCommand.IsAvailableì—ì„œ ì™„ë£Œ)
     /// </summary>
     public void StartRelocation(int resourceCost)
     {
         if (isRelocating)
         {
-            Debug.LogWarning("ÀÌ¹Ì ÀÌ»ç ÁØºñ ÁßÀÔ´Ï´Ù.");
+            Debug.LogWarning("ì´ë¯¸ ì´ì‚¬ ì¤€ë¹„ ì¤‘ì…ë‹ˆë‹¤.");
             return;
         }
 
-        // ÀÚ¿ø Â÷°¨
+        // ìì› ì°¨ê°
         if (HiveManager.Instance != null)
         {
             if (!HiveManager.Instance.TrySpendResources(resourceCost))
             {
-                Debug.LogWarning($"[ÇÏÀÌºê ÀÌ»ç] ÀÚ¿ø Â÷°¨ ½ÇÆĞ: {resourceCost}");
+                Debug.LogWarning($"[í•˜ì´ë¸Œ ì´ì‚¬] ìì› ì°¨ê° ì‹¤íŒ¨: {resourceCost}");
                 return;
             }
-            Debug.Log($"[ÇÏÀÌºê ÀÌ»ç] ÀÚ¿ø Â÷°¨ ¼º°ø: {resourceCost}");
+            Debug.Log($"[í•˜ì´ë¸Œ ì´ì‚¬] ìì› ì°¨ê° ì„±ê³µ: {resourceCost}");
         }
 
         isRelocating = true;
 
-        // ÀÏ²Û »ı¼º ÁßÁö
+        // ì¼ê¾¼ ìƒì„± ì¤‘ì§€
         if (spawnRoutine != null)
         {
             StopCoroutine(spawnRoutine);
             spawnRoutine = null;
         }
 
-        // ¾Ë¸² Åä½ºÆ® Ç¥½Ã ?
+        // ì•Œë¦¼ í† ìŠ¤íŠ¸ í‘œì‹œ ?
         if (NotificationToast.Instance != null)
         {
-            NotificationToast.Instance.ShowMessage("ÀÌ»ç ÁØºñ. 10ÃÊ ÈÄ ¹úÁıÀÌ ÆÄ±«µË´Ï´Ù.", 3f);
+            NotificationToast.Instance.ShowMessage("ì´ì‚¬ ì¤€ë¹„. 10ì´ˆ í›„ ë²Œì§‘ì´ íŒŒê´´ë©ë‹ˆë‹¤.", 3f);
         }
 
-        // 10ÃÊ Ä«¿îÆ®´Ù¿î ½ÃÀÛ
+        // 10ì´ˆ ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘
         if (relocateRoutine != null)
         {
             StopCoroutine(relocateRoutine);
         }
         relocateRoutine = StartCoroutine(RelocationCountdown());
 
-        Debug.Log("[ÇÏÀÌºê ÀÌ»ç] ÀÌ»ç ÁØºñ ½ÃÀÛ! 10ÃÊ ÈÄ ÇÏÀÌºê°¡ ÆÄ±«µË´Ï´Ù.");
+        Debug.Log("[í•˜ì´ë¸Œ ì´ì‚¬] ì´ì‚¬ ì¤€ë¹„ ì‹œì‘! 10ì´ˆ í›„ í•˜ì´ë¸Œê°€ íŒŒê´´ë©ë‹ˆë‹¤.");
     }
 
     IEnumerator RelocationCountdown()
@@ -406,11 +406,11 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         float countdown = 10f;
         var combat = GetComponent<CombatUnit>();
         int initialHealth = combat != null ? combat.health : 0;
-        float healthDrainRate = initialHealth / countdown; // ÃÊ´ç °¨¼Ò·®
+        float healthDrainRate = initialHealth / countdown; // ì´ˆë‹¹ ê°ì†ŒëŸ‰
         
-        Debug.Log($"[ÇÏÀÌºê ÀÌ»ç] Ä«¿îÆ®´Ù¿î ½ÃÀÛ: {countdown}ÃÊ");
+        Debug.Log($"[í•˜ì´ë¸Œ ì´ì‚¬] ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘: {countdown}ì´ˆ");
         
-        // UI ÅØ½ºÆ® È°¼ºÈ­ ?
+        // UI í…ìŠ¤íŠ¸ í™œì„±í™” ?
         if (relocateTimerText != null)
         {
             relocateTimerText.gameObject.SetActive(true);
@@ -420,99 +420,99 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         {
             countdown -= Time.deltaTime;
             
-            // Ã¼·Â Á¡Áø °¨¼Ò
+            // ì²´ë ¥ ì ì§„ ê°ì†Œ
             if (combat != null)
             {
                 float drainAmount = healthDrainRate * Time.deltaTime;
                 combat.health = Mathf.Max(1, combat.health - Mathf.CeilToInt(drainAmount));
             }
             
-            // UI ÅØ½ºÆ® ¾÷µ¥ÀÌÆ® ?
+            // UI í…ìŠ¤íŠ¸ ì—…ë°ì´íŠ¸ ?
             if (relocateTimerText != null)
             {
                 int remainingSeconds = Mathf.CeilToInt(countdown);
-                relocateTimerText.text = $"ÀÌ»ç ÁØºñ Áß...\n{remainingSeconds}ÃÊ";
+                relocateTimerText.text = $"ì´ì‚¬ ì¤€ë¹„ ì¤‘...\n{remainingSeconds}ì´ˆ";
             }
             
-            // 1ÃÊ¸¶´Ù ·Î±× Ãâ·Â (µğ¹ö±×¿ë)
+            // 1ì´ˆë§ˆë‹¤ ë¡œê·¸ ì¶œë ¥ (ë””ë²„ê·¸ìš©)
             if (showDebugLogs && Mathf.FloorToInt(countdown) != Mathf.FloorToInt(countdown + Time.deltaTime))
             {
-                Debug.Log($"[ÇÏÀÌºê ÀÌ»ç] ³²Àº ½Ã°£: {Mathf.FloorToInt(countdown)}ÃÊ");
+                Debug.Log($"[í•˜ì´ë¸Œ ì´ì‚¬] ë‚¨ì€ ì‹œê°„: {Mathf.FloorToInt(countdown)}ì´ˆ");
             }
 
             yield return null;
         }
 
-        Debug.Log("[ÇÏÀÌºê ÀÌ»ç] Ä«¿îÆ®´Ù¿î ¿Ï·á! ÇÏÀÌºê ÆÄ±« ½ÃÀÛ");
+        Debug.Log("[í•˜ì´ë¸Œ ì´ì‚¬] ì¹´ìš´íŠ¸ë‹¤ìš´ ì™„ë£Œ! í•˜ì´ë¸Œ íŒŒê´´ ì‹œì‘");
         
-        // UI ÅØ½ºÆ® ºñÈ°¼ºÈ­ ?
+        // UI í…ìŠ¤íŠ¸ ë¹„í™œì„±í™” ?
         if (relocateTimerText != null)
         {
             relocateTimerText.gameObject.SetActive(false);
         }
         
-        // Countdown finished ÈÄ destroy this hive
+        // Countdown finished í›„ destroy this hive
         DestroyHive();
     }
 
     void DestroyHive()
     {
-        Debug.Log("[ÇÏÀÌºê ÆÄ±«] ÇÏÀÌºê°¡ ÆÄ±«µË´Ï´Ù.");
+        Debug.Log("[í•˜ì´ë¸Œ íŒŒê´´] í•˜ì´ë¸Œê°€ íŒŒê´´ë©ë‹ˆë‹¤.");
         
-        // °æ°è¼± Á¦°Å
+        // ê²½ê³„ì„  ì œê±°
         if (HexBoundaryHighlighter.Instance != null)
         {
             HexBoundaryHighlighter.Instance.Clear();
         }
         
-        // ¿©¿Õ¹ú ÀçÈ°¼ºÈ­ (ÇÏÀÌºê À§Ä¡¿¡¼­)
+        // ì—¬ì™•ë²Œ ì¬í™œì„±í™” (í•˜ì´ë¸Œ ìœ„ì¹˜ì—ì„œ)
         if (queenBee != null)
         {
             if (showDebugLogs)
-                Debug.Log($"[ÇÏÀÌºê ÆÄ±«] ¿©¿Õ¹ú À§Ä¡ ÃÊ±âÈ­ ½ÃÀÛ: ÇÏÀÌºê À§Ä¡ ({q}, {r})");
+                Debug.Log($"[í•˜ì´ë¸Œ íŒŒê´´] ì—¬ì™•ë²Œ ìœ„ì¹˜ ì´ˆê¸°í™” ì‹œì‘: í•˜ì´ë¸Œ ìœ„ì¹˜ ({q}, {r})");
             
-            // 1. ¿©¿Õ¹ú À§Ä¡¸¦ ÇÏÀÌºê Å¸ÀÏ·Î ¼³Á¤ (È°¼ºÈ­ Àü¿¡ ¸ÕÀú!)
+            // 1. ì—¬ì™•ë²Œ ìœ„ì¹˜ë¥¼ í•˜ì´ë¸Œ íƒ€ì¼ë¡œ ì„¤ì • (í™œì„±í™” ì „ì— ë¨¼ì €!)
             queenBee.SetPosition(q, r);
             
-            // 2. ¿ùµå À§Ä¡ °è»ê
+            // 2. ì›”ë“œ ìœ„ì¹˜ ê³„ì‚°
             Vector3 hivePos = TileHelper.HexToWorld(q, r, queenBee.hexSize);
             
-            // 3. Transform À§Ä¡ ¼³Á¤ (È°¼ºÈ­ Àü¿¡!)
+            // 3. Transform ìœ„ì¹˜ ì„¤ì • (í™œì„±í™” ì „ì—!)
             queenBee.transform.position = hivePos;
             
             if (showDebugLogs)
-                Debug.Log($"[ÇÏÀÌºê ÆÄ±«] ¿©¿Õ¹ú Transform À§Ä¡: {queenBee.transform.position}, Å¸ÀÏ ÁÂÇ¥: ({queenBee.q}, {queenBee.r})");
+                Debug.Log($"[í•˜ì´ë¸Œ íŒŒê´´] ì—¬ì™•ë²Œ Transform ìœ„ì¹˜: {queenBee.transform.position}, íƒ€ì¼ ì¢Œí‘œ: ({queenBee.q}, {queenBee.r})");
             
-            //// 4. ÀÌµ¿ °¡´ÉÇÏ°Ô ¼³Á¤
+            //// 4. ì´ë™ ê°€ëŠ¥í•˜ê²Œ ì„¤ì •
             //queenBee.canMove = true;
             
-            // 5. ¿©¿Õ¹ú ÇÃ·¡±× ÃÊ±âÈ­ ?
+            // 5. ì—¬ì™•ë²Œ í”Œë˜ê·¸ ì´ˆê¸°í™” ?
             queenBee.isFollowingQueen = false;
             queenBee.hasManualOrder = false;
-            queenBee.homeHive = null; // ÇÏÀÌºê ÂüÁ¶ Á¦°Å ?
+            queenBee.homeHive = null; // í•˜ì´ë¸Œ ì°¸ì¡° ì œê±° ?
             
-            // 6. UnitBehaviorController ÃÊ±âÈ­ ?
+            // 6. UnitBehaviorController ì´ˆê¸°í™” ?
             var queenBehavior = queenBee.GetComponent<UnitBehaviorController>();
             if (queenBehavior != null)
             {
-                queenBehavior.CancelCurrentTask(); // ¸ğµç ÀÛ¾÷ Ãë¼Ò
+                queenBehavior.CancelCurrentTask(); // ëª¨ë“  ì‘ì—… ì·¨ì†Œ
             }
             
-            //// 7. ·»´õ·¯ ÀçÈ°¼ºÈ­ (È°¼ºÈ­ Àü¿¡!)
+            //// 7. ë Œë”ëŸ¬ ì¬í™œì„±í™” (í™œì„±í™” ì „ì—!)
             //var queenRenderer = queenBee.GetComponent<Renderer>();
             //if (queenRenderer != null) queenRenderer.enabled = true;
             
             //var queenSprite = queenBee.GetComponent<SpriteRenderer>();
             //if (queenSprite != null) queenSprite.enabled = true;
             
-            //// 8. ÄÃ¶óÀÌ´õ ÀçÈ°¼ºÈ­ (Å¬¸¯ °¡´ÉÇÏ°Ô)
+            //// 8. ì»¬ë¼ì´ë” ì¬í™œì„±í™” (í´ë¦­ ê°€ëŠ¥í•˜ê²Œ)
             //var queenCollider2D = queenBee.GetComponent<Collider2D>();
             //if (queenCollider2D != null) queenCollider2D.enabled = true;
             
             //var queenCollider3D = queenBee.GetComponent<Collider>();
             //if (queenCollider3D != null) queenCollider3D.enabled = true;
             
-            // 9. ¿©¿Õ¹ú ¹«Àû »óÅÂ ÇØÁ¦
+            // 9. ì—¬ì™•ë²Œ ë¬´ì  ìƒíƒœ í•´ì œ
             var queenCombat = queenBee.GetComponent<CombatUnit>();
             if (queenCombat != null)
             {
@@ -520,37 +520,37 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             }
             
             if (showDebugLogs)
-                Debug.Log("[ÇÏÀÌºê ÆÄ±«] ¿©¿Õ¹ú ·»´õ·¯ ¹× ÄÃ¶óÀÌ´õ ÀçÈ°¼ºÈ­ ¿Ï·á - ¹«Àû »óÅÂ ÇØÁ¦");
+                Debug.Log("[í•˜ì´ë¸Œ íŒŒê´´] ì—¬ì™•ë²Œ ë Œë”ëŸ¬ ë° ì»¬ë¼ì´ë” ì¬í™œì„±í™” ì™„ë£Œ - ë¬´ì  ìƒíƒœ í•´ì œ");
             
-            // 10. GameObject ÀçÈ°¼ºÈ­ (¸¶Áö¸·¿¡!)
+            // 10. GameObject ì¬í™œì„±í™” (ë§ˆì§€ë§‰ì—!)
             queenBee.gameObject.SetActive(true);
             
             if (showDebugLogs)
-                Debug.Log($"[ÇÏÀÌºê ÆÄ±«] ¿©¿Õ¹ú È°¼ºÈ­ ¿Ï·á - À§Ä¡: ({queenBee.q}, {queenBee.r}), World: {queenBee.transform.position}");
+                Debug.Log($"[í•˜ì´ë¸Œ íŒŒê´´] ì—¬ì™•ë²Œ í™œì„±í™” ì™„ë£Œ - ìœ„ì¹˜: ({queenBee.q}, {queenBee.r}), World: {queenBee.transform.position}");
             
-            // 11. FogOfWar¿¡ µî·Ï (È°¼ºÈ­ ÈÄ)
+            // 11. FogOfWarì— ë“±ë¡ (í™œì„±í™” í›„)
             queenBee.RegisterWithFog();
             
-            //// 12. ¼±ÅÃ °¡´É »óÅÂ·Î ¸®¼Â
+            //// 12. ì„ íƒ ê°€ëŠ¥ ìƒíƒœë¡œ ë¦¬ì…‹
             //queenBee.SetSelected(false);
             
-            Debug.Log("[ÇÏÀÌºê ÆÄ±«] ¿©¿Õ¹ú ¿ÏÀü È°¼ºÈ­ ¿Ï·á - ÀÌµ¿ °¡´É »óÅÂ, ¸ğµç ÇÃ·¡±× ÃÊ±âÈ­");
+            Debug.Log("[í•˜ì´ë¸Œ íŒŒê´´] ì—¬ì™•ë²Œ ì™„ì „ í™œì„±í™” ì™„ë£Œ - ì´ë™ ê°€ëŠ¥ ìƒíƒœ, ëª¨ë“  í”Œë˜ê·¸ ì´ˆê¸°í™”");
         }
         else
         {
-            Debug.LogWarning("[ÇÏÀÌºê ÆÄ±«] ¿©¿Õ¹ú ÂüÁ¶°¡ ¾ø½À´Ï´Ù!");
+            Debug.LogWarning("[í•˜ì´ë¸Œ íŒŒê´´] ì—¬ì™•ë²Œ ì°¸ì¡°ê°€ ì—†ìŠµë‹ˆë‹¤!");
         }
         
-        // ÀÏ²ÛµéÀÌ ¿©¿Õ¹úÀ» µû¶ó´Ù´Ï°Ô ¼³Á¤
+        // ì¼ê¾¼ë“¤ì´ ì—¬ì™•ë²Œì„ ë”°ë¼ë‹¤ë‹ˆê²Œ ì„¤ì •
         foreach (var worker in workers)
         {
             if (worker != null)
             {
                 worker.isFollowingQueen = true;
                 worker.hasManualOrder = false;
-                worker.homeHive = null; // ÇÏÀÌºê ÂüÁ¶ Á¦°Å ?
+                worker.homeHive = null; // í•˜ì´ë¸Œ ì°¸ì¡° ì œê±° ?
                 
-                // WorkerBehaviorController°¡ ÀÖÀ¸¸é StartFollowingQueen È£Ãâ ?
+                // WorkerBehaviorControllerê°€ ìˆìœ¼ë©´ StartFollowingQueen í˜¸ì¶œ ?
                 var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
                 if (workerBehavior != null)
                 {
@@ -558,8 +558,8 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 }
                 else
                 {
-                    // ±âÁ¸ ·ÎÁ÷ (È£È¯¼º À¯Áö)
-                    // ÇöÀç ÀÛ¾÷ Ãë¼Ò
+                    // ê¸°ì¡´ ë¡œì§ (í˜¸í™˜ì„± ìœ ì§€)
+                    // í˜„ì¬ ì‘ì—… ì·¨ì†Œ
                     var behavior = worker.GetComponent<UnitBehaviorController>();
                     if (behavior != null)
                     {
@@ -568,17 +568,17 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 }
                 
                 if (showDebugLogs)
-                    Debug.Log($"[ÇÏÀÌºê ÆÄ±«] ÀÏ²Û {worker.name}ÀÌ(°¡) ¿©¿Õ¹ú ÃßÀû ½ÃÀÛ");
+                    Debug.Log($"[í•˜ì´ë¸Œ íŒŒê´´] ì¼ê¾¼ {worker.name}ì´(ê°€) ì—¬ì™•ë²Œ ì¶”ì  ì‹œì‘");
             }
         }
         
-        // HiveManager¿¡¼­ µî·Ï ÇØÁ¦
+        // HiveManagerì—ì„œ ë“±ë¡ í•´ì œ
         if (HiveManager.Instance != null)
         {
             HiveManager.Instance.UnregisterHive(this);
         }
         
-        // GameObject ÆÄ±«
+        // GameObject íŒŒê´´
         Destroy(gameObject);
     }
 
@@ -593,28 +593,49 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             worker.isFollowingQueen = false;
             worker.hasManualOrder = false;
             
-            // WorkerBehaviorController°¡ ÀÖÀ¸¸é OnHiveConstructed È£Ãâ ?
+            // âœ… 2. í•˜ì´ë¸Œì™€ ê°™ì€ íƒ€ì¼ì— ìˆì§€ ì•Šìœ¼ë©´ ì´ë™
+            bool isSameTile = (worker.q == q && worker.r == r);
+            
+            // WorkerBehaviorControllerê°€ ìˆìœ¼ë©´ OnHiveConstructed í˜¸ì¶œ âœ…
             var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
             if (workerBehavior != null)
             {
-                workerBehavior.OnHiveConstructed(this);
-                continue; // WorkerBehaviorController°¡ ÀÌµ¿ Ã³¸®
+                if (!isSameTile)
+                {
+                    workerBehavior.OnHiveConstructed(this);
+                    Debug.Log($"[í•˜ì´ë¸Œ ê±´ì„¤] {worker.name} í•˜ì´ë¸Œë¡œ ì´ë™ ì‹œì‘: ({worker.q}, {worker.r}) â†’ ({q}, {r})");
+                }
+                else
+                {
+                    // ì´ë¯¸ ê°™ì€ íƒ€ì¼ì— ìˆìœ¼ë©´ homeHiveë§Œ ì„¤ì •
+                    worker.homeHive = this;
+                    Debug.Log($"[í•˜ì´ë¸Œ ê±´ì„¤] {worker.name} ì´ë¯¸ í•˜ì´ë¸Œ íƒ€ì¼ì— ìœ„ì¹˜: ({q}, {r})");
+                }
+                continue;
             }
             
-            // ±âÁ¸ ·ÎÁ÷ (È£È¯¼º À¯Áö)
-            // Move worker to new hive location
-            var start = TileManager.Instance.GetTile(worker.q, worker.r);
-            var dest = TileManager.Instance.GetTile(q, r);
-            if (start != null && dest != null)
+            // ê¸°ì¡´ ë¡œì§ (í˜¸í™˜ì„± ìœ ì§€)
+            if (!isSameTile)
             {
-                var path = Pathfinder.FindPath(start, dest);
-                if (path != null)
+                // Move worker to new hive location
+                var start = TileManager.Instance.GetTile(worker.q, worker.r);
+                var dest = TileManager.Instance.GetTile(q, r);
+                if (start != null && dest != null)
                 {
-                    var ctrl = worker.GetComponent<UnitController>();
-                    if (ctrl == null) ctrl = worker.gameObject.AddComponent<UnitController>();
-                    ctrl.agent = worker;
-                    ctrl.SetPath(path);
+                    var path = Pathfinder.FindPath(start, dest);
+                    if (path != null)
+                    {
+                        var ctrl = worker.GetComponent<UnitController>();
+                        if (ctrl == null) ctrl = worker.gameObject.AddComponent<UnitController>();
+                        ctrl.agent = worker;
+                        ctrl.SetPath(path);
+                        Debug.Log($"[í•˜ì´ë¸Œ ê±´ì„¤] {worker.name} í•˜ì´ë¸Œë¡œ ì´ë™ (ê¸°ì¡´ ë¡œì§): ({worker.q}, {worker.r}) â†’ ({q}, {r})");
+                    }
                 }
+            }
+            else
+            {
+                Debug.Log($"[í•˜ì´ë¸Œ ê±´ì„¤] {worker.name} ì´ë¯¸ í•˜ì´ë¸Œ íƒ€ì¼ì— ìœ„ì¹˜ (ê¸°ì¡´ ë¡œì§): ({q}, {r})");
             }
         }
     }

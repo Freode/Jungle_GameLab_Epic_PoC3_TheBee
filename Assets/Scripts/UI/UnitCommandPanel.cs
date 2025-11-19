@@ -11,11 +11,11 @@ public class UnitCommandPanel : MonoBehaviour
     public RectTransform buttonContainer;
     public GameObject commandButtonPrefab; // prefab with Button + Image + Text
 
-    [Header("À¯´Ö Á¤º¸ UI")]
+    [Header("ìœ ë‹› ì •ë³´ UI")]
     public TextMeshProUGUI unitNameText;
     public TextMeshProUGUI unitHealthText;
     public TextMeshProUGUI unitAttackText;
-    public TextMeshProUGUI workerCountText; // ÀÏ²Û ¼ö Ç¥½Ã ?
+    public TextMeshProUGUI workerCountText; // ì¼ê¾¼ ìˆ˜ í‘œì‹œ ?
 
     private UnitAgent currentAgent;
 
@@ -34,7 +34,7 @@ public class UnitCommandPanel : MonoBehaviour
 
     void OnEnable()
     {
-        // ÀÚ¿ø º¯°æ ÀÌº¥Æ® ±¸µ¶
+        // ìì› ë³€ê²½ ì´ë²¤íŠ¸ êµ¬ë…
         if (HiveManager.Instance != null)
         {
             HiveManager.Instance.OnResourcesChanged += RefreshButtonStates;
@@ -43,7 +43,7 @@ public class UnitCommandPanel : MonoBehaviour
 
     void OnDisable()
     {
-        // ÀÚ¿ø º¯°æ ÀÌº¥Æ® ±¸µ¶ ÇØÁ¦
+        // ìì› ë³€ê²½ ì´ë²¤íŠ¸ êµ¬ë… í•´ì œ
         if (HiveManager.Instance != null)
         {
             HiveManager.Instance.OnResourcesChanged -= RefreshButtonStates;
@@ -55,7 +55,7 @@ public class UnitCommandPanel : MonoBehaviour
     {
         if (agent == null) return;
         
-        // ÀÌÀü agentÀÇ ÀÌº¥Æ® ±¸µ¶ ÇØÁ¦
+        // ì´ì „ agentì˜ ì´ë²¤íŠ¸ êµ¬ë… í•´ì œ
         if (currentAgent != null)
         {
             UnsubscribeFromEvents(currentAgent);
@@ -64,10 +64,10 @@ public class UnitCommandPanel : MonoBehaviour
         currentAgent = agent;
         if (panelRoot != null) panelRoot.SetActive(true);
         
-        // ÀÌº¥Æ® ±¸µ¶ ?
+        // ì´ë²¤íŠ¸ êµ¬ë… ?
         SubscribeToEvents(currentAgent);
         
-        // À¯´Ö Á¤º¸ Ç¥½Ã
+        // ìœ ë‹› ì •ë³´ í‘œì‹œ
         UpdateUnitInfo();
         
         RebuildCommands();
@@ -75,7 +75,7 @@ public class UnitCommandPanel : MonoBehaviour
 
     public void Hide()
     {
-        // ÀÌº¥Æ® ±¸µ¶ ÇØÁ¦ ?
+        // ì´ë²¤íŠ¸ êµ¬ë… í•´ì œ ?
         if (currentAgent != null)
         {
             UnsubscribeFromEvents(currentAgent);
@@ -86,7 +86,7 @@ public class UnitCommandPanel : MonoBehaviour
     }
 
     /// <summary>
-    /// À¯´Ö ÀÌº¥Æ® ±¸µ¶
+    /// ìœ ë‹› ì´ë²¤íŠ¸ êµ¬ë…
     /// </summary>
     void SubscribeToEvents(UnitAgent agent)
     {
@@ -110,7 +110,7 @@ public class UnitCommandPanel : MonoBehaviour
     }
 
     /// <summary>
-    /// À¯´Ö ÀÌº¥Æ® ±¸µ¶ ÇØÁ¦
+    /// ìœ ë‹› ì´ë²¤íŠ¸ êµ¬ë… í•´ì œ
     /// </summary>
     void UnsubscribeFromEvents(UnitAgent agent)
     {
@@ -137,7 +137,7 @@ public class UnitCommandPanel : MonoBehaviour
     {
         if (currentAgent == null)
         {
-            // Á¤º¸ Áö¿ò
+            // ì •ë³´ ì§€ì›€
             if (unitNameText != null) unitNameText.text = "";
             if (unitHealthText != null) unitHealthText.text = "";
             if (unitAttackText != null) unitAttackText.text = "";
@@ -145,27 +145,27 @@ public class UnitCommandPanel : MonoBehaviour
             return;
         }
 
-        // À¯´Ö ÀÌ¸§
+        // ìœ ë‹› ì´ë¦„
         string unitName = GetUnitName(currentAgent);
         if (unitNameText != null)
             unitNameText.text = unitName;
 
-        // ÇÏÀÌºêÀÎÁö È®ÀÎ
+        // í•˜ì´ë¸Œì¸ì§€ í™•ì¸
         var hive = currentAgent.GetComponent<Hive>();
         CombatUnit combat = null;
         
         if (hive != null)
         {
-            // ÇÏÀÌºêÀÎ °æ¿ì: ÇÏÀÌºê GameObjectÀÇ CombatUnit¸¸ Ç¥½Ã
+            // í•˜ì´ë¸Œì¸ ê²½ìš°: í•˜ì´ë¸Œ GameObjectì˜ CombatUnitë§Œ í‘œì‹œ
             combat = hive.GetComponent<CombatUnit>();
             
-            // Ã¼·Â Ç¥½Ã
+            // ì²´ë ¥ í‘œì‹œ
             if (combat != null && unitHealthText != null)
             {
                 unitHealthText.text = $"HP: {combat.health}/{combat.maxHealth}";
             }
             
-            // ÇÏÀÌºê´Â °ø°İ·Â Ç¥½Ã ¾È ÇÔ
+            // í•˜ì´ë¸ŒëŠ” ê³µê²©ë ¥ í‘œì‹œ ì•ˆ í•¨
             if (unitAttackText != null)
             {
                 unitAttackText.text = "";
@@ -173,27 +173,27 @@ public class UnitCommandPanel : MonoBehaviour
         }
         else
         {
-            // ÀÏ¹İ À¯´ÖÀÎ °æ¿ì: À¯´ÖÀÇ CombatUnit Ç¥½Ã
+            // ì¼ë°˜ ìœ ë‹›ì¸ ê²½ìš°: ìœ ë‹›ì˜ CombatUnit í‘œì‹œ
             combat = currentAgent.GetComponent<CombatUnit>();
             
-            // Ã¼·Â Ç¥½Ã
+            // ì²´ë ¥ í‘œì‹œ
             if (combat != null)
             {
                 if (unitHealthText != null)
                     unitHealthText.text = $"HP: {combat.health}/{combat.maxHealth}";
                 
-                // °ø°İ·Â Ç¥½Ã (0º¸´Ù Å¬ ¶§¸¸)
+                // ê³µê²©ë ¥ í‘œì‹œ (0ë³´ë‹¤ í´ ë•Œë§Œ)
                 if (unitAttackText != null)
                 {
                     if (combat.attack > 0)
-                        unitAttackText.text = $"°ø°İ·Â: {combat.attack}";
+                        unitAttackText.text = $"ê³µê²©ë ¥: {combat.attack}";
                     else
                         unitAttackText.text = "";
                 }
             }
             else
             {
-                // CombatUnitÀÌ ¾øÀ¸¸é ¼û±è
+                // CombatUnitì´ ì—†ìœ¼ë©´ ìˆ¨ê¹€
                 if (unitHealthText != null)
                     unitHealthText.text = "";
                 
@@ -202,16 +202,16 @@ public class UnitCommandPanel : MonoBehaviour
             }
         }
 
-        // ÀÏ²Û ¼ö Á¤º¸ ¾÷µ¥ÀÌÆ®
+        // ì¼ê¾¼ ìˆ˜ ì •ë³´ ì—…ë°ì´íŠ¸
         if (workerCountText != null)
         {
-            // ÇÃ·¹ÀÌ¾î ÇÏÀÌºêÀÎ °æ¿ì
+            // í”Œë ˆì´ì–´ í•˜ì´ë¸Œì¸ ê²½ìš°
             if (hive != null && currentAgent.faction == Faction.Player)
             {
                 int workerCount = hive.GetWorkers().Count;
-                workerCountText.text = $"ÀÏ²Û ¼ö: {workerCount}/{hive.maxWorkers}";
+                workerCountText.text = $"ì¼ê¾¼ ìˆ˜: {workerCount}/{hive.maxWorkers}";
             }
-            // ¿©¿Õ¹úÀÎ °æ¿ì (ÀüÃ¼ ÀÏ²Û ¼ö)
+            // ì—¬ì™•ë²Œì¸ ê²½ìš° (ì „ì²´ ì¼ê¾¼ ìˆ˜)
             else if (currentAgent.faction == Faction.Player && currentAgent.isQueen)
             {
                 int workerCount = 0;
@@ -220,70 +220,70 @@ public class UnitCommandPanel : MonoBehaviour
                     if (unit.faction == Faction.Player && !unit.isQueen)
                         workerCount++;
                 }
-                workerCountText.text = $"ÀÏ²Û ¼ö: {workerCount}";
+                workerCountText.text = $"ì¼ê¾¼ ìˆ˜: {workerCount}";
             }
             else
             {
-                workerCountText.text = ""; // ÀÏ¹İ À¯´ÖÀº ¼û±è
+                workerCountText.text = ""; // ì¼ë°˜ ìœ ë‹›ì€ ìˆ¨ê¹€
             }
         }
     }
 
     string GetUnitName(UnitAgent agent)
     {
-        if (agent == null) return "¾Ë ¼ö ¾øÀ½";
+        if (agent == null) return "ì•Œ ìˆ˜ ì—†ìŒ";
 
-        // ÇÏÀÌºê Ã¼Å© (ÇÃ·¹ÀÌ¾î Áø¿µ)
+        // í•˜ì´ë¸Œ ì²´í¬ (í”Œë ˆì´ì–´ ì§„ì˜)
         var hive = agent.GetComponent<Hive>();
         if (hive != null)
         {
             if (agent.faction == Faction.Player)
-                return "²Ü¹úÁı";
+                return "ê¿€ë²Œì§‘";
             else if (agent.faction == Faction.Enemy && agent.gameObject.name.Contains("Elite"))
-                return "Àå¼ö¸»¹úÁı";
+                return "ì¥ìˆ˜ë§ë²Œì§‘";
             else if (agent.faction == Faction.Enemy)
-                return "¸»¹úÁı";
+                return "ë§ë²Œì§‘";
         }
 
-        // Àû ÇÏÀÌºê Ã¼Å© (»ó´ë Áø¿µ)
+        // ì  í•˜ì´ë¸Œ ì²´í¬ (ìƒëŒ€ ì§„ì˜)
         var enemyHive = agent.GetComponent<EnemyHive>();
         if(enemyHive != null)
         {
             if (agent.gameObject.name.Contains("Elite"))
-                return "Àå¼ö¸»¹úÁı";
+                return "ì¥ìˆ˜ë§ë²Œì§‘";
             else if(agent.gameObject.name.Contains("Normal"))
-                return "¸»¹úÁı";
+                return "ë§ë²Œì§‘";
         }
 
-        // ¿©¿Õ¹ú/¸»¹ú ¿©¿Õ Ã¼Å©
+        // ì—¬ì™•ë²Œ/ë§ë²Œ ì—¬ì™• ì²´í¬
         if (agent.isQueen)
         {
             if (agent.faction == Faction.Player)
-                return "¿©¿Õ¹ú";
+                return "ì—¬ì™•ë²Œ";
             else if (agent.faction == Faction.Enemy)
-                return "¸»¹ú ¿©¿Õ";
+                return "ë§ë²Œ ì—¬ì™•";
         }
 
-        // ÀÏ²Û Ã¼Å©
+        // ì¼ê¾¼ ì²´í¬
         if (agent.faction == Faction.Player && !agent.isQueen)
-            return "ÀÏ²Û ²Ü¹ú";
+            return "ì¼ê¾¼ ê¿€ë²Œ";
 
-        // Àû À¯´Ö (¸»¹ú) - EliteWasp ±¸º° ?
+        // ì  ìœ ë‹› (ë§ë²Œ) - EliteWasp êµ¬ë³„ ?
         if (agent.faction == Faction.Enemy && !agent.isQueen)
         {
-            // GameObject ÀÌ¸§À¸·Î EliteWasp Ã¼Å© ?
+            // GameObject ì´ë¦„ìœ¼ë¡œ EliteWasp ì²´í¬ ?
             if (agent.gameObject.name.Contains("Lv2"))
             {
-                return "Àå¼ö¸»¹ú";
+                return "ì¥ìˆ˜ë§ë²Œ";
             }
-            return "¸»¹ú";
+            return "ë§ë²Œ";
         }
 
-        // Áß¸³ À¯´Ö
+        // ì¤‘ë¦½ ìœ ë‹›
         if (agent.faction == Faction.Neutral)
-            return "Áß¸³ À¯´Ö";
+            return "ì¤‘ë¦½ ìœ ë‹›";
 
-        // ±âº» (GameObject ÀÌ¸§)
+        // ê¸°ë³¸ (GameObject ì´ë¦„)
         return agent.gameObject.name;
     }
 
@@ -294,10 +294,10 @@ public class UnitCommandPanel : MonoBehaviour
 
         if (currentAgent == null) return;
 
-        // Enemy À¯´ÖÀº ¸í·É ¹öÆ° Ç¥½Ã ¾È ÇÔ (Á¤º¸¸¸ Ç¥½Ã)
+        // Enemy ìœ ë‹›ì€ ëª…ë ¹ ë²„íŠ¼ í‘œì‹œ ì•ˆ í•¨ (ì •ë³´ë§Œ í‘œì‹œ)
         if (currentAgent.faction == Faction.Enemy)
         {
-            Debug.Log("[¸í·É UI] Àû À¯´ÖÀº ¸í·ÉÀ» ³»¸± ¼ö ¾ø½À´Ï´Ù.");
+            Debug.Log("[ëª…ë ¹ UI] ì  ìœ ë‹›ì€ ëª…ë ¹ì„ ë‚´ë¦´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -332,10 +332,10 @@ public class UnitCommandPanel : MonoBehaviour
             var tmp = btnObj.GetComponentInChildren<TextMeshProUGUI>();
             var txt = btnObj.GetComponentInChildren<UnityEngine.UI.Text>();
             
-            // ¾ÆÀÌÄÜ ¼³Á¤
+            // ì•„ì´ì½˜ ì„¤ì •
             if (img != null) img.sprite = command.Icon;
             
-            // ÅØ½ºÆ® ¼³Á¤ (ÀÌ¸§ + ºñ¿ë)
+            // í…ìŠ¤íŠ¸ ì„¤ì • (ì´ë¦„ + ë¹„ìš©)
             string buttonText = command.DisplayName;
             if (!string.IsNullOrEmpty(command.CostText))
             {
@@ -366,7 +366,7 @@ public class UnitCommandPanel : MonoBehaviour
 
         // After command execution, refresh button states and unit info
         RefreshButtonStates();
-        UpdateUnitInfo(); // Ã¼·Â µîÀÌ º¯°æµÉ ¼ö ÀÖÀ¸¹Ç·Î ¾÷µ¥ÀÌÆ®
+        UpdateUnitInfo(); // ì²´ë ¥ ë“±ì´ ë³€ê²½ë  ìˆ˜ ìˆìœ¼ë¯€ë¡œ ì—…ë°ì´íŠ¸
     }
 
     void OnCommandClicked(ICommand cmd)
@@ -467,7 +467,7 @@ public class UnitCommandPanel : MonoBehaviour
         }
     }
 
-    // ¿ÜºÎ¿¡¼­ À¯´Ö Á¤º¸ °­Á¦ ¾÷µ¥ÀÌÆ® (Ã¼·Â º¯°æ ½Ã µî)
+    // ì™¸ë¶€ì—ì„œ ìœ ë‹› ì •ë³´ ê°•ì œ ì—…ë°ì´íŠ¸ (ì²´ë ¥ ë³€ê²½ ì‹œ ë“±)
     public void ForceUpdateUnitInfo()
     {
         UpdateUnitInfo();
@@ -475,7 +475,7 @@ public class UnitCommandPanel : MonoBehaviour
 
     void Update()
     {
-        // ¸Å ÇÁ·¹ÀÓ¸¶´Ù Ã¼·Â ¾÷µ¥ÀÌÆ® (½Ç½Ã°£ ¹İ¿µ)
+        // ë§¤ í”„ë ˆì„ë§ˆë‹¤ ì²´ë ¥ ì—…ë°ì´íŠ¸ (ì‹¤ì‹œê°„ ë°˜ì˜)
         if (currentAgent != null && panelRoot != null && panelRoot.activeSelf)
         {
             UpdateUnitInfo();

@@ -2,8 +2,8 @@ using UnityEngine;
 using System.Linq;
 
 /// <summary>
-/// ÇÖÅ° ÀÔ·Â °ü¸®ÀÚ
-/// - 1¹ø Å°: ÇÏÀÌºê ¶Ç´Â ¿©¿Õ¹ú ¼±ÅÃ
+/// í•«í‚¤ ì…ë ¥ ê´€ë¦¬ì
+/// - 1ë²ˆ í‚¤: í•˜ì´ë¸Œ ë˜ëŠ” ì—¬ì™•ë²Œ ì„ íƒ
 /// </summary>
 public class HotkeyManager : MonoBehaviour
 {
@@ -21,7 +21,7 @@ public class HotkeyManager : MonoBehaviour
 
     void Update()
     {
-        // 1¹ø Å°: ÇÏÀÌºê/¿©¿Õ¹ú ¼±ÅÃ
+        // 1ë²ˆ í‚¤: í•˜ì´ë¸Œ/ì—¬ì™•ë²Œ ì„ íƒ
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             SelectHiveOrQueen();
@@ -29,37 +29,37 @@ public class HotkeyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÏÀÌºê ¶Ç´Â ¿©¿Õ¹ú ¼±ÅÃ
+    /// í•˜ì´ë¸Œ ë˜ëŠ” ì—¬ì™•ë²Œ ì„ íƒ
     /// </summary>
     void SelectHiveOrQueen()
     {
-        // ÇÃ·¹ÀÌ¾î ÇÏÀÌºê Ã£±â
+        // í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ì°¾ê¸°
         Hive playerHive = FindPlayerHive();
 
         if (playerHive != null)
         {
-            // ÇÏÀÌºê ÀÖÀ¸¸é ÇÏÀÌºê ¼±ÅÃ
+            // í•˜ì´ë¸Œ ìˆìœ¼ë©´ í•˜ì´ë¸Œ ì„ íƒ
             SelectHive(playerHive);
-            Debug.Log("[ÇÖÅ°] ÇÃ·¹ÀÌ¾î ÇÏÀÌºê ¼±ÅÃ");
+            Debug.Log("[í•«í‚¤] í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ì„ íƒ");
         }
         else
         {
-            // ÇÏÀÌºê ¾øÀ¸¸é ¿©¿Õ¹ú ¼±ÅÃ
+            // í•˜ì´ë¸Œ ì—†ìœ¼ë©´ ì—¬ì™•ë²Œ ì„ íƒ
             UnitAgent queen = FindPlayerQueen();
             if (queen != null)
             {
                 SelectQueen(queen);
-                Debug.Log("[ÇÖÅ°] ¿©¿Õ¹ú ¼±ÅÃ");
+                Debug.Log("[í•«í‚¤] ì—¬ì™•ë²Œ ì„ íƒ");
             }
             else
             {
-                Debug.Log("[ÇÖÅ°] ÇÏÀÌºê¿Í ¿©¿Õ¹úÀÌ ¾ø½À´Ï´Ù.");
+                Debug.Log("[í•«í‚¤] í•˜ì´ë¸Œì™€ ì—¬ì™•ë²Œì´ ì—†ìŠµë‹ˆë‹¤.");
             }
         }
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ÇÏÀÌºê Ã£±â
+    /// í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ì°¾ê¸°
     /// </summary>
     Hive FindPlayerHive()
     {
@@ -80,7 +80,7 @@ public class HotkeyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ¿©¿Õ¹ú Ã£±â
+    /// í”Œë ˆì´ì–´ ì—¬ì™•ë²Œ ì°¾ê¸°
     /// </summary>
     UnitAgent FindPlayerQueen()
     {
@@ -100,19 +100,19 @@ public class HotkeyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÏÀÌºê ¼±ÅÃ
+    /// í•˜ì´ë¸Œ ì„ íƒ
     /// </summary>
     void SelectHive(Hive hive)
     {
         if (hive == null) return;
 
-        // ±âÁ¸ ¼±ÅÃ ÇØÁ¦
+        // ê¸°ì¡´ ì„ íƒ í•´ì œ
         if (DragSelector.Instance != null)
         {
             DragSelector.Instance.DeselectAll();
         }
 
-        // TileClickMover¸¦ ÅëÇÑ ¼±ÅÃ
+        // TileClickMoverë¥¼ í†µí•œ ì„ íƒ
         if (TileClickMover.Instance != null)
         {
             var agent = hive.GetComponent<UnitAgent>();
@@ -122,7 +122,7 @@ public class HotkeyManager : MonoBehaviour
             }
         }
 
-        // UI ÆĞ³Î Ç¥½Ã
+        // UI íŒ¨ë„ í‘œì‹œ
         if (UnitCommandPanel.Instance != null)
         {
             var agent = hive.GetComponent<UnitAgent>();
@@ -134,25 +134,25 @@ public class HotkeyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ¿©¿Õ¹ú ¼±ÅÃ
+    /// ì—¬ì™•ë²Œ ì„ íƒ
     /// </summary>
     void SelectQueen(UnitAgent queen)
     {
         if (queen == null) return;
 
-        // ±âÁ¸ ¼±ÅÃ ÇØÁ¦
+        // ê¸°ì¡´ ì„ íƒ í•´ì œ
         if (DragSelector.Instance != null)
         {
             DragSelector.Instance.DeselectAll();
         }
 
-        // TileClickMover¸¦ ÅëÇÑ ¼±ÅÃ
+        // TileClickMoverë¥¼ í†µí•œ ì„ íƒ
         if (TileClickMover.Instance != null)
         {
             TileClickMover.Instance.SelectUnit(queen);
         }
 
-        // UI ÆĞ³Î Ç¥½Ã
+        // UI íŒ¨ë„ í‘œì‹œ
         if (UnitCommandPanel.Instance != null)
         {
             UnitCommandPanel.Instance.Show(queen);

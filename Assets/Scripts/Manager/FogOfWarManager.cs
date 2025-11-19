@@ -82,7 +82,7 @@ public class FogOfWarManager : MonoBehaviour
             {
                 tile.SetFogState(HexTile.FogState.Visible);
                 
-                // Å¸ÀÏ¿¡ EnemyHive°¡ ÀÖÀ¸¸é ·»´õ·¯ È°¼ºÈ­ ?
+                // íƒ€ì¼ì— EnemyHiveê°€ ìˆìœ¼ë©´ ë Œë”ëŸ¬ í™œì„±í™” ?
                 if (tile.enemyHive != null)
                 {
                     EnableEnemyHiveRenderers(tile.enemyHive, true);
@@ -97,7 +97,7 @@ public class FogOfWarManager : MonoBehaviour
                 }
                 // if already Revealed or Hidden, keep as is
                 
-                // ÇÑ ¹ø ¹ß°ßµÈ EnemyHive´Â °è¼Ó º¸ÀÌ°Ô ?
+                // í•œ ë²ˆ ë°œê²¬ëœ EnemyHiveëŠ” ê³„ì† ë³´ì´ê²Œ ?
                 if (tile.enemyHive != null && tile.fogState == HexTile.FogState.Revealed)
                 {
                     EnableEnemyHiveRenderers(tile.enemyHive, true);
@@ -107,20 +107,20 @@ public class FogOfWarManager : MonoBehaviour
     }
 
     /// <summary>
-    /// EnemyHiveÀÇ ·»´õ·¯ È°¼ºÈ­/ºñÈ°¼ºÈ­ ?
+    /// EnemyHiveì˜ ë Œë”ëŸ¬ í™œì„±í™”/ë¹„í™œì„±í™” ?
     /// </summary>
     void EnableEnemyHiveRenderers(EnemyHive hive, bool enabled)
     {
         if (hive == null) return;
         
-        // ÀÚ½ÅÀÇ ·»´õ·¯
+        // ìì‹ ì˜ ë Œë”ëŸ¬
         var sprite = hive.GetComponent<SpriteRenderer>();
         if (sprite != null) sprite.enabled = enabled;
         
         var renderer = hive.GetComponent<Renderer>();
         if (renderer != null) renderer.enabled = enabled;
         
-        // ÀÚ½Ä ·»´õ·¯
+        // ìì‹ ë Œë”ëŸ¬
         var childRenderers = hive.GetComponentsInChildren<Renderer>(true);
         foreach (var r in childRenderers)
         {
@@ -135,7 +135,7 @@ public class FogOfWarManager : MonoBehaviour
         
         if (enabled)
         {
-            Debug.Log($"[Fog] Àû ¸»¹úÁı ¹ß°ß: ({hive.q}, {hive.r})");
+            Debug.Log($"[Fog] ì  ë§ë²Œì§‘ ë°œê²¬: ({hive.q}, {hive.r})");
         }
     }
 

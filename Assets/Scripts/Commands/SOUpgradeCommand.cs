@@ -1,25 +1,25 @@
 using UnityEngine;
 
 /// <summary>
-/// ¾÷±×·¹ÀÌµå Àü¿ë ¸í·É - SOCommand¸¦ »ó¼Ó¹Ş¾Æ ¾÷±×·¹ÀÌµå Å¸ÀÔÀ» ÁöÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
-/// Inspector¿¡¼­ upgradeTypeÀ» ¼±ÅÃÇÏ¸é ÇØ´ç ¾÷±×·¹ÀÌµå°¡ ½ÇÇàµË´Ï´Ù.
+/// ì—…ê·¸ë ˆì´ë“œ ì „ìš© ëª…ë ¹ - SOCommandë¥¼ ìƒì†ë°›ì•„ ì—…ê·¸ë ˆì´ë“œ íƒ€ì…ì„ ì§€ì •í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+/// Inspectorì—ì„œ upgradeTypeì„ ì„ íƒí•˜ë©´ í•´ë‹¹ ì—…ê·¸ë ˆì´ë“œê°€ ì‹¤í–‰ë©ë‹ˆë‹¤.
 /// </summary>
 [CreateAssetMenu(menuName = "Commands/UpgradeCommand", fileName = "UpgradeCommand")]
 public class SOUpgradeCommand : SOCommand
 {
-    [Header("¾÷±×·¹ÀÌµå ¼³Á¤")]
-    [Tooltip("¾÷±×·¹ÀÌµå Á¾·ù¸¦ ¼±ÅÃÇÏ¼¼¿ä")]
+    [Header("ì—…ê·¸ë ˆì´ë“œ ì„¤ì •")]
+    [Tooltip("ì—…ê·¸ë ˆì´ë“œ ì¢…ë¥˜ë¥¼ ì„ íƒí•˜ì„¸ìš”")]
     public UpgradeType upgradeType;
 
     public override bool IsAvailable(UnitAgent agent)
     {
         if (agent == null) return false;
 
-        // ÇÏÀÌºê¿¡¼­¸¸ ¾÷±×·¹ÀÌµå °¡´É
+        // í•˜ì´ë¸Œì—ì„œë§Œ ì—…ê·¸ë ˆì´ë“œ ê°€ëŠ¥
         Hive hive = agent.GetComponent<Hive>();
         if (hive == null) return false;
 
-        // ÀÚ¿ø È®ÀÎ
+        // ìì› í™•ì¸
         if (resourceCost > 0 && HiveManager.Instance != null)
         {
             if (!HiveManager.Instance.HasResources(resourceCost))
@@ -33,7 +33,7 @@ public class SOUpgradeCommand : SOCommand
 
     public override void Execute(UnitAgent agent, CommandTarget target)
     {
-        // UpgradeCommandHandler¿¡ À§ÀÓ
+        // UpgradeCommandHandlerì— ìœ„ì„
         UpgradeCommandHandler.ExecuteUpgrade(upgradeType, resourceCost);
     }
 }

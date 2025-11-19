@@ -6,12 +6,18 @@ public class UnitController : MonoBehaviour
     public UnitAgent agent;
     public float moveSpeed = 2f; // tiles per second
 
+    [Header("ì´ë™ ì„¤ì •")]
+    [Tooltip("íƒ€ì¼ ë‚´ ëœë¤ ì´ë™ ë²”ìœ„ (0~1, 0=ì¤‘ì•™ë§Œ, 1=íƒ€ì¼ ì „ì²´)")]
+    [Range(0f, 1f)]
+    public float tileRandomRadius = 0.3f; // íƒ€ì¼ ë°˜ì§€ë¦„ì˜ 50%ê¹Œì§€ ëœë¤
+    
+    [Tooltip("íƒ€ì¼ ê²½ê³„ë¡œë¶€í„°ì˜ ìµœì†Œ íŒ¨ë”© (íƒ€ì¼ ë°˜ì§€ë¦„ ë¹„ìœ¨)")]
+    [Range(0f, 0.5f)]
+    public float tilePadding = 0.1f; // íƒ€ì¼ ë°˜ì§€ë¦„ì˜ 10% íŒ¨ë”©
+
     private Queue<HexTile> pathQueue = new Queue<HexTile>();
     private bool isMoving = false;
     private Coroutine moveCoroutine;
-    
-    // °æ·Î Å¥À×À» À§ÇÑ ¸ñÀûÁö ÀúÀå ?
-    private HexTile queuedDestination = null;
 
     void Update()
     {
@@ -20,34 +26,56 @@ public class UnitController : MonoBehaviour
             var next = pathQueue.Dequeue();
             moveCoroutine = StartCoroutine(MoveToTileCoroutine(next));
         }
-        else if (!isMoving && queuedDestination != null)
-        {
-            // ÀÌµ¿ÀÌ ³¡³ª°í Å¥À×µÈ ¸ñÀûÁö°¡ ÀÖÀ¸¸é »õ·Î¿î °æ·Î Å½»ö ?
-            ProcessQueuedDestination();
-        }
     }
 
     /// <summary>
-    /// °æ·Î ¼³Á¤ (¿¬¼Ó Å¬¸¯ ½Ã Å¥À×) ?
+    /// ê²½ë¡œ ì„¤ì • (ì´ë™ ì¤‘ì´ë©´ í˜„ì¬ ìœ„ì¹˜ì—ì„œ ìƒˆ ëª©ì ì§€ë¡œ ì¬ê³„ì‚°)
     /// </summary>
-    public void SetPath(List<HexTile> path)
+    /// <param name="path">ì´ë™ ê²½ë¡œ</param>
+    /// <param name="forceCenter">trueë©´ ì •ì¤‘ì•™ ì´ë™, nullì´ë©´ agent.useRandomPosition ì‚¬ìš©</param>
+    public void SetPath(List<HexTile> path, bool? forceCenter = null)
     {
         if (path == null || path.Count == 0) return;
 
-        // ÀÌ¹Ì ÀÌµ¿ ÁßÀÌ°Å³ª ´ë±â ÁßÀÎ °æ·Î°¡ ÀÖÀ¸¸é Å¥À× ?
+        // âœ… 1. ì´ë™ ì¤‘ì´ë©´ í˜„ì¬ ì½”ë£¨í‹´ ì¤‘ë‹¨í•˜ê³  ìƒˆ ê²½ë¡œë¡œ ì¬ê³„ì‚°
         if (isMoving || pathQueue.Count > 0)
         {
-            // ¸¶Áö¸· ¸ñÀûÁö ÀúÀå
-            queuedDestination = path[path.Count - 1];
-            Debug.Log($"[UnitController] °æ·Î Å¥À×: ÇöÀç ÀÌµ¿ ¿Ï·á ÈÄ ({queuedDestination.q}, {queuedDestination.r})·Î ÀÌµ¿ ¿¹Á¤");
+            // âœ… í˜„ì¬ ì´ë™ ì¤‘ì¸ ì½”ë£¨í‹´ ì¤‘ë‹¨
+            if (moveCoroutine != null)
+            {
+                StopCoroutine(moveCoroutine);
+                moveCoroutine = null;
+                isMoving = false;
+            }
+            
+            // ê¸°ì¡´ ê²½ë¡œ í´ë¦¬ì–´
+            pathQueue.Clear();
+            
+            // í˜„ì¬ ìœ„ì¹˜ì—ì„œ ëª©ì ì§€ë¡œ ìƒˆ ê²½ë¡œ ì°¾ê¸°
+            if (agent != null && TileManager.Instance != null)
+            {
+                var currentTile = TileManager.Instance.GetTile(agent.q, agent.r);
+                var destTile = path[path.Count - 1];
+                
+                var newPath = Pathfinder.FindPath(currentTile, destTile);
+                if (newPath != null && newPath.Count > 0)
+                {
+                    Debug.Log($"[UnitController] ì´ë™ ì¤‘ ìƒˆ ëª…ë ¹: ({agent.q}, {agent.r}) â†’ ({destTile.q}, {destTile.r})");
+                    
+                    // ì²« íƒ€ì¼ì´ í˜„ì¬ íƒ€ì¼ì´ë©´ ìŠ¤í‚µ
+                    int newStartIndex = (newPath[0].q == agent.q && newPath[0].r == agent.r) ? 1 : 0;
+                    for (int i = newStartIndex; i < newPath.Count; i++)
+                    {
+                        pathQueue.Enqueue(newPath[i]);
+                    }
+                }
+            }
             return;
         }
 
-        // »õ·Î¿î °æ·Î ¼³Á¤
+        // ìƒˆë¡œìš´ ê²½ë¡œ ì„¤ì •
         pathQueue.Clear();
-        queuedDestination = null;
         
-        // remove first tile if it's the current tile
         int startIndex = 0;
         if (path.Count > 0 && agent != null && path[0].q == agent.q && path[0].r == agent.r)
         {
@@ -59,47 +87,9 @@ public class UnitController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Å¥À×µÈ ¸ñÀûÁö Ã³¸® ?
-    /// </summary>
-    void ProcessQueuedDestination()
-    {
-        if (queuedDestination == null || agent == null) return;
-        
-        // ÇöÀç À§Ä¡¿¡¼­ ¸ñÀûÁö·Î °æ·Î Å½»ö ?
-        var startTile = TileManager.Instance?.GetTile(agent.q, agent.r);
-        if (startTile == null)
-        {
-            Debug.LogWarning($"[UnitController] ÇöÀç Å¸ÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù: ({agent.q}, {agent.r})");
-            queuedDestination = null;
-            return;
-        }
-        
-        var path = Pathfinder.FindPath(startTile, queuedDestination);
-        if (path != null && path.Count > 0)
-        {
-            Debug.Log($"[UnitController] Å¥À×µÈ °æ·Î ½ÇÇà: ({agent.q}, {agent.r}) ¡æ ({queuedDestination.q}, {queuedDestination.r})");
-            
-            // °æ·Î ¼³Á¤
-            pathQueue.Clear();
-            int startIndex = (path[0].q == agent.q && path[0].r == agent.r) ? 1 : 0;
-            for (int i = startIndex; i < path.Count; i++)
-            {
-                pathQueue.Enqueue(path[i]);
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"[UnitController] Å¥À×µÈ °æ·Î¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù: ({agent.q}, {agent.r}) ¡æ ({queuedDestination.q}, {queuedDestination.r})");
-        }
-        
-        queuedDestination = null;
-    }
-
     public void ClearPath()
     {
         pathQueue.Clear();
-        queuedDestination = null; // Å¥À×µÈ ¸ñÀûÁöµµ ÃÊ±âÈ­ ?
         if (moveCoroutine != null)
         {
             StopCoroutine(moveCoroutine);
@@ -108,38 +98,28 @@ public class UnitController : MonoBehaviour
         isMoving = false;
     }
 
-    /// <summary>
-    /// ÇöÀç ÀÌµ¿ ÁßÀÎÁö È®ÀÎ
-    /// </summary>
     public bool IsMoving()
     {
-        return isMoving || pathQueue.Count > 0 || queuedDestination != null; // Å¥À×µÈ ¸ñÀûÁöµµ Ã¼Å© ?
+        return isMoving || pathQueue.Count > 0;
     }
 
-    /// <summary>
-    /// ÇöÀç Å¸ÀÏ ³»ºÎ·Î ·£´ı À§Ä¡·Î ÀÌµ¿ (È¸ÇÇ Çàµ¿)
-    /// </summary>
     public void MoveWithinCurrentTile()
     {
         if (agent == null) return;
         
-        // Å¸ÀÏÀÇ ¹üÀ§, World ÁÂÇ¥·Î º¯È¯
         Vector3 newPos = TileHelper.GetRandomPositionInCurrentTile(
             transform.position, 
             agent.q, 
             agent.r, 
             agent.hexSize,
-            0.2f // ¹İ°æ 20% (ÀÛ°Ô ¿òÁ÷ÀÌµµ·Ï)
+            0.2f
         );
         
-        // Å¸ÀÏ ¹üÀ§ ³»¿¡ ÀÖ´ÂÁö È®ÀÎ
         if (!TileHelper.IsPositionInTile(newPos, agent.q, agent.r, agent.hexSize))
         {
-            // Å¸ÀÏ ¹ÛÀÌ¸é Áß½ÉÀ¸·Î ÀÌµ¿
             newPos = TileHelper.HexToWorld(agent.q, agent.r, agent.hexSize);
         }
         
-        // ÄÚ·çÆ¾À¸·Î ºÎµå·´°Ô ÀÌµ¿
         if (moveCoroutine != null)
         {
             StopCoroutine(moveCoroutine);
@@ -147,15 +127,12 @@ public class UnitController : MonoBehaviour
         moveCoroutine = StartCoroutine(MoveWithinTileCoroutine(newPos));
     }
 
-    /// <summary>
-    /// Å¸ÀÏ ³»ºÎ ÀÌµ¿ ÄÚ·çÆ¾
-    /// </summary>
     System.Collections.IEnumerator MoveWithinTileCoroutine(Vector3 targetPos)
     {
         isMoving = true;
         Vector3 startPos = transform.position;
         float distance = Vector3.Distance(startPos, targetPos);
-        float travelTime = distance / (moveSpeed * agent.hexSize * 2f); // ºü¸£°Ô ÀÌµ¿
+        float travelTime = distance / (moveSpeed * agent.hexSize * 2f);
         
         if (travelTime <= 0f)
         {
@@ -171,28 +148,24 @@ public class UnitController : MonoBehaviour
             float t = Mathf.Clamp01(elapsed / travelTime);
             Vector3 lerpedPos = Vector3.Lerp(startPos, targetPos, t);
             
-            // ÀÌµ¿ Áß¿¡µµ Å¸ÀÏ ¹üÀ§ Ã¼Å©
             if (TileHelper.IsPositionInTile(lerpedPos, agent.q, agent.r, agent.hexSize))
             {
                 transform.position = lerpedPos;
             }
             else
             {
-                // ¹üÀ§ ³Ñ¾î°¡¸é Áß´Ü
                 break;
             }
             
             yield return null;
         }
 
-        // ÃÖÁ¾ À§Ä¡ È®ÀÎ
         if (TileHelper.IsPositionInTile(targetPos, agent.q, agent.r, agent.hexSize))
         {
             transform.position = targetPos;
         }
         else
         {
-            // ¾ÈÀüÇÑ À§Ä¡·Î ÀÌµ¿
             transform.position = TileHelper.HexToWorld(agent.q, agent.r, agent.hexSize);
         }
         
@@ -200,17 +173,61 @@ public class UnitController : MonoBehaviour
         isMoving = false;
     }
 
+    /// <summary>
+    /// âœ… íƒ€ì¼ ë‚´ ìœ„ì¹˜ ê³„ì‚° (ëœë¤ or ì •ì¤‘ì•™)
+    /// </summary>
+    /// <param name="q">íƒ€ì¼ q ì¢Œí‘œ</param>
+    /// <param name="r">íƒ€ì¼ r ì¢Œí‘œ</param>
+    /// <param name="useRandom">trueë©´ ëœë¤ ìœ„ì¹˜, falseë©´ ì •ì¤‘ì•™</param>
+    Vector3 GetPositionInTile(int q, int r, bool useRandom)
+    {
+        if (agent == null) return TileHelper.HexToWorld(q, r, 0.5f);
+
+        // íƒ€ì¼ ì¤‘ì‹¬ ìœ„ì¹˜
+        Vector3 center = TileHelper.HexToWorld(q, r, agent.hexSize);
+        
+        // âœ… ì •ì¤‘ì•™ ì´ë™
+        if (!useRandom)
+        {
+            return center;
+        }
+        
+        // âœ… ëœë¤ ìœ„ì¹˜ ì´ë™
+        // ëœë¤ ë°˜ì§€ë¦„ ê³„ì‚° (íŒ¨ë”© ~ tileRandomRadius ì‚¬ì´)
+        float minRadius = agent.hexSize * tilePadding;
+        float maxRadius = agent.hexSize * tileRandomRadius;
+        float randomRadius = Random.Range(minRadius, maxRadius);
+        
+        // ëœë¤ ê°ë„ (0 ~ 360ë„)
+        float randomAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+        
+        // ëœë¤ ì˜¤í”„ì…‹ ê³„ì‚°
+        float offsetX = Mathf.Cos(randomAngle) * randomRadius;
+        float offsetY = Mathf.Sin(randomAngle) * randomRadius;
+        
+        // ìµœì¢… ìœ„ì¹˜
+        Vector3 randomPos = new Vector3(
+            center.x + offsetX,
+            center.y + offsetY,
+            center.z
+        );
+        
+        return randomPos;
+    }
+
     System.Collections.IEnumerator MoveToTileCoroutine(HexTile dest)
     {
         isMoving = true;
         Vector3 startPos = transform.position;
-        Vector3 endPos = TileHelper.HexToWorld(dest.q, dest.r, agent.hexSize);
+        
+        // âœ… UnitAgentì˜ useRandomPosition ì„¤ì •ì— ë”°ë¼ ìœ„ì¹˜ ê²°ì •
+        bool useRandom = (agent != null) ? agent.useRandomPosition : true;
+        Vector3 endPos = GetPositionInTile(dest.q, dest.r, useRandom);
 
         float distance = Vector3.Distance(startPos, endPos);
-        float travelTime = distance / (moveSpeed * agent.hexSize); // normalize by hexSize
+        float travelTime = distance / (moveSpeed * agent.hexSize);
         if (travelTime <= 0f)
         {
-            // instantly snap
             transform.position = endPos;
             agent.SetPosition(dest.q, dest.r);
             isMoving = false;
@@ -226,11 +243,9 @@ public class UnitController : MonoBehaviour
             yield return null;
         }
 
-        // ensure final position exact
         transform.position = endPos;
         agent.SetPosition(dest.q, dest.r);
 
-        // small yield to ensure other systems update
         yield return null;
         isMoving = false;
     }

@@ -2,35 +2,35 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Àû Áø¿µ ÇÏÀÌºê »ı¼º ½Ã½ºÅÛ
-/// - Àå¼ö¸»¹úÁı: ¸Ê Áß¾Ó (0,0)¿¡ 1°³¸¸ »ı¼º
-/// - ÀÏ¹İ ¸»¹úÁı: Àå¼ö¸»¹úÁıÀ¸·ÎºÎÅÍ °Å¸® 4~9 »çÀÌ, ÃÖ¼Ò °£°İ 3 ÀÌ»óÀ¸·Î ·£´ı »ı¼º
+/// ì  ì§„ì˜ í•˜ì´ë¸Œ ìƒì„± ì‹œìŠ¤í…œ
+/// - ì¥ìˆ˜ë§ë²Œì§‘: ë§µ ì¤‘ì•™ (0,0)ì— 1ê°œë§Œ ìƒì„±
+/// - ì¼ë°˜ ë§ë²Œì§‘: ì¥ìˆ˜ë§ë²Œì§‘ìœ¼ë¡œë¶€í„° ê±°ë¦¬ 4~9 ì‚¬ì´, ìµœì†Œ ê°„ê²© 3 ì´ìƒìœ¼ë¡œ ëœë¤ ìƒì„±
 /// </summary>
 public class EnemyHiveSpawner : MonoBehaviour
 {
     public static EnemyHiveSpawner Instance { get; private set; }
 
-    [Header("ÇÁ¸®ÆÕ")]
-    public GameObject eliteWaspHivePrefab;  // Àå¼ö¸»¹úÁı ÇÁ¸®ÆÕ
-    public GameObject normalWaspHivePrefab; // ÀÏ¹İ ¸»¹úÁı ÇÁ¸®ÆÕ
+    [Header("í”„ë¦¬íŒ¹")]
+    public GameObject eliteWaspHivePrefab;  // ì¥ìˆ˜ë§ë²Œì§‘ í”„ë¦¬íŒ¹
+    public GameObject normalWaspHivePrefab; // ì¼ë°˜ ë§ë²Œì§‘ í”„ë¦¬íŒ¹
 
-    [Header("»ı¼º ¼³Á¤")]
-    [Tooltip("°ÔÀÓ ½ÃÀÛ ½Ã ÀÚµ¿ »ı¼º")]
+    [Header("ìƒì„± ì„¤ì •")]
+    [Tooltip("ê²Œì„ ì‹œì‘ ì‹œ ìë™ ìƒì„±")]
     public bool autoSpawnOnStart = true;
     
-    [Tooltip("»ı¼º Áö¿¬ ½Ã°£ (ÃÊ) - ¸Ê ·Îµå ´ë±â")]
+    [Tooltip("ìƒì„± ì§€ì—° ì‹œê°„ (ì´ˆ) - ë§µ ë¡œë“œ ëŒ€ê¸°")]
     public float spawnDelay = 1f;
     
-    [Tooltip("ÀÏ¹İ ¸»¹úÁı »ı¼º °³¼ö")]
+    [Tooltip("ì¼ë°˜ ë§ë²Œì§‘ ìƒì„± ê°œìˆ˜")]
     public int normalHiveCount = 3;
     
-    [Tooltip("ÀÏ¹İ ¸»¹úÁı ÃÖ¼Ò °Å¸® (Àå¼ö¸»¹úÁı ±âÁØ)")]
+    [Tooltip("ì¼ë°˜ ë§ë²Œì§‘ ìµœì†Œ ê±°ë¦¬ (ì¥ìˆ˜ë§ë²Œì§‘ ê¸°ì¤€)")]
     public int minDistanceFromElite = 4;
     
-    [Tooltip("ÀÏ¹İ ¸»¹úÁı ÃÖ´ë °Å¸® (Àå¼ö¸»¹úÁı ±âÁØ)")]
+    [Tooltip("ì¼ë°˜ ë§ë²Œì§‘ ìµœëŒ€ ê±°ë¦¬ (ì¥ìˆ˜ë§ë²Œì§‘ ê¸°ì¤€)")]
     public int maxDistanceFromElite = 9;
     
-    [Tooltip("ÀÏ¹İ ¸»¹úÁı °£ ÃÖ¼Ò °£°İ")]
+    [Tooltip("ì¼ë°˜ ë§ë²Œì§‘ ê°„ ìµœì†Œ ê°„ê²©")]
     public int minDistanceBetweenHives = 3;
 
     private GameObject eliteHive;
@@ -48,7 +48,7 @@ public class EnemyHiveSpawner : MonoBehaviour
 
     void Start()
     {
-        // °ÔÀÓ ½ÃÀÛ ½Ã ÀÚµ¿ »ı¼º
+        // ê²Œì„ ì‹œì‘ ì‹œ ìë™ ìƒì„±
         if (autoSpawnOnStart)
         {
             if (spawnDelay > 0)
@@ -63,42 +63,42 @@ public class EnemyHiveSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// ¸ğµç Àû ÇÏÀÌºê »ı¼º
+    /// ëª¨ë“  ì  í•˜ì´ë¸Œ ìƒì„±
     /// </summary>
     public void SpawnAllEnemyHives()
     {
-        // ÇÁ¸®ÆÕ Ã¼Å©
+        // í”„ë¦¬íŒ¹ ì²´í¬
         if (!ValidatePrefabs())
         {
-            Debug.LogError("[Àû ÇÏÀÌºê »ı¼º] ÇÊ¼ö ÇÁ¸®ÆÕÀÌ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù!");
+            Debug.LogError("[ì  í•˜ì´ë¸Œ ìƒì„±] í•„ìˆ˜ í”„ë¦¬íŒ¹ì´ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤!");
             return;
         }
 
-        // TileManager Ã¼Å©
+        // TileManager ì²´í¬
         if (TileManager.Instance == null)
         {
-            Debug.LogError("[Àû ÇÏÀÌºê »ı¼º] TileManager°¡ ¾ø½À´Ï´Ù!");
+            Debug.LogError("[ì  í•˜ì´ë¸Œ ìƒì„±] TileManagerê°€ ì—†ìŠµë‹ˆë‹¤!");
             return;
         }
 
-        // Áßº¹ »ı¼º ¹æÁö
+        // ì¤‘ë³µ ìƒì„± ë°©ì§€
         if (eliteHive != null || normalHives.Count > 0)
         {
-            Debug.LogWarning("[Àû ÇÏÀÌºê »ı¼º] ÀÌ¹Ì »ı¼ºµÇ¾ú½À´Ï´Ù.");
+            Debug.LogWarning("[ì  í•˜ì´ë¸Œ ìƒì„±] ì´ë¯¸ ìƒì„±ë˜ì—ˆìŠµë‹ˆë‹¤.");
             return;
         }
 
-        // 1. Àå¼ö¸»¹úÁı »ı¼º (0, 0)
+        // 1. ì¥ìˆ˜ë§ë²Œì§‘ ìƒì„± (0, 0)
         SpawnEliteWaspHive();
 
-        // 2. ÀÏ¹İ ¸»¹úÁı »ı¼º
+        // 2. ì¼ë°˜ ë§ë²Œì§‘ ìƒì„±
         SpawnNormalWaspHives(normalHiveCount);
 
-        Debug.Log($"[Àû ÇÏÀÌºê »ı¼º] Àå¼ö¸»¹úÁı 1°³, ÀÏ¹İ ¸»¹úÁı {normalHives.Count}°³ »ı¼º ¿Ï·á");
+        Debug.Log($"[ì  í•˜ì´ë¸Œ ìƒì„±] ì¥ìˆ˜ë§ë²Œì§‘ 1ê°œ, ì¼ë°˜ ë§ë²Œì§‘ {normalHives.Count}ê°œ ìƒì„± ì™„ë£Œ");
     }
 
     /// <summary>
-    /// ÇÁ¸®ÆÕ À¯È¿¼º °Ë»ç
+    /// í”„ë¦¬íŒ¹ ìœ íš¨ì„± ê²€ì‚¬
     /// </summary>
     bool ValidatePrefabs()
     {
@@ -106,13 +106,13 @@ public class EnemyHiveSpawner : MonoBehaviour
 
         if (eliteWaspHivePrefab == null)
         {
-            Debug.LogError("[Àû ÇÏÀÌºê »ı¼º] Elite Wasp Hive PrefabÀÌ ¾ø½À´Ï´Ù!");
+            Debug.LogError("[ì  í•˜ì´ë¸Œ ìƒì„±] Elite Wasp Hive Prefabì´ ì—†ìŠµë‹ˆë‹¤!");
             isValid = false;
         }
 
         if (normalWaspHivePrefab == null)
         {
-            Debug.LogError("[Àû ÇÏÀÌºê »ı¼º] Normal Wasp Hive PrefabÀÌ ¾ø½À´Ï´Ù!");
+            Debug.LogError("[ì  í•˜ì´ë¸Œ ìƒì„±] Normal Wasp Hive Prefabì´ ì—†ìŠµë‹ˆë‹¤!");
             isValid = false;
         }
 
@@ -120,42 +120,42 @@ public class EnemyHiveSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// ¿¤¸®Æ®¸»¹úÁı »ı¼º (0, 0 À§Ä¡)
+    /// ì—˜ë¦¬íŠ¸ë§ë²Œì§‘ ìƒì„± (0, 0 ìœ„ì¹˜)
     /// </summary>
     void SpawnEliteWaspHive()
     {
         int q = 0, r = 0;
         
-        // Å¸ÀÏ Á¸Àç È®ÀÎ
+        // íƒ€ì¼ ì¡´ì¬ í™•ì¸
         var tile = TileManager.Instance?.GetTile(q, r);
         if (tile == null)
         {
-            Debug.LogError($"[Àû ÇÏÀÌºê »ı¼º] Å¸ÀÏ ({q}, {r})ÀÌ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù!");
+            Debug.LogError($"[ì  í•˜ì´ë¸Œ ìƒì„±] íƒ€ì¼ ({q}, {r})ì´ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤!");
             return;
         }
 
-        // ÇÁ¸®ÆÕ »ı¼º (À§Ä¡´Â Initialize¿¡¼­ ¼³Á¤µÊ)
+        // í”„ë¦¬íŒ¹ ìƒì„± (ìœ„ì¹˜ëŠ” Initializeì—ì„œ ì„¤ì •ë¨)
         eliteHive = Instantiate(eliteWaspHivePrefab, Vector3.zero, Quaternion.identity);
         eliteHive.name = "EliteWaspHive";
 
-        // EnemyHive ÄÄÆ÷³ÍÆ® °¡Á®¿À±â
+        // EnemyHive ì»´í¬ë„ŒíŠ¸ ê°€ì ¸ì˜¤ê¸°
         var enemyHive = eliteHive.GetComponent<EnemyHive>();
         if (enemyHive != null)
         {
-            // EnemyHive.Initialize() È£Ãâ (q, r ¼³Á¤ ¹× Å¸ÀÏ ºÎÂø)
-            enemyHive.Initialize(q, r, 6250); // Àå¼ö¸»¹úÁı Ã¼·Â ? ¿øÇÏ´Â °ªÀ¸·Î º¯°æ
-            Debug.Log($"[Àû ÇÏÀÌºê »ı¼º] ¿¤¸®Æ®¸»¹úÁı »ı¼º: ({q}, {r})");
+            // EnemyHive.Initialize() í˜¸ì¶œ (q, r ì„¤ì • ë° íƒ€ì¼ ë¶€ì°©)
+            enemyHive.Initialize(q, r, 6250); // ì¥ìˆ˜ë§ë²Œì§‘ ì²´ë ¥ ? ì›í•˜ëŠ” ê°’ìœ¼ë¡œ ë³€ê²½
+            Debug.Log($"[ì  í•˜ì´ë¸Œ ìƒì„±] ì—˜ë¦¬íŠ¸ë§ë²Œì§‘ ìƒì„±: ({q}, {r})");
         }
         else
         {
-            Debug.LogError($"[Àû ÇÏÀÌºê »ı¼º] EnemyHive ÄÄÆ÷³ÍÆ®¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+            Debug.LogError($"[ì  í•˜ì´ë¸Œ ìƒì„±] EnemyHive ì»´í¬ë„ŒíŠ¸ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
             Destroy(eliteHive);
             eliteHive = null;
         }
     }
 
     /// <summary>
-    /// ÀÏ¹İ ¸»¹úÁı »ı¼º ¹× ¹èÄ¡
+    /// ì¼ë°˜ ë§ë²Œì§‘ ìƒì„± ë° ë°°ì¹˜
     /// </summary>
     void SpawnNormalWaspHives(int count)
     {
@@ -169,21 +169,21 @@ public class EnemyHiveSpawner : MonoBehaviour
             
             if (pos.x == int.MinValue) continue;
 
-            // ÇÁ¸®ÆÕ »ı¼º (À§Ä¡´Â Initialize¿¡¼­ ¼³Á¤µÊ)
+            // í”„ë¦¬íŒ¹ ìƒì„± (ìœ„ì¹˜ëŠ” Initializeì—ì„œ ì„¤ì •ë¨)
             GameObject hive = Instantiate(normalWaspHivePrefab, Vector3.zero, Quaternion.identity);
             hive.name = $"NormalWaspHive_{i + 1}";
 
-            // EnemyHive ÄÄÆ÷³ÍÆ® °¡Á®¿À±â
+            // EnemyHive ì»´í¬ë„ŒíŠ¸ ê°€ì ¸ì˜¤ê¸°
             var enemyHive = hive.GetComponent<EnemyHive>();
             if (enemyHive != null)
             {
-                // EnemyHive.Initialize() È£Ãâ (q, r ¼³Á¤ ¹× Å¸ÀÏ ºÎÂø)
-                enemyHive.Initialize(pos.x, pos.y, 750); // ÀÏ¹İ ¸»¹úÁı Ã¼·Â ? ¿øÇÏ´Â °ªÀ¸·Î º¯°æ
-                Debug.Log($"[Àû ÇÏÀÌºê »ı¼º] ÀÏ¹İ ¸»¹úÁı »ı¼º: ({pos.x}, {pos.y})");
+                // EnemyHive.Initialize() í˜¸ì¶œ (q, r ì„¤ì • ë° íƒ€ì¼ ë¶€ì°©)
+                enemyHive.Initialize(pos.x, pos.y, 750); // ì¼ë°˜ ë§ë²Œì§‘ ì²´ë ¥ ? ì›í•˜ëŠ” ê°’ìœ¼ë¡œ ë³€ê²½
+                Debug.Log($"[ì  í•˜ì´ë¸Œ ìƒì„±] ì¼ë°˜ ë§ë²Œì§‘ ìƒì„±: ({pos.x}, {pos.y})");
             }
             else
             {
-                Debug.LogError($"[Àû ÇÏÀÌºê »ı¼º] EnemyHive ÄÄÆ÷³ÍÆ®¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+                Debug.LogError($"[ì  í•˜ì´ë¸Œ ìƒì„±] EnemyHive ì»´í¬ë„ŒíŠ¸ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
                 Destroy(hive);
                 continue;
             }
@@ -195,12 +195,12 @@ public class EnemyHiveSpawner : MonoBehaviour
 
         if (normalHives.Count < count)
         {
-            Debug.LogWarning($"[Àû ÇÏÀÌºê »ı¼º] ¿äÃ»: {count}°³, ½ÇÁ¦ »ı¼º: {normalHives.Count}°³");
+            Debug.LogWarning($"[ì  í•˜ì´ë¸Œ ìƒì„±] ìš”ì²­: {count}ê°œ, ì‹¤ì œ ìƒì„±: {normalHives.Count}ê°œ");
         }
     }
 
     /// <summary>
-    /// À¯È¿ÇÑ ÇÏÀÌºê »ı¼º À§Ä¡ Ã£±â
+    /// ìœ íš¨í•œ í•˜ì´ë¸Œ ìƒì„± ìœ„ì¹˜ ì°¾ê¸°
     /// </summary>
     Vector2Int FindValidHivePosition(List<Vector2Int> existingPositions)
     {
@@ -211,20 +211,20 @@ public class EnemyHiveSpawner : MonoBehaviour
         {
             attempts++;
 
-            // ·£´ı °Å¸®¿Í ¹æÇâ »ı¼º
+            // ëœë¤ ê±°ë¦¬ì™€ ë°©í–¥ ìƒì„±
             int distance = Random.Range(minDistanceFromElite, maxDistanceFromElite + 1);
             float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
 
-            // Hex ÁÂÇ¥·Î º¯È¯ (±Ù»ç°ª)
+            // Hex ì¢Œí‘œë¡œ ë³€í™˜ (ê·¼ì‚¬ê°’)
             int q = Mathf.RoundToInt(distance * Mathf.Cos(angle));
             int r = Mathf.RoundToInt(distance * Mathf.Sin(angle));
 
-            // ½ÇÁ¦ °Å¸® È®ÀÎ
+            // ì‹¤ì œ ê±°ë¦¬ í™•ì¸
             int actualDistance = Pathfinder.AxialDistance(0, 0, q, r);
             if (actualDistance < minDistanceFromElite || actualDistance > maxDistanceFromElite)
                 continue;
 
-            // ±âÁ¸ ÇÏÀÌºêµé°úÀÇ °Å¸® È®ÀÎ
+            // ê¸°ì¡´ í•˜ì´ë¸Œë“¤ê³¼ì˜ ê±°ë¦¬ í™•ì¸
             bool tooClose = false;
             foreach (var pos in existingPositions)
             {
@@ -238,20 +238,20 @@ public class EnemyHiveSpawner : MonoBehaviour
 
             if (tooClose) continue;
 
-            // Å¸ÀÏÀÌ Á¸ÀçÇÏ´ÂÁö È®ÀÎ
+            // íƒ€ì¼ì´ ì¡´ì¬í•˜ëŠ”ì§€ í™•ì¸
             var tile = TileManager.Instance?.GetTile(q, r);
             if (tile == null) continue;
 
-            // À¯È¿ÇÑ À§Ä¡ Ã£À½
+            // ìœ íš¨í•œ ìœ„ì¹˜ ì°¾ìŒ
             return new Vector2Int(q, r);
         }
 
-        // À¯È¿ÇÑ À§Ä¡¸¦ ¸ø Ã£À½
+        // ìœ íš¨í•œ ìœ„ì¹˜ë¥¼ ëª» ì°¾ìŒ
         return new Vector2Int(int.MinValue, int.MinValue);
     }
 
     /// <summary>
-    /// ¸ğµç Àû ÇÏÀÌºê Á¦°Å
+    /// ëª¨ë“  ì  í•˜ì´ë¸Œ ì œê±°
     /// </summary>
     public void ClearAllEnemyHives()
     {
@@ -268,11 +268,11 @@ public class EnemyHiveSpawner : MonoBehaviour
         }
         normalHives.Clear();
 
-        Debug.Log("[Àû ÇÏÀÌºê »ı¼º] ¸ğµç Àû ÇÏÀÌºê Á¦°Å ¿Ï·á");
+        Debug.Log("[ì  í•˜ì´ë¸Œ ìƒì„±] ëª¨ë“  ì  í•˜ì´ë¸Œ ì œê±° ì™„ë£Œ");
     }
 
     /// <summary>
-    /// Àå¼ö¸»¹úÁı °¡Á®¿À±â
+    /// ì¥ìˆ˜ë§ë²Œì§‘ ê°€ì ¸ì˜¤ê¸°
     /// </summary>
     public GameObject GetEliteHive()
     {
@@ -280,7 +280,7 @@ public class EnemyHiveSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀÏ¹İ ¸»¹úÁı ¸ñ·Ï °¡Á®¿À±â
+    /// ì¼ë°˜ ë§ë²Œì§‘ ëª©ë¡ ê°€ì ¸ì˜¤ê¸°
     /// </summary>
     public List<GameObject> GetNormalHives()
     {
@@ -288,19 +288,19 @@ public class EnemyHiveSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// Æ¯Á¤ ÇÏÀÌºê Á¦°Å (ÆÄ±«µÆÀ» ¶§)
+    /// íŠ¹ì • í•˜ì´ë¸Œ ì œê±° (íŒŒê´´ëì„ ë•Œ)
     /// </summary>
     public void UnregisterHive(GameObject hive)
     {
         if (hive == eliteHive)
         {
             eliteHive = null;
-            Debug.Log("[Àû ÇÏÀÌºê »ı¼º] Àå¼ö¸»¹úÁı ÆÄ±«µÊ!");
+            Debug.Log("[ì  í•˜ì´ë¸Œ ìƒì„±] ì¥ìˆ˜ë§ë²Œì§‘ íŒŒê´´ë¨!");
         }
         else if (normalHives.Contains(hive))
         {
             normalHives.Remove(hive);
-            Debug.Log($"[Àû ÇÏÀÌºê »ı¼º] ÀÏ¹İ ¸»¹úÁı ÆÄ±«µÊ! (³²Àº °³¼ö: {normalHives.Count})");
+            Debug.Log($"[ì  í•˜ì´ë¸Œ ìƒì„±] ì¼ë°˜ ë§ë²Œì§‘ íŒŒê´´ë¨! (ë‚¨ì€ ê°œìˆ˜: {normalHives.Count})");
         }
     }
 }

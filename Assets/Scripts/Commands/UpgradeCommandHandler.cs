@@ -6,7 +6,7 @@ public static class UpgradeCommandHandler
     {
         if (HiveManager.Instance == null)
         {
-            Debug.LogWarning("[¾÷±×·¹ÀÌµå] HiveManager¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+            Debug.LogWarning("[ì—…ê·¸ë ˆì´ë“œ] HiveManagerë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
             return false;
         }
 
@@ -39,7 +39,7 @@ public static class UpgradeCommandHandler
 
         if (!success)
         {
-            Debug.Log($"[¾÷±×·¹ÀÌµå] ½ÇÆĞ! (ÀÚ¿ø ºÎÁ·: ÇÊ¿ä {cost})");
+            Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ] ì‹¤íŒ¨! (ìì› ë¶€ì¡±: í•„ìš” {cost})");
         }
 
         return success;
@@ -48,11 +48,11 @@ public static class UpgradeCommandHandler
 
 public enum UpgradeType
 {
-    HiveRange,      // ÇÏÀÌºê È°µ¿ ¹üÀ§ +1
-    WorkerAttack,   // ÀÏ²Û °ø°İ·Â +1
-    WorkerHealth,   // ÀÏ²Û Ã¼·Â +5
-    WorkerSpeed,    // ÀÏ²Û ÀÌµ¿ ¼Óµµ +1
-    HiveHealth,     // ÇÏÀÌºê Ã¼·Â +30
-    MaxWorkers,     // ÃÖ´ë ÀÏ²Û ¼ö +5
-    GatherAmount    // ÀÚ¿ø Ã¤Ãë·® +2
+    HiveRange,      // í•˜ì´ë¸Œ í™œë™ ë²”ìœ„ +1
+    WorkerAttack,   // ì¼ê¾¼ ê³µê²©ë ¥ +1
+    WorkerHealth,   // ì¼ê¾¼ ì²´ë ¥ +5
+    WorkerSpeed,    // ì¼ê¾¼ ì´ë™ ì†ë„ +1
+    HiveHealth,     // í•˜ì´ë¸Œ ì²´ë ¥ +30
+    MaxWorkers,     // ìµœëŒ€ ì¼ê¾¼ ìˆ˜ +5
+    GatherAmount    // ìì› ì±„ì·¨ëŸ‰ +2
 }

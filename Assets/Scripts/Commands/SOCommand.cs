@@ -18,14 +18,14 @@ public class SOCommand : ScriptableObject, ICommand
     public bool RequiresTarget => requiresTarget;
     public bool HidePanelOnClick => hidePanelOnClick;
     
-    // ICommand ºñ¿ë ÇÁ·ÎÆÛÆ¼ ±¸Çö
+    // ICommand ë¹„ìš© í”„ë¡œí¼í‹° êµ¬í˜„
     public int ResourceCost => resourceCost;
     public string CostText
     {
         get
         {
             if (resourceCost <= 0) return "";
-            return $"ºñ¿ë: {resourceCost}";
+            return $"ë¹„ìš©: {resourceCost}";
         }
     }
 

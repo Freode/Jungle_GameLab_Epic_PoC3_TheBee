@@ -5,6 +5,6 @@ public class TerrainType : ScriptableObject
 {
     public string terrainName = "NewTerrain";
     public Color color = Color.white;
-    // È®Àå °¡´É: ÀÌµ¿ºñ¿ë, ÀÚ¿ø·® µî
+    // í™•ì¥ ê°€ëŠ¥: ì´ë™ë¹„ìš©, ìì›ëŸ‰ ë“±
     public int resourceYield = 0;
 }

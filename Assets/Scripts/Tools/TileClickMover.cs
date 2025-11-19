@@ -36,19 +36,19 @@ public class TileClickMover : MonoBehaviour
         // Left click: selection / UI interactions
         if (Input.GetMouseButtonDown(0))
         {
-            // µå·¡±× ¼±ÅÃµÈ À¯´ÖÀÌ ÀÖÀ¸¸é ¸ğµÎ ¼±ÅÃ ÇØÁ¦ ?
+            // ë“œë˜ê·¸ ì„ íƒëœ ìœ ë‹›ì´ ìˆìœ¼ë©´ ëª¨ë‘ ì„ íƒ í•´ì œ ?
             if (DragSelector.Instance != null && DragSelector.Instance.GetSelectedCount() > 0)
             {
                 DragSelector.Instance.DeselectAll();
             }
             
-            // ´ÜÀÏ ¼±ÅÃµÈ À¯´ÖÀÌ ÀÖÀ¸¸é ¼±ÅÃ ÇØÁ¦ ?
+            // ë‹¨ì¼ ì„ íƒëœ ìœ ë‹›ì´ ìˆìœ¼ë©´ ì„ íƒ í•´ì œ ?
             if (selectedUnitInstance != null && !IsPointerOverUI())
             {
                 DeselectUnit();
             }
             
-            // UI°¡ ¾Æ´Ï¸é ¿ùµå Å¬¸¯ Ã³¸® ?
+            // UIê°€ ì•„ë‹ˆë©´ ì›”ë“œ í´ë¦­ ì²˜ë¦¬ ?
             if (!IsPointerOverUI())
             {
                 HandleLeftClick();
@@ -106,33 +106,33 @@ public class TileClickMover : MonoBehaviour
 
     void HandleLeftClick()
     {
-        // Try 2D - ¸ğµç È÷Æ® ¼öÁı ?
+        // Try 2D - ëª¨ë“  íˆíŠ¸ ìˆ˜ì§‘ ?
         Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         wp.z = 0f;
         RaycastHit2D[] hits2D = Physics2D.RaycastAll(wp, Vector2.zero);
             
         if (hits2D.Length > 0)
         {
-            // ·»´õ¸µ ¼ø¼­·Î Á¤·Ä (sortingOrder + UnitAgent ID) ?
+            // ë Œë”ë§ ìˆœì„œë¡œ ì •ë ¬ (sortingOrder + UnitAgent ID) ?
             System.Array.Sort(hits2D, (a, b) => {
                 var spriteA = a.collider.GetComponentInChildren<SpriteRenderer>();
                 var spriteB = b.collider.GetComponentInChildren<SpriteRenderer>();
                     
                 if (spriteA != null && spriteB != null)
                 {
-                    // 1. sortingOrder ºñ±³ (³ôÀº °ªÀÌ À§ = ¸ÕÀú ¼±ÅÃ) ?
+                    // 1. sortingOrder ë¹„êµ (ë†’ì€ ê°’ì´ ìœ„ = ë¨¼ì € ì„ íƒ) ?
                     if (spriteA.sortingOrder != spriteB.sortingOrder)
                     {
                         return spriteB.sortingOrder.CompareTo(spriteA.sortingOrder);
                     }
                         
-                    // 2. °°Àº sortingOrder¸é UnitAgent ID·Î ºñ±³ (³·Àº ID = ³ªÁß »ı¼º = ¸ÕÀú ¼±ÅÃ) ?
+                    // 2. ê°™ì€ sortingOrderë©´ UnitAgent IDë¡œ ë¹„êµ (ë‚®ì€ ID = ë‚˜ì¤‘ ìƒì„± = ë¨¼ì € ì„ íƒ) ?
                     var unitA = a.collider.GetComponent<UnitAgent>();
                     var unitB = b.collider.GetComponent<UnitAgent>();
                         
                     if (unitA != null && unitB != null)
                     {
-                        // ³·Àº ID°¡ ¸ÕÀú (³ªÁß¿¡ »ı¼º = À§¿¡ ÀÖÀ½) ?
+                        // ë‚®ì€ IDê°€ ë¨¼ì € (ë‚˜ì¤‘ì— ìƒì„± = ìœ„ì— ìˆìŒ) ?
                         return unitA.id.CompareTo(unitB.id);
                     }
                 }
@@ -140,11 +140,11 @@ public class TileClickMover : MonoBehaviour
                 return 0;
             });
                 
-            // °¡Àå À§¿¡ ÀÖ´Â UnitAgent Ã£±â (Hive Æ÷ÇÔ) ?
+            // ê°€ì¥ ìœ„ì— ìˆëŠ” UnitAgent ì°¾ê¸° (Hive í¬í•¨) ?
             UnitAgent topUnit = null;
             foreach (var hit2 in hits2D)
             {              
-                // UnitAgent Ã¼Å©
+                // UnitAgent ì²´í¬
                 var unit = hit2.collider.GetComponentInParent<UnitAgent>();
                 if (unit != null)
                 {
@@ -153,7 +153,7 @@ public class TileClickMover : MonoBehaviour
                 }
             }
                 
-            // UnitAgent°¡ ÀÖÀ¸¸é ¼±ÅÃ, ¾øÀ¸¸é Å¸ÀÏ ¼±ÅÃ ?
+            // UnitAgentê°€ ìˆìœ¼ë©´ ì„ íƒ, ì—†ìœ¼ë©´ íƒ€ì¼ ì„ íƒ ?
             if (topUnit != null)
             {
                 SelectUnit(topUnit);
@@ -161,7 +161,7 @@ public class TileClickMover : MonoBehaviour
             }
             else
             {
-                // UnitAgent°¡ ¾øÀ¸¸é Å¸ÀÏ ¼±ÅÃ
+                // UnitAgentê°€ ì—†ìœ¼ë©´ íƒ€ì¼ ì„ íƒ
                 foreach (var hit2 in hits2D)
                 {
                     var tile = hit2.collider.GetComponentInParent<HexTile>();
@@ -179,7 +179,7 @@ public class TileClickMover : MonoBehaviour
 
     void HandleRightClick()
     {
-        // µå·¡±×·Î ¼±ÅÃµÈ À¯´ÖµéÀÌ ÀÖÀ¸¸é ±×·ì ÀÌµ¿
+        // ë“œë˜ê·¸ë¡œ ì„ íƒëœ ìœ ë‹›ë“¤ì´ ìˆìœ¼ë©´ ê·¸ë£¹ ì´ë™
         if (DragSelector.Instance != null)
         {
             var dragSelected = DragSelector.Instance.GetSelectedUnits();
@@ -190,14 +190,14 @@ public class TileClickMover : MonoBehaviour
             }
         }
 
-        // Try 2D - ¸ğµç È÷Æ® ¼öÁı ?
+        // Try 2D - ëª¨ë“  íˆíŠ¸ ìˆ˜ì§‘ ?
         Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         wp.z = 0f;
         RaycastHit2D[] hits2D = Physics2D.RaycastAll(wp, Vector2.zero);
             
         if (hits2D.Length > 0)
         {   
-            // ¹Ù·Î Å¸ÀÏ¿¡ ´ëÇÑ ¸í·É
+            // ë°”ë¡œ íƒ€ì¼ì— ëŒ€í•œ ëª…ë ¹
             foreach (var hit2 in hits2D)
             {
                 var tile = hit2.collider.GetComponentInParent<HexTile>();
@@ -220,7 +220,7 @@ public class TileClickMover : MonoBehaviour
 
         if (hits2D.Length > 0)
         {
-            // Å¸ÀÏ Ã£±â
+            // íƒ€ì¼ ì°¾ê¸°
             foreach (var hit2 in hits2D)
             {
                 var tile = hit2.collider.GetComponentInParent<HexTile>();
@@ -234,7 +234,7 @@ public class TileClickMover : MonoBehaviour
 
         if (targetTile != null)
         {
-            // ¸ğµç ¼±ÅÃµÈ À¯´ÖÀ» ¸ñÇ¥ Å¸ÀÏ·Î ÀÌµ¿
+            // ëª¨ë“  ì„ íƒëœ ìœ ë‹›ì„ ëª©í‘œ íƒ€ì¼ë¡œ ì´ë™
             foreach (var unit in units)
             {
                 if (unit == null || !unit.canMove) continue;
@@ -248,17 +248,17 @@ public class TileClickMover : MonoBehaviour
 
             if (debugText != null)
             {
-                debugText.text = $"{units.Count}°³ À¯´Ö ÀÌµ¿: ({targetTile.q}, {targetTile.r})";
+                debugText.text = $"{units.Count}ê°œ ìœ ë‹› ì´ë™: ({targetTile.q}, {targetTile.r})";
             }
         }
     }
 
     public void SelectUnit(UnitAgent unit)
     {
-        // canMove°¡ falseÀÌ°í ¿©¿Õ¹úÀÌ¸é ÇÏÀÌºê ¾È¿¡ ÀÖ´Â °ÍÀÌ¹Ç·Î ¼±ÅÃ ºÒ°¡
+        // canMoveê°€ falseì´ê³  ì—¬ì™•ë²Œì´ë©´ í•˜ì´ë¸Œ ì•ˆì— ìˆëŠ” ê²ƒì´ë¯€ë¡œ ì„ íƒ ë¶ˆê°€
         if (unit.isQueen && !unit.canMove)
         {
-            Debug.Log("[¼±ÅÃ] ¿©¿Õ¹úÀÌ ÇÏÀÌºê ¾È¿¡ ÀÖ¾î ¼±ÅÃÇÒ ¼ö ¾ø½À´Ï´Ù.");
+            Debug.Log("[ì„ íƒ] ì—¬ì™•ë²Œì´ í•˜ì´ë¸Œ ì•ˆì— ìˆì–´ ì„ íƒí•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -310,12 +310,12 @@ public class TileClickMover : MonoBehaviour
             return;
         }
 
-        // Enemy À¯´ÖÀº ¸í·ÉÀ» ³»¸± ¼ö ¾øÀ½
+        // Enemy ìœ ë‹›ì€ ëª…ë ¹ì„ ë‚´ë¦´ ìˆ˜ ì—†ìŒ
         if (selectedUnitInstance.faction == Faction.Enemy)
         {
             if (debugText != null)
             {
-                debugText.text = "Àû À¯´ÖÀº ¸í·ÉÀ» ³»¸± ¼ö ¾ø½À´Ï´Ù.";
+                debugText.text = "ì  ìœ ë‹›ì€ ëª…ë ¹ì„ ë‚´ë¦´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.";
             }
             return;
         }
@@ -361,21 +361,21 @@ public class TileClickMover : MonoBehaviour
     }
 
     /// <summary>
-    /// Àû À¯´Ö °ø°İ ¸í·É Ã³¸® (È°µ¿ ¹üÀ§ Ã¼Å©) ?
+    /// ì  ìœ ë‹› ê³µê²© ëª…ë ¹ ì²˜ë¦¬ (í™œë™ ë²”ìœ„ ì²´í¬) ?
     /// </summary>
     void HandleAttackCommand(UnitAgent enemy)
     {
         if (selectedUnitInstance == null || enemy == null) return;
         
-        // ÇÃ·¹ÀÌ¾î À¯´Ö¸¸ °ø°İ °¡´É
+        // í”Œë ˆì´ì–´ ìœ ë‹›ë§Œ ê³µê²© ê°€ëŠ¥
         if (selectedUnitInstance.faction != Faction.Player)
         {
             if (debugText != null)
-                debugText.text = "ÇÃ·¹ÀÌ¾î À¯´Ö¸¸ °ø°İ ¸í·ÉÀ» ³»¸± ¼ö ÀÖ½À´Ï´Ù.";
+                debugText.text = "í”Œë ˆì´ì–´ ìœ ë‹›ë§Œ ê³µê²© ëª…ë ¹ì„ ë‚´ë¦´ ìˆ˜ ìˆìŠµë‹ˆë‹¤.";
             return;
         }
         
-        // È°µ¿ ¹üÀ§ Ã¼Å© ?
+        // í™œë™ ë²”ìœ„ ì²´í¬ ?
         var behavior = selectedUnitInstance.GetComponent<UnitBehaviorController>();
         if (behavior != null)
         {
@@ -384,7 +384,7 @@ public class TileClickMover : MonoBehaviour
                 enemy.q, enemy.r
             );
             
-            // È°µ¿ ¹üÀ§ ³»ÀÎÁö È®ÀÎ ?
+            // í™œë™ ë²”ìœ„ ë‚´ì¸ì§€ í™•ì¸ ?
             if (selectedUnitInstance.homeHive != null)
             {
                 int hiveDistance = Pathfinder.AxialDistance(
@@ -395,21 +395,21 @@ public class TileClickMover : MonoBehaviour
                 if (hiveDistance > behavior.activityRadius)
                 {
                     if (debugText != null)
-                        debugText.text = $"ÀûÀÌ È°µ¿ ¹üÀ§ ¹ÛÀÔ´Ï´Ù (ÇÏÀÌºê·ÎºÎÅÍ {hiveDistance}/{behavior.activityRadius})";
+                        debugText.text = $"ì ì´ í™œë™ ë²”ìœ„ ë°–ì…ë‹ˆë‹¤ (í•˜ì´ë¸Œë¡œë¶€í„° {hiveDistance}/{behavior.activityRadius})";
                     return;
                 }
             }
             
-            // °ø°İ ¸í·É ½ÇÇà ?
+            // ê³µê²© ëª…ë ¹ ì‹¤í–‰ ?
             behavior.IssueAttackCommand(enemy);
             
             if (debugText != null)
-                debugText.text = $"Àû À¯´Ö °ø°İ ¸í·É: ({enemy.q}, {enemy.r})";
+                debugText.text = $"ì  ìœ ë‹› ê³µê²© ëª…ë ¹: ({enemy.q}, {enemy.r})";
         }
         else
         {
             if (debugText != null)
-                debugText.text = "°ø°İ ¸í·ÉÀ» ³»¸± ¼ö ¾ø½À´Ï´Ù.";
+                debugText.text = "ê³µê²© ëª…ë ¹ì„ ë‚´ë¦´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.";
         }
     }
 }

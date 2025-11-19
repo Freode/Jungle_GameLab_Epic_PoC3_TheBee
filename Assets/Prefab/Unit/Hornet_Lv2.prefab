@@ -88,6 +88,10 @@ PrefabInstance:
       propertyPath: moveSpeed
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6112904449999854078, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: tileRandomRadius
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 6144156112367316586, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: m_Color.b
       value: 0.15641688
@@ -111,6 +115,10 @@ PrefabInstance:
     - target: {fileID: 7071419041377049769, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: visionRange
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7071419041377049769, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: useSeqRenderLayerOrder
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8356495950311495776, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: m_LocalPosition.x

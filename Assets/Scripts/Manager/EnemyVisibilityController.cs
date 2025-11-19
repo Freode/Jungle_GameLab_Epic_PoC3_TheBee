@@ -2,26 +2,26 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Enemy À¯´ÖÀÇ °¡½Ã¼ºÀ» ÇöÀç ÇÃ·¹ÀÌ¾î ½Ã¾ß¿¡ µû¶ó Á¦¾î
-/// - ÇÃ·¹ÀÌ¾î ½Ã¾ß ³»¿¡ ÀÖÀ» ¶§¸¸ º¸ÀÓ
-/// - ½Ã¾ß¿¡¼­ ¹ş¾î³ª¸é ¼û±è (ÀüÀåÀÇ ¾È°³°¡ °ÈÇôÀÖ¾îµµ)
-/// - ¸»¹úÁıÀº ÇÑ ¹ø ¹ß°ßÇÏ¸é °è¼Ó º¸ÀÓ
+/// Enemy ìœ ë‹›ì˜ ê°€ì‹œì„±ì„ í˜„ì¬ í”Œë ˆì´ì–´ ì‹œì•¼ì— ë”°ë¼ ì œì–´
+/// - í”Œë ˆì´ì–´ ì‹œì•¼ ë‚´ì— ìˆì„ ë•Œë§Œ ë³´ì„
+/// - ì‹œì•¼ì—ì„œ ë²—ì–´ë‚˜ë©´ ìˆ¨ê¹€ (ì „ì¥ì˜ ì•ˆê°œê°€ ê±·í˜€ìˆì–´ë„)
+/// - ë§ë²Œì§‘ì€ í•œ ë²ˆ ë°œê²¬í•˜ë©´ ê³„ì† ë³´ì„
 /// </summary>
 public class EnemyVisibilityController : MonoBehaviour
 {
     public static EnemyVisibilityController Instance { get; private set; }
 
-    [Header("¼³Á¤")]
-    [Tooltip("°¡½Ã¼º ¾÷µ¥ÀÌÆ® ÁÖ±â (ÃÊ)")]
+    [Header("ì„¤ì •")]
+    [Tooltip("ê°€ì‹œì„± ì—…ë°ì´íŠ¸ ì£¼ê¸° (ì´ˆ)")]
     public float updateInterval = 0.2f;
     
-    [Tooltip("µğ¹ö±× ·Î±× Ç¥½Ã")]
+    [Tooltip("ë””ë²„ê·¸ ë¡œê·¸ í‘œì‹œ")]
     public bool showDebugLogs = false;
 
     private float lastUpdateTime;
     private HashSet<Vector2Int> currentVisibleTiles = new HashSet<Vector2Int>();
     
-    // ÇÑ ¹ø ¹ß°ßµÈ ÇÏÀÌºê ¸ñ·Ï
+    // í•œ ë²ˆ ë°œê²¬ëœ í•˜ì´ë¸Œ ëª©ë¡
     private HashSet<GameObject> discoveredHives = new HashSet<GameObject>();
     
     void Awake()
@@ -44,17 +44,17 @@ public class EnemyVisibilityController : MonoBehaviour
     }
 
     /// <summary>
-    /// ¸ğµç Enemy À¯´ÖÀÇ ½Ã°¢È­ ¾÷µ¥ÀÌÆ®
+    /// ëª¨ë“  Enemy ìœ ë‹›ì˜ ì‹œê°í™” ì—…ë°ì´íŠ¸
     /// </summary>
     void UpdateEnemyVisibility()
     {
-        // ÇöÀç ÇÃ·¹ÀÌ¾î ½Ã¾ß °è»ê
+        // í˜„ì¬ í”Œë ˆì´ì–´ ì‹œì•¼ ê³„ì‚°
         CalculatePlayerVision();
 
         if (showDebugLogs)
-            Debug.Log($"[½Ã¾ß µğ¹ö±×] ÇöÀç ÇÃ·¹ÀÌ¾î ½Ã¾ß Å¸ÀÏ ¼ö: {currentVisibleTiles.Count}");
+            Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] í˜„ì¬ í”Œë ˆì´ì–´ ì‹œì•¼ íƒ€ì¼ ìˆ˜: {currentVisibleTiles.Count}");
 
-        // ¸ğµç À¯´Ö È®ÀÎ
+        // ëª¨ë“  ìœ ë‹› í™•ì¸
         if (TileManager.Instance == null) return;
 
         int processedEnemies = 0;
@@ -64,126 +64,126 @@ public class EnemyVisibilityController : MonoBehaviour
         {
             if (unit == null) continue;
 
-            // Enemy À¯´Ö¸¸ Ã³¸®
+            // Enemy ìœ ë‹›ë§Œ ì²˜ë¦¬
             if (unit.faction != Faction.Enemy) continue;
 
             processedEnemies++;
 
-            // ÇÏÀÌºê Ã¼Å© (ÇÃ·¹ÀÌ¾î Hive¿Í EnemyHive ¸ğµÎ Ã¼Å©)
+            // í•˜ì´ë¸Œ ì²´í¬ (í”Œë ˆì´ì–´ Hiveì™€ EnemyHive ëª¨ë‘ ì²´í¬)
             var playerHive = unit.GetComponent<Hive>();
             var enemyHive = unit.GetComponent<EnemyHive>();
             bool isHive = (playerHive != null || enemyHive != null);
 
-            // À¯´Ö À§Ä¡
+            // ìœ ë‹› ìœ„ì¹˜
             Vector2Int unitPos = new Vector2Int(unit.q, unit.r);
 
-            // ÇÃ·¹ÀÌ¾î ½Ã¾ß ¾È¿¡ ÀÖ´ÂÁö È®ÀÎ
+            // í”Œë ˆì´ì–´ ì‹œì•¼ ì•ˆì— ìˆëŠ”ì§€ í™•ì¸
             bool isCurrentlyVisible = currentVisibleTiles.Contains(unitPos);
 
             if (showDebugLogs && isHive)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] ÇÏÀÌºê Ã¼Å©: {unit.name} at ({unit.q}, {unit.r}), ½Ã¾ß ³»: {isCurrentlyVisible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] í•˜ì´ë¸Œ ì²´í¬: {unit.name} at ({unit.q}, {unit.r}), ì‹œì•¼ ë‚´: {isCurrentlyVisible}");
 
             bool shouldBeVisible = false;
 
             if (isHive)
             {
-                // ÇÏÀÌºê: ÇÑ ¹ø ¹ß°ßÇÏ¸é Ç×»ó º¸ÀÓ
+                // í•˜ì´ë¸Œ: í•œ ë²ˆ ë°œê²¬í•˜ë©´ í•­ìƒ ë³´ì„
                 if (isCurrentlyVisible)
                 {
-                    // Ã³À½ ¹ß°ß
+                    // ì²˜ìŒ ë°œê²¬
                     if (!discoveredHives.Contains(unit.gameObject))
                     {
                         discoveredHives.Add(unit.gameObject);
                         
-                        string hiveType = enemyHive != null ? "Àû ¸»¹úÁı" : "ÇÏÀÌºê";
-                        Debug.Log($"[½Ã¾ß] {hiveType} ¹ß°ß: {unit.name} at ({unit.q}, {unit.r})");
+                        string hiveType = enemyHive != null ? "ì  ë§ë²Œì§‘" : "í•˜ì´ë¸Œ";
+                        Debug.Log($"[ì‹œì•¼] {hiveType} ë°œê²¬: {unit.name} at ({unit.q}, {unit.r})");
                         
                         if (showDebugLogs)
-                            Debug.Log($"[½Ã¾ß µğ¹ö±×] ¹ß°ßµÈ ÇÏÀÌºê ¼ö: {discoveredHives.Count}");
+                            Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] ë°œê²¬ëœ í•˜ì´ë¸Œ ìˆ˜: {discoveredHives.Count}");
                     }
                 }
 
-                // ¹ß°ßµÈ ÇÏÀÌºê´Â Ç×»ó º¸ÀÓ
+                // ë°œê²¬ëœ í•˜ì´ë¸ŒëŠ” í•­ìƒ ë³´ì„
                 shouldBeVisible = discoveredHives.Contains(unit.gameObject);
                 
                 if (showDebugLogs)
-                    Debug.Log($"[½Ã¾ß µğ¹ö±×] ÇÏÀÌºê {unit.name} shouldBeVisible: {shouldBeVisible}");
+                    Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] í•˜ì´ë¸Œ {unit.name} shouldBeVisible: {shouldBeVisible}");
             }
             else
             {
-                // ÀÏ¹İ À¯´Ö: ÇöÀç ½Ã¾ß ¹üÀ§¸¸ º¸ÀÓ
+                // ì¼ë°˜ ìœ ë‹›: í˜„ì¬ ì‹œì•¼ ë²”ìœ„ë§Œ ë³´ì„
                 shouldBeVisible = isCurrentlyVisible;
             }
 
             if (shouldBeVisible) visibleEnemies++;
 
-            // ½Ã°¢È­ ¼³Á¤
+            // ì‹œê°í™” ì„¤ì •
             SetUnitVisibility(unit, shouldBeVisible);
         }
         
-        // EnemyHive GameObjectµéµµ Á÷Á¢ Ã¼Å© ?
+        // EnemyHive GameObjectë“¤ë„ ì§ì ‘ ì²´í¬ ?
         var allEnemyHives = FindObjectsOfType<EnemyHive>();
         
         if (showDebugLogs)
-            Debug.Log($"[½Ã¾ß µğ¹ö±×] FindObjectsOfType<EnemyHive> °á°ú: {allEnemyHives.Length}°³");
+            Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] FindObjectsOfType<EnemyHive> ê²°ê³¼: {allEnemyHives.Length}ê°œ");
 
         foreach (var enemyHive in allEnemyHives)
         {
             if (enemyHive == null) continue;
             
-            // EnemyHiveÀÇ UnitAgent °¡Á®¿À±â
+            // EnemyHiveì˜ UnitAgent ê°€ì ¸ì˜¤ê¸°
             var hiveAgent = enemyHive.GetComponent<UnitAgent>();
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] EnemyHive: {enemyHive.name}, UnitAgent: {(hiveAgent != null ? "ÀÖÀ½" : "¾øÀ½")}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] EnemyHive: {enemyHive.name}, UnitAgent: {(hiveAgent != null ? "ìˆìŒ" : "ì—†ìŒ")}");
             
             if (hiveAgent == null)
             {
-                Debug.LogWarning($"[½Ã¾ß °æ°í] EnemyHive {enemyHive.name}¿¡ UnitAgent°¡ ¾ø½À´Ï´Ù!");
+                Debug.LogWarning($"[ì‹œì•¼ ê²½ê³ ] EnemyHive {enemyHive.name}ì— UnitAgentê°€ ì—†ìŠµë‹ˆë‹¤!");
                 continue;
             }
             
-            // ÀÌ¹Ì Ã³¸®µÇ¾úÀ¸¸é ½ºÅµ
+            // ì´ë¯¸ ì²˜ë¦¬ë˜ì—ˆìœ¼ë©´ ìŠ¤í‚µ
             if (hiveAgent.faction != Faction.Enemy)
             {
                 if (showDebugLogs)
-                    Debug.Log($"[½Ã¾ß µğ¹ö±×] EnemyHive {enemyHive.name} factionÀÌ Enemy°¡ ¾Æ´Ô: {hiveAgent.faction}");
+                    Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] EnemyHive {enemyHive.name} factionì´ Enemyê°€ ì•„ë‹˜: {hiveAgent.faction}");
                 continue;
             }
             
-            // À§Ä¡ È®ÀÎ
+            // ìœ„ì¹˜ í™•ì¸
             Vector2Int hivePos = new Vector2Int(enemyHive.q, enemyHive.r);
             bool isVisible = currentVisibleTiles.Contains(hivePos);
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] EnemyHive {enemyHive.name} at ({enemyHive.q}, {enemyHive.r}), ½Ã¾ß ³»: {isVisible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] EnemyHive {enemyHive.name} at ({enemyHive.q}, {enemyHive.r}), ì‹œì•¼ ë‚´: {isVisible}");
             
             if (isVisible)
             {
-                // Ã³À½ ¹ß°ß
+                // ì²˜ìŒ ë°œê²¬
                 if (!discoveredHives.Contains(enemyHive.gameObject))
                 {
                     discoveredHives.Add(enemyHive.gameObject);
-                    Debug.Log($"[½Ã¾ß] Àû ¸»¹úÁı ¹ß°ß: {enemyHive.name} at ({enemyHive.q}, {enemyHive.r})");
+                    Debug.Log($"[ì‹œì•¼] ì  ë§ë²Œì§‘ ë°œê²¬: {enemyHive.name} at ({enemyHive.q}, {enemyHive.r})");
                 }
             }
             
-            // ¹ß°ßµÈ ÇÏÀÌºê´Â Ç×»ó º¸ÀÓ
+            // ë°œê²¬ëœ í•˜ì´ë¸ŒëŠ” í•­ìƒ ë³´ì„
             bool shouldBeVisible = discoveredHives.Contains(enemyHive.gameObject);
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] EnemyHive {enemyHive.name} shouldBeVisible: {shouldBeVisible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] EnemyHive {enemyHive.name} shouldBeVisible: {shouldBeVisible}");
             
-            // EnemyHive GameObjectÀÇ ·»´õ·¯ È°¼ºÈ­ ?
+            // EnemyHive GameObjectì˜ ë Œë”ëŸ¬ í™œì„±í™” ?
             SetEnemyHiveVisibility(enemyHive, shouldBeVisible);
         }
 
         if (showDebugLogs)
-            Debug.Log($"[½Ã¾ß µğ¹ö±×] Ã³¸®µÈ Àû: {processedEnemies}°³, Ç¥½ÃÇÒ Àû: {visibleEnemies}°³");
+            Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] ì²˜ë¦¬ëœ ì : {processedEnemies}ê°œ, í‘œì‹œí•  ì : {visibleEnemies}ê°œ");
     }
     
     /// <summary>
-    /// EnemyHiveÀÇ ½Ã°¢È­ ¼³Á¤ ?
+    /// EnemyHiveì˜ ì‹œê°í™” ì„¤ì • ?
     /// </summary>
     void SetEnemyHiveVisibility(EnemyHive hive, bool visible)
     {
@@ -192,11 +192,11 @@ public class EnemyVisibilityController : MonoBehaviour
         GameObject targetObject = hive.gameObject;
         
         if (showDebugLogs)
-            Debug.Log($"[½Ã¾ß µğ¹ö±×] EnemyHive ·»´õ·¯ ¼³Á¤: {targetObject.name}, visible={visible}");
+            Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] EnemyHive ë Œë”ëŸ¬ ì„¤ì •: {targetObject.name}, visible={visible}");
 
         int rendererCount = 0;
 
-        // 1. ÀÚ½ÅÀÇ SpriteRenderer
+        // 1. ìì‹ ì˜ SpriteRenderer
         var sprite = targetObject.GetComponent<SpriteRenderer>();
         if (sprite != null)
         {
@@ -204,10 +204,10 @@ public class EnemyVisibilityController : MonoBehaviour
             rendererCount++;
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] EnemyHive SpriteRenderer: {sprite.name}, enabled={visible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] EnemyHive SpriteRenderer: {sprite.name}, enabled={visible}");
         }
 
-        // 2. ÀÚ½ÅÀÇ Renderer
+        // 2. ìì‹ ì˜ Renderer
         var renderer = targetObject.GetComponent<Renderer>();
         if (renderer != null && renderer != sprite)
         {
@@ -215,7 +215,7 @@ public class EnemyVisibilityController : MonoBehaviour
             rendererCount++;
         }
 
-        // 3. ÀÚ½Ä GameObjectµéÀÇ ¸ğµç Renderer
+        // 3. ìì‹ GameObjectë“¤ì˜ ëª¨ë“  Renderer
         var childRenderers = targetObject.GetComponentsInChildren<Renderer>(true);
         foreach (var r in childRenderers)
         {
@@ -223,14 +223,14 @@ public class EnemyVisibilityController : MonoBehaviour
             rendererCount++;
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] EnemyHive ÀÚ½Ä Renderer: {r.name}, enabled={visible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] EnemyHive ìì‹ Renderer: {r.name}, enabled={visible}");
         }
 
-        // 4. ÀÚ½Ä GameObjectµéÀÇ ¸ğµç SpriteRenderer
+        // 4. ìì‹ GameObjectë“¤ì˜ ëª¨ë“  SpriteRenderer
         var childSprites = targetObject.GetComponentsInChildren<SpriteRenderer>(true);
         foreach (var s in childSprites)
         {
-            // ÀÌ¹Ì Ã³¸®µÈ ·»´õ·¯´Â °Ç³Ê¶Ù±â
+            // ì´ë¯¸ ì²˜ë¦¬ëœ ë Œë”ëŸ¬ëŠ” ê±´ë„ˆë›°ê¸°
             bool alreadyProcessed = false;
             foreach (var r in childRenderers)
             {
@@ -248,7 +248,7 @@ public class EnemyVisibilityController : MonoBehaviour
             }
         }
         
-        // 5. ºÎ¸ğ GameObject Ã¼Å©
+        // 5. ë¶€ëª¨ GameObject ì²´í¬
         if (targetObject.transform.parent != null)
         {
             var parentRenderer = targetObject.transform.parent.GetComponent<Renderer>();
@@ -266,18 +266,18 @@ public class EnemyVisibilityController : MonoBehaviour
             }
         }
         
-        // ·»´õ·¯°¡ ÇÏ³ªµµ ¾øÀ¸¸é °æ°í
+        // ë Œë”ëŸ¬ê°€ í•˜ë‚˜ë„ ì—†ìœ¼ë©´ ê²½ê³ 
         if (rendererCount == 0)
         {
-            Debug.LogWarning($"[½Ã¾ß °æ°í] EnemyHive {hive.name}¿¡ ·»´õ·¯¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+            Debug.LogWarning($"[ì‹œì•¼ ê²½ê³ ] EnemyHive {hive.name}ì— ë Œë”ëŸ¬ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
         }
         
         if (showDebugLogs)
-            Debug.Log($"[½Ã¾ß µğ¹ö±×] EnemyHive ÃÑ {rendererCount}°³ ·»´õ·¯ Ã³¸® ¿Ï·á");
+            Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] EnemyHive ì´ {rendererCount}ê°œ ë Œë”ëŸ¬ ì²˜ë¦¬ ì™„ë£Œ");
     }
 
     /// <summary>
-    /// ÇöÀç ÇÃ·¹ÀÌ¾î ½Ã¾ß ¹üÀ§ °è»ê
+    /// í˜„ì¬ í”Œë ˆì´ì–´ ì‹œì•¼ ë²”ìœ„ ê³„ì‚°
     /// </summary>
     void CalculatePlayerVision()
     {
@@ -285,15 +285,15 @@ public class EnemyVisibilityController : MonoBehaviour
 
         if (TileManager.Instance == null) return;
 
-        // ¸ğµç ÇÃ·¹ÀÌ¾î À¯´ÖÀÇ ½Ã¾ß ÇÕ»ê
+        // ëª¨ë“  í”Œë ˆì´ì–´ ìœ ë‹›ì˜ ì‹œì•¼ í•©ì‚°
         foreach (var unit in TileManager.Instance.GetAllUnits())
         {
             if (unit == null) continue;
 
-            // ÇÃ·¹ÀÌ¾î À¯´Ö¸¸
+            // í”Œë ˆì´ì–´ ìœ ë‹›ë§Œ
             if (unit.faction != Faction.Player) continue;
 
-            // À¯´ÖÀÇ ½Ã¾ß ¹üÀ§ Å¸ÀÏ Ãß°¡
+            // ìœ ë‹›ì˜ ì‹œì•¼ ë²”ìœ„ íƒ€ì¼ ì¶”ê°€
             var visibleTiles = GetTilesInRange(unit.q, unit.r, unit.visionRange);
             foreach (var tile in visibleTiles)
             {
@@ -303,7 +303,7 @@ public class EnemyVisibilityController : MonoBehaviour
     }
 
     /// <summary>
-    /// ¹üÀ§ ³» Å¸ÀÏ ÁÂÇ¥ °¡Á®¿À±â
+    /// ë²”ìœ„ ë‚´ íƒ€ì¼ ì¢Œí‘œ ê°€ì ¸ì˜¤ê¸°
     /// </summary>
     List<Vector2Int> GetTilesInRange(int q, int r, int radius)
     {
@@ -326,13 +326,13 @@ public class EnemyVisibilityController : MonoBehaviour
     }
 
     /// <summary>
-    /// À¯´Ö ½Ã°¢È­ ¼³Á¤
+    /// ìœ ë‹› ì‹œê°í™” ì„¤ì •
     /// </summary>
     void SetUnitVisibility(UnitAgent unit, bool visible)
     {
         if (unit == null) return;
 
-        // ÇÏÀÌºêÀÎ °æ¿ì Hive ÄÄÆ÷³ÍÆ®ÀÇ GameObject¿¡¼­ ·»´õ·¯ Ã£±â
+        // í•˜ì´ë¸Œì¸ ê²½ìš° Hive ì»´í¬ë„ŒíŠ¸ì˜ GameObjectì—ì„œ ë Œë”ëŸ¬ ì°¾ê¸°
         var hive = unit.GetComponent<Hive>();
         GameObject targetObject = unit.gameObject;
         
@@ -341,12 +341,12 @@ public class EnemyVisibilityController : MonoBehaviour
             targetObject = hive.gameObject;
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] ÇÏÀÌºê ·»´õ·¯ Ã£±â: {targetObject.name}, visible={visible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] í•˜ì´ë¸Œ ë Œë”ëŸ¬ ì°¾ê¸°: {targetObject.name}, visible={visible}");
         }
 
         int rendererCount = 0;
 
-        // 1. ÀÚ½ÅÀÇ SpriteRenderer
+        // 1. ìì‹ ì˜ SpriteRenderer
         var sprite = targetObject.GetComponent<SpriteRenderer>();
         if (sprite != null)
         {
@@ -354,21 +354,21 @@ public class EnemyVisibilityController : MonoBehaviour
             rendererCount++;
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] SpriteRenderer ¼³Á¤: {sprite.name}, enabled={visible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] SpriteRenderer ì„¤ì •: {sprite.name}, enabled={visible}");
         }
 
-        // 2. ÀÚ½ÅÀÇ Renderer
+        // 2. ìì‹ ì˜ Renderer
         var renderer = targetObject.GetComponent<Renderer>();
-        if (renderer != null && renderer != sprite) // SpriteRenderer¿Í Áßº¹ ¹æÁö
+        if (renderer != null && renderer != sprite) // SpriteRendererì™€ ì¤‘ë³µ ë°©ì§€
         {
             renderer.enabled = visible;
             rendererCount++;
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] Renderer ¼³Á¤: {renderer.name}, enabled={visible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] Renderer ì„¤ì •: {renderer.name}, enabled={visible}");
         }
 
-        // 3. ÀÚ½Ä GameObjectµéÀÇ ¸ğµç Renderer (ºñÈ°¼ºÈ­µÈ GameObject Æ÷ÇÔ)
+        // 3. ìì‹ GameObjectë“¤ì˜ ëª¨ë“  Renderer (ë¹„í™œì„±í™”ëœ GameObject í¬í•¨)
         var childRenderers = targetObject.GetComponentsInChildren<Renderer>(true);
         foreach (var r in childRenderers)
         {
@@ -376,14 +376,14 @@ public class EnemyVisibilityController : MonoBehaviour
             rendererCount++;
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] ÀÚ½Ä Renderer ¼³Á¤: {r.name}, enabled={visible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] ìì‹ Renderer ì„¤ì •: {r.name}, enabled={visible}");
         }
 
-        // 4. ÀÚ½Ä GameObjectµéÀÇ ¸ğµç SpriteRenderer (ºñÈ°¼ºÈ­µÈ GameObject Æ÷ÇÔ)
+        // 4. ìì‹ GameObjectë“¤ì˜ ëª¨ë“  SpriteRenderer (ë¹„í™œì„±í™”ëœ GameObject í¬í•¨)
         var childSprites = targetObject.GetComponentsInChildren<SpriteRenderer>(true);
         foreach (var s in childSprites)
         {
-            // ÀÌ¹Ì Ã³¸®µÈ ·»´õ·¯´Â °Ç³Ê¶Ù±â
+            // ì´ë¯¸ ì²˜ë¦¬ëœ ë Œë”ëŸ¬ëŠ” ê±´ë„ˆë›°ê¸°
             bool alreadyProcessed = false;
             foreach (var r in childRenderers)
             {
@@ -400,11 +400,11 @@ public class EnemyVisibilityController : MonoBehaviour
                 rendererCount++;
                 
                 if (showDebugLogs)
-                    Debug.Log($"[½Ã¾ß µğ¹ö±×] ÀÚ½Ä SpriteRenderer ¼³Á¤: {s.name}, enabled={visible}");
+                    Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] ìì‹ SpriteRenderer ì„¤ì •: {s.name}, enabled={visible}");
             }
         }
         
-        // 5. ºÎ¸ğ GameObject Ã¼Å© (ÇÏÀÌºê°¡ ÀÚ½ÄÀÏ °æ¿ì)
+        // 5. ë¶€ëª¨ GameObject ì²´í¬ (í•˜ì´ë¸Œê°€ ìì‹ì¼ ê²½ìš°)
         if (hive != null && targetObject.transform.parent != null)
         {
             var parentRenderer = targetObject.transform.parent.GetComponent<Renderer>();
@@ -414,7 +414,7 @@ public class EnemyVisibilityController : MonoBehaviour
                 rendererCount++;
                 
                 if (showDebugLogs)
-                    Debug.Log($"[½Ã¾ß µğ¹ö±×] ºÎ¸ğ Renderer ¼³Á¤: {parentRenderer.name}, enabled={visible}");
+                    Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] ë¶€ëª¨ Renderer ì„¤ì •: {parentRenderer.name}, enabled={visible}");
             }
             
             var parentSprite = targetObject.transform.parent.GetComponent<SpriteRenderer>();
@@ -424,18 +424,18 @@ public class EnemyVisibilityController : MonoBehaviour
                 rendererCount++;
                 
                 if (showDebugLogs)
-                    Debug.Log($"[½Ã¾ß µğ¹ö±×] ºÎ¸ğ SpriteRenderer ¼³Á¤: {parentSprite.name}, enabled={visible}");
+                    Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] ë¶€ëª¨ SpriteRenderer ì„¤ì •: {parentSprite.name}, enabled={visible}");
             }
         }
         
-        // 6. ÄÃ¶óÀÌ´õ È°¼ºÈ­/ºñÈ°¼ºÈ­ (Å¬¸¯ °¡´É/ºÒ°¡´É) ?
+        // 6. ì»¬ë¼ì´ë” í™œì„±í™”/ë¹„í™œì„±í™” (í´ë¦­ ê°€ëŠ¥/ë¶ˆê°€ëŠ¥) ?
         var collider2D = targetObject.GetComponent<Collider2D>();
         if (collider2D != null)
         {
             collider2D.enabled = visible;
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] Collider2D ¼³Á¤: {collider2D.name}, enabled={visible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] Collider2D ì„¤ì •: {collider2D.name}, enabled={visible}");
         }
         
         var collider3D = targetObject.GetComponent<Collider>();
@@ -444,21 +444,21 @@ public class EnemyVisibilityController : MonoBehaviour
             collider3D.enabled = visible;
             
             if (showDebugLogs)
-                Debug.Log($"[½Ã¾ß µğ¹ö±×] Collider3D ¼³Á¤: {collider3D.name}, enabled={visible}");
+                Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] Collider3D ì„¤ì •: {collider3D.name}, enabled={visible}");
         }
         
-        // ·»´õ·¯°¡ ÇÏ³ªµµ ¾øÀ¸¸é °æ°í
+        // ë Œë”ëŸ¬ê°€ í•˜ë‚˜ë„ ì—†ìœ¼ë©´ ê²½ê³ 
         if (rendererCount == 0 && hive != null)
         {
-            Debug.LogWarning($"[½Ã¾ß °æ°í] ÇÏÀÌºê {unit.name}¿¡ ·»´õ·¯¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+            Debug.LogWarning($"[ì‹œì•¼ ê²½ê³ ] í•˜ì´ë¸Œ {unit.name}ì— ë Œë”ëŸ¬ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
         }
         
         if (showDebugLogs && hive != null)
-            Debug.Log($"[½Ã¾ß µğ¹ö±×] ÃÑ {rendererCount}°³ ·»´õ·¯ Ã³¸® ¿Ï·á");
+            Debug.Log($"[ì‹œì•¼ ë””ë²„ê·¸] ì´ {rendererCount}ê°œ ë Œë”ëŸ¬ ì²˜ë¦¬ ì™„ë£Œ");
     }
 
     /// <summary>
-    /// Æ¯Á¤ À§Ä¡°¡ ÇÃ·¹ÀÌ¾î ½Ã¾ß ³»ÀÎÁö È®ÀÎ (¿ÜºÎ È£Ãâ¿ë)
+    /// íŠ¹ì • ìœ„ì¹˜ê°€ í”Œë ˆì´ì–´ ì‹œì•¼ ë‚´ì¸ì§€ í™•ì¸ (ì™¸ë¶€ í˜¸ì¶œìš©)
     /// </summary>
     public bool IsPositionVisible(int q, int r)
     {
@@ -466,7 +466,7 @@ public class EnemyVisibilityController : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç ½Ã¾ß Å¸ÀÏ °³¼ö (µğ¹ö±×¿ë)
+    /// í˜„ì¬ ì‹œì•¼ íƒ€ì¼ ê°œìˆ˜ (ë””ë²„ê·¸ìš©)
     /// </summary>
     public int GetVisibleTileCount()
     {
@@ -474,7 +474,7 @@ public class EnemyVisibilityController : MonoBehaviour
     }
 
     /// <summary>
-    /// ¹ß°ßµÈ ÇÏÀÌºê °³¼ö (µğ¹ö±×¿ë)
+    /// ë°œê²¬ëœ í•˜ì´ë¸Œ ê°œìˆ˜ (ë””ë²„ê·¸ìš©)
     /// </summary>
     public int GetDiscoveredHiveCount()
     {
@@ -482,7 +482,7 @@ public class EnemyVisibilityController : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÏÀÌºê ¹ß°ß ±â·Ï ÃÊ±âÈ­ (°ÔÀÓ Àç½ÃÀÛ¿ë)
+    /// í•˜ì´ë¸Œ ë°œê²¬ ê¸°ë¡ ì´ˆê¸°í™” (ê²Œì„ ì¬ì‹œì‘ìš©)
     /// </summary>
     public void ResetDiscoveredHives()
     {
@@ -490,7 +490,7 @@ public class EnemyVisibilityController : MonoBehaviour
     }
 
     /// <summary>
-    /// Áï½Ã °¡½Ã¼º ¾÷µ¥ÀÌÆ® (Enemy »ı¼º ½Ã µî)
+    /// ì¦‰ì‹œ ê°€ì‹œì„± ì—…ë°ì´íŠ¸ (Enemy ìƒì„± ì‹œ ë“±)
     /// </summary>
     public void ForceUpdateVisibility()
     {

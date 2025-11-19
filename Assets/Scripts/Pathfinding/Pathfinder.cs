@@ -28,15 +28,27 @@ public static class Pathfinder
 
         while (openSet.Count > 0)
         {
-            // get node in openSet with lowest fScore
+            // get node in openSet with lowest fScore (tie-breaking 추가)
             Vector2Int current = openSet[0];
             int bestF = fScore.ContainsKey(current) ? fScore[current] : int.MaxValue;
+            int bestG = gScore.ContainsKey(current) ? gScore[current] : int.MaxValue;
+            
             foreach (var node in openSet)
             {
                 int f = fScore.ContainsKey(node) ? fScore[node] : int.MaxValue;
+                int g = gScore.ContainsKey(node) ? gScore[node] : int.MaxValue;
+                
+                // 1순위: fScore가 낮은 것
                 if (f < bestF)
                 {
                     bestF = f;
+                    bestG = g;
+                    current = node;
+                }
+                // 2순위: fScore가 같으면 gScore가 높은 것 (목표에 더 가까운 것)
+                else if (f == bestF && g > bestG)
+                {
+                    bestG = g;
                     current = node;
                 }
             }
@@ -50,15 +62,23 @@ public static class Pathfinder
             closedSet.Add(current);
 
             var neighbors = tm.GetNeighbors(current.x, current.y);
+            
+            // 이웃 타일을 일관된 순서로 처리 (좌상단부터 시계방향)
             foreach (var n in neighbors)
             {
                 var ncoord = new Vector2Int(n.q, n.r);
                 if (closedSet.Contains(ncoord)) continue;
 
-                int tentativeG = (gScore.ContainsKey(current) ? gScore[current] : int.MaxValue) + 1; // uniform cost
+                int tentativeG = (gScore.ContainsKey(current) ? gScore[current] : int.MaxValue) + 1;
 
-                if (!openSet.Contains(ncoord)) openSet.Add(ncoord);
-                else if (tentativeG >= (gScore.ContainsKey(ncoord) ? gScore[ncoord] : int.MaxValue)) continue;
+                if (!openSet.Contains(ncoord))
+                {
+                    openSet.Add(ncoord);
+                }
+                else if (tentativeG >= (gScore.ContainsKey(ncoord) ? gScore[ncoord] : int.MaxValue))
+                {
+                    continue;
+                }
 
                 cameFrom[ncoord] = current;
                 gScore[ncoord] = tentativeG;

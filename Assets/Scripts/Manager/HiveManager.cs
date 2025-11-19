@@ -11,19 +11,19 @@ public class HiveManager : MonoBehaviour
     public int hiveActivityRadius = 5;
 
     [Header("Player Resources")]
-    public int playerStoredResources = 0; // ÇÃ·¹ÀÌ¾îÀÇ ÀüÃ¼ ÀúÀå ÀÚ¿ø
+    public int playerStoredResources = 0; // í”Œë ˆì´ì–´ì˜ ì „ì²´ ì €ì¥ ìì›
 
-    // ÀÚ¿ø º¯°æ ÀÌº¥Æ®
+    // ìì› ë³€ê²½ ì´ë²¤íŠ¸
     public event System.Action OnResourcesChanged;
 
     [Header("Upgrade Levels")]
-    public int hiveRangeLevel = 0;          // ÇÏÀÌºê È°µ¿ ¹üÀ§ ·¹º§
-    public int workerAttackLevel = 0;       // ÀÏ²Û °ø°İ·Â ·¹º§
-    public int workerHealthLevel = 0;       // ÀÏ²Û Ã¼·Â ·¹º§
-    public int workerSpeedLevel = 0;        // ÀÏ²Û ÀÌµ¿ ¼Óµµ ·¹º§
-    public int hiveHealthLevel = 0;         // ÇÏÀÌºê Ã¼·Â ·¹º§
-    public int maxWorkersLevel = 0;         // ÃÖ´ë ÀÏ²Û ¼ö ·¹º§
-    public int gatherAmountLevel = 0;       // ÀÚ¿ø Ã¤Ãë·® ·¹º§
+    public int hiveRangeLevel = 0;          // í•˜ì´ë¸Œ í™œë™ ë²”ìœ„ ë ˆë²¨
+    public int workerAttackLevel = 0;       // ì¼ê¾¼ ê³µê²©ë ¥ ë ˆë²¨
+    public int workerHealthLevel = 0;       // ì¼ê¾¼ ì²´ë ¥ ë ˆë²¨
+    public int workerSpeedLevel = 0;        // ì¼ê¾¼ ì´ë™ ì†ë„ ë ˆë²¨
+    public int hiveHealthLevel = 0;         // í•˜ì´ë¸Œ ì²´ë ¥ ë ˆë²¨
+    public int maxWorkersLevel = 0;         // ìµœëŒ€ ì¼ê¾¼ ìˆ˜ ë ˆë²¨
+    public int gatherAmountLevel = 0;       // ìì› ì±„ì·¨ëŸ‰ ë ˆë²¨
 
     void Awake()
     {
@@ -90,9 +90,9 @@ public class HiveManager : MonoBehaviour
     public void AddResources(int amount)
     {
         playerStoredResources += amount;
-        Debug.Log($"ÀÚ¿ø Ãß°¡: +{amount}, ÃÑ ÀÚ¿ø: {playerStoredResources}");
+        Debug.Log($"ìì› ì¶”ê°€: +{amount}, ì´ ìì›: {playerStoredResources}");
         
-        // ÀÌº¥Æ® ¹ß»ı
+        // ì´ë²¤íŠ¸ ë°œìƒ
         OnResourcesChanged?.Invoke();
     }
 
@@ -102,9 +102,9 @@ public class HiveManager : MonoBehaviour
         if (playerStoredResources >= amount)
         {
             playerStoredResources -= amount;
-            Debug.Log($"ÀÚ¿ø ¼Ò¸ğ: -{amount}, ³²Àº ÀÚ¿ø: {playerStoredResources}");
+            Debug.Log($"ìì› ì†Œëª¨: -{amount}, ë‚¨ì€ ìì›: {playerStoredResources}");
             
-            // ÀÌº¥Æ® ¹ß»ı
+            // ì´ë²¤íŠ¸ ë°œìƒ
             OnResourcesChanged?.Invoke();
             
             return true;
@@ -118,9 +118,9 @@ public class HiveManager : MonoBehaviour
         return playerStoredResources >= amount;
     }
 
-    // ========== ¾÷±×·¹ÀÌµå ½Ã½ºÅÛ ==========
+    // ========== ì—…ê·¸ë ˆì´ë“œ ì‹œìŠ¤í…œ ==========
 
-    // 1. ÇÏÀÌºê È°µ¿ ¹üÀ§ ¾÷±×·¹ÀÌµå
+    // 1. í•˜ì´ë¸Œ í™œë™ ë²”ìœ„ ì—…ê·¸ë ˆì´ë“œ
     public bool UpgradeHiveRange(int cost)
     {
         if (!TrySpendResources(cost)) return false;
@@ -128,7 +128,7 @@ public class HiveManager : MonoBehaviour
         hiveRangeLevel++;
         hiveActivityRadius = 2 + hiveRangeLevel;
 
-        // ¸ğµç ÇÏÀÌºêÀÇ °æ°è¼± ¾÷µ¥ÀÌÆ®
+        // ëª¨ë“  í•˜ì´ë¸Œì˜ ê²½ê³„ì„  ì—…ë°ì´íŠ¸
         foreach (var hive in hives)
         {
             if (hive != null && HexBoundaryHighlighter.Instance != null)
@@ -137,22 +137,22 @@ public class HiveManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"[¾÷±×·¹ÀÌµå] ÇÏÀÌºê È°µ¿ ¹üÀ§ +1! ÇöÀç ¹üÀ§: {hiveActivityRadius}");
+        Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ] í•˜ì´ë¸Œ í™œë™ ë²”ìœ„ +1! í˜„ì¬ ë²”ìœ„: {hiveActivityRadius}");
         
-        // UI Ç¥½Ã
+        // UI í‘œì‹œ
         if (UpgradeResultUI.Instance != null)
         {
             UpgradeResultUI.Instance.ShowUpgradeResult(
-                "È°µ¿ ¹üÀ§ È®Àå",
-                "ÇÏÀÌºê È°µ¿ ¹üÀ§ +1",
-                $"{hiveActivityRadius}Ä­"
+                "í™œë™ ë²”ìœ„ í™•ì¥",
+                "í•˜ì´ë¸Œ í™œë™ ë²”ìœ„ +1",
+                $"{hiveActivityRadius}ì¹¸"
             );
         }
         
         return true;
     }
 
-    // 2. ÀÏ²Û °ø°İ·Â ¾÷±×·¹ÀÌµå
+    // 2. ì¼ê¾¼ ê³µê²©ë ¥ ì—…ê·¸ë ˆì´ë“œ
     public bool UpgradeWorkerAttack(int cost)
     {
         if (!TrySpendResources(cost)) return false;
@@ -160,14 +160,14 @@ public class HiveManager : MonoBehaviour
         workerAttackLevel++;
         UpdateAllWorkerCombat();
 
-        Debug.Log($"[¾÷±×·¹ÀÌµå] ÀÏ²Û °ø°İ·Â +1! ÇöÀç: {GetWorkerAttack()}");
+        Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ] ì¼ê¾¼ ê³µê²©ë ¥ +1! í˜„ì¬: {GetWorkerAttack()}");
         
-        // UI Ç¥½Ã
+        // UI í‘œì‹œ
         if (UpgradeResultUI.Instance != null)
         {
             UpgradeResultUI.Instance.ShowUpgradeResult(
-                "³¯Ä«·Î¿î Ä§",
-                "ÀÏ²Û °ø°İ·Â +1",
+                "ë‚ ì¹´ë¡œìš´ ì¹¨",
+                "ì¼ê¾¼ ê³µê²©ë ¥ +1",
                 $"{GetWorkerAttack()}"
             );
         }
@@ -175,7 +175,7 @@ public class HiveManager : MonoBehaviour
         return true;
     }
 
-    // 3. ÀÏ²Û Ã¼·Â ¾÷±×·¹ÀÌµå
+    // 3. ì¼ê¾¼ ì²´ë ¥ ì—…ê·¸ë ˆì´ë“œ
     public bool UpgradeWorkerHealth(int cost)
     {
         if (!TrySpendResources(cost)) return false;
@@ -183,14 +183,14 @@ public class HiveManager : MonoBehaviour
         workerHealthLevel++;
         UpdateAllWorkerCombat();
 
-        Debug.Log($"[¾÷±×·¹ÀÌµå] ÀÏ²Û Ã¼·Â +2! ÇöÀç: {GetWorkerMaxHealth()}");
+        Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ] ì¼ê¾¼ ì²´ë ¥ +2! í˜„ì¬: {GetWorkerMaxHealth()}");
         
-        // UI Ç¥½Ã
+        // UI í‘œì‹œ
         if (UpgradeResultUI.Instance != null)
         {
             UpgradeResultUI.Instance.ShowUpgradeResult(
-                "°­È­ ¿Ü°ñ°İ",
-                "ÀÏ²Û ÃÖ´ë Ã¼·Â +2",
+                "ê°•í™” ì™¸ê³¨ê²©",
+                "ì¼ê¾¼ ìµœëŒ€ ì²´ë ¥ +2",
                 $"{GetWorkerMaxHealth()} HP"
             );
         }
@@ -198,7 +198,7 @@ public class HiveManager : MonoBehaviour
         return true;
     }
 
-    // 4. ÀÏ²Û ÀÌµ¿ ¼Óµµ ¾÷±×·¹ÀÌµå
+    // 4. ì¼ê¾¼ ì´ë™ ì†ë„ ì—…ê·¸ë ˆì´ë“œ
     public bool UpgradeWorkerSpeed(int cost)
     {
         if (!TrySpendResources(cost)) return false;
@@ -206,14 +206,14 @@ public class HiveManager : MonoBehaviour
         workerSpeedLevel++;
         UpdateAllWorkerSpeed();
 
-        Debug.Log($"[¾÷±×·¹ÀÌµå] ÀÏ²Û ÀÌµ¿ ¼Óµµ +0.2! ÇöÀç: {GetWorkerSpeed()}");
+        Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ] ì¼ê¾¼ ì´ë™ ì†ë„ +0.2! í˜„ì¬: {GetWorkerSpeed()}");
         
-        // UI Ç¥½Ã
+        // UI í‘œì‹œ
         if (UpgradeResultUI.Instance != null)
         {
             UpgradeResultUI.Instance.ShowUpgradeResult(
-                "ºü¸¥ ³¯°³",
-                "ÀÏ²Û ÀÌµ¿ ¼Óµµ +0.2",
+                "ë¹ ë¥¸ ë‚ ê°œ",
+                "ì¼ê¾¼ ì´ë™ ì†ë„ +0.2",
                 $"{GetWorkerSpeed():F1}"
             );
         }
@@ -221,7 +221,7 @@ public class HiveManager : MonoBehaviour
         return true;
     }
 
-    // 5. ÇÏÀÌºê Ã¼·Â ¾÷±×·¹ÀÌµå
+    // 5. í•˜ì´ë¸Œ ì²´ë ¥ ì—…ê·¸ë ˆì´ë“œ
     public bool UpgradeHiveHealth(int cost)
     {
         if (!TrySpendResources(cost)) return false;
@@ -229,14 +229,14 @@ public class HiveManager : MonoBehaviour
         hiveHealthLevel++;
         UpdateAllHiveHealth();
 
-        Debug.Log($"[¾÷±×·¹ÀÌµå] ÇÏÀÌºê Ã¼·Â +30! ÇöÀç: {GetHiveMaxHealth()}");
+        Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ] í•˜ì´ë¸Œ ì²´ë ¥ +30! í˜„ì¬: {GetHiveMaxHealth()}");
         
-        // UI Ç¥½Ã
+        // UI í‘œì‹œ
         if (UpgradeResultUI.Instance != null)
         {
             UpgradeResultUI.Instance.ShowUpgradeResult(
-                "°­È­ ¼ºº®",
-                "ÇÏÀÌºê ÃÖ´ë Ã¼·Â +30",
+                "ê°•í™” ì„±ë²½",
+                "í•˜ì´ë¸Œ ìµœëŒ€ ì²´ë ¥ +30",
                 $"{GetHiveMaxHealth()} HP"
             );
         }
@@ -244,7 +244,7 @@ public class HiveManager : MonoBehaviour
         return true;
     }
 
-    // 6. ÃÖ´ë ÀÏ²Û ¼ö ¾÷±×·¹ÀÌµå
+    // 6. ìµœëŒ€ ì¼ê¾¼ ìˆ˜ ì—…ê·¸ë ˆì´ë“œ
     public bool UpgradeMaxWorkers(int cost)
     {
         if (!TrySpendResources(cost)) return false;
@@ -252,22 +252,22 @@ public class HiveManager : MonoBehaviour
         maxWorkersLevel++;
         UpdateAllHiveMaxWorkers();
 
-        Debug.Log($"[¾÷±×·¹ÀÌµå] ÃÖ´ë ÀÏ²Û ¼ö +3! ÇöÀç: {GetMaxWorkers()}");
+        Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ] ìµœëŒ€ ì¼ê¾¼ ìˆ˜ +3! í˜„ì¬: {GetMaxWorkers()}");
         
-        // UI Ç¥½Ã
+        // UI í‘œì‹œ
         if (UpgradeResultUI.Instance != null)
         {
             UpgradeResultUI.Instance.ShowUpgradeResult(
-                "È®Àå ¹úÁı",
-                "ÃÖ´ë ÀÏ²Û ¼ö +3",
-                $"{GetMaxWorkers()}¸¶¸®"
+                "í™•ì¥ ë²Œì§‘",
+                "ìµœëŒ€ ì¼ê¾¼ ìˆ˜ +3",
+                $"{GetMaxWorkers()}ë§ˆë¦¬"
             );
         }
         
         return true;
     }
 
-    // 7. ÀÚ¿ø Ã¤Ãë·® ¾÷±×·¹ÀÌµå
+    // 7. ìì› ì±„ì·¨ëŸ‰ ì—…ê·¸ë ˆì´ë“œ
     public bool UpgradeGatherAmount(int cost)
     {
         if (!TrySpendResources(cost)) return false;
@@ -275,14 +275,14 @@ public class HiveManager : MonoBehaviour
         gatherAmountLevel++;
         UpdateAllWorkerGatherAmount();
 
-        Debug.Log($"[¾÷±×·¹ÀÌµå] ÀÚ¿ø Ã¤Ãë·® +1! ÇöÀç: {GetGatherAmount()}");
+        Debug.Log($"[ì—…ê·¸ë ˆì´ë“œ] ìì› ì±„ì·¨ëŸ‰ +1! í˜„ì¬: {GetGatherAmount()}");
         
-        // UI Ç¥½Ã
+        // UI í‘œì‹œ
         if (UpgradeResultUI.Instance != null)
         {
             UpgradeResultUI.Instance.ShowUpgradeResult(
-                "È¿À²Àû Ã¤Áı",
-                "ÀÚ¿ø Ã¤Ãë·® +1",
+                "íš¨ìœ¨ì  ì±„ì§‘",
+                "ìì› ì±„ì·¨ëŸ‰ +1",
                 $"{GetGatherAmount()}"
             );
         }
@@ -290,7 +290,7 @@ public class HiveManager : MonoBehaviour
         return true;
     }
 
-    // ========== ¾÷µ¥ÀÌÆ® ¸Ş¼­µå ==========
+    // ========== ì—…ë°ì´íŠ¸ ë©”ì„œë“œ ==========
 
     void UpdateAllWorkerCombat()
     {
@@ -300,20 +300,20 @@ public class HiveManager : MonoBehaviour
         {
             if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
 
-            // ÇÏÀÌºê ÀÚÃ¼´Â Á¦¿Ü ?
+            // í•˜ì´ë¸Œ ìì²´ëŠ” ì œì™¸ ?
             var hive = unit.GetComponent<Hive>();
             if (hive != null) continue;
 
-            // ÇÏÀÌºê ¾È¿¡ ÀÖ´Â ¿©¿Õ¹ú Á¦¿Ü (ºñÈ°¼ºÈ­ »óÅÂ) ?
+            // í•˜ì´ë¸Œ ì•ˆì— ìˆëŠ” ì—¬ì™•ë²Œ ì œì™¸ (ë¹„í™œì„±í™” ìƒíƒœ) ?
             if (!unit.gameObject.activeInHierarchy) continue;
 
             var combat = unit.GetComponent<CombatUnit>();
             if (combat != null)
             {
-                // °ø°İ·Â ¾÷µ¥ÀÌÆ® (ÀÌº¥Æ® ¹ß»ı)
+                // ê³µê²©ë ¥ ì—…ë°ì´íŠ¸ (ì´ë²¤íŠ¸ ë°œìƒ)
                 combat.SetAttack(GetWorkerAttack());
                 
-                // Ã¼·Â ¾÷µ¥ÀÌÆ® - ÃÖ´ë Ã¼·ÂÀÌ Áõ°¡ÇÑ ¸¸Å­ ÇöÀç Ã¼·Âµµ Áõ°¡
+                // ì²´ë ¥ ì—…ë°ì´íŠ¸ - ìµœëŒ€ ì²´ë ¥ì´ ì¦ê°€í•œ ë§Œí¼ í˜„ì¬ ì²´ë ¥ë„ ì¦ê°€
                 int oldMaxHealth = combat.maxHealth;
                 int newMaxHealth = GetWorkerMaxHealth();
                 int healthIncrease = newMaxHealth - oldMaxHealth;
@@ -332,11 +332,11 @@ public class HiveManager : MonoBehaviour
         {
             if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
 
-            // ÇÏÀÌºê ÀÚÃ¼´Â Á¦¿Ü ?
+            // í•˜ì´ë¸Œ ìì²´ëŠ” ì œì™¸ ?
             var hive = unit.GetComponent<Hive>();
             if (hive != null) continue;
 
-            // ÇÏÀÌºê ¾È¿¡ ÀÖ´Â ¿©¿Õ¹ú Á¦¿Ü (ºñÈ°¼ºÈ­ »óÅÂ) ?
+            // í•˜ì´ë¸Œ ì•ˆì— ìˆëŠ” ì—¬ì™•ë²Œ ì œì™¸ (ë¹„í™œì„±í™” ìƒíƒœ) ?
             if (!unit.gameObject.activeInHierarchy) continue;
 
             var controller = unit.GetComponent<UnitController>();
@@ -358,7 +358,7 @@ public class HiveManager : MonoBehaviour
             {
                 int oldMax = combat.maxHealth;
                 combat.maxHealth = GetHiveMaxHealth();
-                // ÇöÀç Ã¼·ÂÀ» ºñÀ²·Î Áõ°¡
+                // í˜„ì¬ ì²´ë ¥ì„ ë¹„ìœ¨ë¡œ ì¦ê°€
                 if (oldMax > 0)
                 {
                     float ratio = (float)combat.health / oldMax;
@@ -391,11 +391,11 @@ public class HiveManager : MonoBehaviour
         {
             if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
 
-            // ÇÏÀÌºê ÀÚÃ¼´Â Á¦¿Ü ?
+            // í•˜ì´ë¸Œ ìì²´ëŠ” ì œì™¸ ?
             var hive = unit.GetComponent<Hive>();
             if (hive != null) continue;
 
-            // ÇÏÀÌºê ¾È¿¡ ÀÖ´Â ¿©¿Õ¹ú Á¦¿Ü (ºñÈ°¼ºÈ­ »óÅÂ) ?
+            // í•˜ì´ë¸Œ ì•ˆì— ìˆëŠ” ì—¬ì™•ë²Œ ì œì™¸ (ë¹„í™œì„±í™” ìƒíƒœ) ?
             if (!unit.gameObject.activeInHierarchy) continue;
 
             var behavior = unit.GetComponent<UnitBehaviorController>();
@@ -406,7 +406,7 @@ public class HiveManager : MonoBehaviour
         }
     }
 
-    // ========== ½ºÅÈ °è»ê ¸Ş¼­µå ==========
+    // ========== ìŠ¤íƒ¯ ê³„ì‚° ë©”ì„œë“œ ==========
 
     public int GetWorkerAttack()
     {
@@ -430,7 +430,7 @@ public class HiveManager : MonoBehaviour
 
     public int GetMaxWorkers()
     {
-        return 1 + (maxWorkersLevel * 3);
+        return 10 + (maxWorkersLevel * 3);
     }
 
     public int GetGatherAmount()

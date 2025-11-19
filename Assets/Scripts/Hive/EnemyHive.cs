@@ -3,34 +3,34 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Àû ¸»¹úÁı Àü¿ë Å¬·¡½º
-/// - ÇÃ·¹ÀÌ¾î ÇÏÀÌºê¿Í ºĞ¸®µÈ µ¶¸³ÀûÀÎ Å¬·¡½º
-/// - ¸»¹ú »ı¼º ¹× °ü¸®
-/// - ½Ã¾ß ½Ã½ºÅÛ ÃÖÀûÈ­
-/// - ´Ü¼øÈ­µÈ AI ¿¬µ¿
+/// ì  ë§ë²Œì§‘ ì „ìš© í´ë˜ìŠ¤
+/// - í”Œë ˆì´ì–´ í•˜ì´ë¸Œì™€ ë¶„ë¦¬ëœ ë…ë¦½ì ì¸ í´ë˜ìŠ¤
+/// - ë§ë²Œ ìƒì„± ë° ê´€ë¦¬
+/// - ì‹œì•¼ ì‹œìŠ¤í…œ ìµœì í™”
+/// - ë‹¨ìˆœí™”ëœ AI ì—°ë™
 /// </summary>
 public class EnemyHive : MonoBehaviour
 {
-    [Header("À§Ä¡")]
+    [Header("ìœ„ì¹˜")]
     public int q;
     public int r;
 
-    [Header("»ı¼º ¼³Á¤")]
-    public GameObject waspPrefab; // ¸»¹ú ÇÁ¸®ÆÕ
-    public float spawnInterval = 8f; // »ı¼º °£°İ (ÃÊ)
-    public int maxWasps = 15; // ÃÖ´ë ¸»¹ú ¼ö
+    [Header("ìƒì„± ì„¤ì •")]
+    public GameObject waspPrefab; // ë§ë²Œ í”„ë¦¬íŒ¹
+    public float spawnInterval = 8f; // ìƒì„± ê°„ê²© (ì´ˆ)
+    public int maxWasps = 15; // ìµœëŒ€ ë§ë²Œ ìˆ˜
 
-    [Header("ÀüÅõ ¼³Á¤")]
-    public int visionRange = 5; // ¸»¹úÁı ½Ã¾ß ¹üÀ§
-    public int activityRange = 5; // ¸»¹ú È°µ¿ ¹üÀ§
+    [Header("ì „íˆ¬ ì„¤ì •")]
+    public int visionRange = 5; // ë§ë²Œì§‘ ì‹œì•¼ ë²”ìœ„
+    public int activityRange = 5; // ë§ë²Œ í™œë™ ë²”ìœ„
 
-    [Header("µğ¹ö±×")]
+    [Header("ë””ë²„ê·¸")]
     public bool showDebugLogs = false;
 
-    private List<UnitAgent> wasps = new List<UnitAgent>(); // »ı¼ºµÈ ¸»¹ú ¸ñ·Ï
+    private List<UnitAgent> wasps = new List<UnitAgent>(); // ìƒì„±ëœ ë§ë²Œ ëª©ë¡
     private Coroutine spawnRoutine;
-    private UnitAgent hiveAgent; // ÇÏÀÌºê ÀÚ½ÅÀÇ UnitAgent
-    private CombatUnit combat; // ÇÏÀÌºê ÀüÅõ À¯´Ö
+    private UnitAgent hiveAgent; // í•˜ì´ë¸Œ ìì‹ ì˜ UnitAgent
+    private CombatUnit combat; // í•˜ì´ë¸Œ ì „íˆ¬ ìœ ë‹›
 
     void Awake()
     {
@@ -50,19 +50,19 @@ public class EnemyHive : MonoBehaviour
 
     void OnEnable()
     {
-        // TileManager¿¡ À§Ä¡ µî·Ï
+        // TileManagerì— ìœ„ì¹˜ ë“±ë¡
         if (TileManager.Instance != null && hiveAgent != null)
         {
             hiveAgent.SetPosition(q, r);
         }
 
-        // WaspWaveManager¿¡ µî·Ï
+        // WaspWaveManagerì— ë“±ë¡
         if (WaspWaveManager.Instance != null)
         {
             WaspWaveManager.Instance.RegisterEnemyHive(this);
         }
 
-        // »ı¼º ·çÆ¾ ½ÃÀÛ
+        // ìƒì„± ë£¨í‹´ ì‹œì‘
         if (spawnRoutine == null)
         {
             spawnRoutine = StartCoroutine(SpawnLoop());
@@ -71,14 +71,14 @@ public class EnemyHive : MonoBehaviour
 
     void OnDisable()
     {
-        // »ı¼º ·çÆ¾ ÁßÁö
+        // ìƒì„± ë£¨í‹´ ì¤‘ì§€
         if (spawnRoutine != null)
         {
             StopCoroutine(spawnRoutine);
             spawnRoutine = null;
         }
 
-        // WaspWaveManager¿¡¼­ µî·Ï ÇØÁ¦
+        // WaspWaveManagerì—ì„œ ë“±ë¡ í•´ì œ
         if (WaspWaveManager.Instance != null)
         {
             WaspWaveManager.Instance.UnregisterEnemyHive(this);
@@ -86,42 +86,42 @@ public class EnemyHive : MonoBehaviour
     }
 
     /// <summary>
-    /// ¸»¹úÁı ÃÊ±âÈ­
+    /// ë§ë²Œì§‘ ì´ˆê¸°í™”
     /// </summary>
     public void Initialize(int q, int r, int maxHealth = 250)
     {
         this.q = q;
         this.r = r;
 
-        // Å¸ÀÏ Ã£±â ?
+        // íƒ€ì¼ ì°¾ê¸° ?
         if (TileManager.Instance != null)
         {
             var tile = TileManager.Instance.GetTile(q, r);
             if (tile != null)
             {
-                // Å¸ÀÏÀÇ ÀÚ½ÄÀ¸·Î ¼³Á¤ ?
+                // íƒ€ì¼ì˜ ìì‹ìœ¼ë¡œ ì„¤ì • ?
                 transform.SetParent(tile.transform);
                 
-                // Å¸ÀÏ¿¡ µî·Ï ?
+                // íƒ€ì¼ì— ë“±ë¡ ?
                 tile.enemyHive = this;
                 
-                // Å¸ÀÏ Áß½É À§Ä¡ (·ÎÄÃ ÁÂÇ¥) ?
+                // íƒ€ì¼ ì¤‘ì‹¬ ìœ„ì¹˜ (ë¡œì»¬ ì¢Œí‘œ) ?
                 transform.localPosition = Vector3.zero;
                 
                 if (showDebugLogs)
-                    Debug.Log($"[Àû ÇÏÀÌºê] Å¸ÀÏ¿¡ ºÎÂø: ({q}, {r})");
+                    Debug.Log($"[ì  í•˜ì´ë¸Œ] íƒ€ì¼ì— ë¶€ì°©: ({q}, {r})");
             }
             else
             {
-                Debug.LogError($"[Àû ÇÏÀÌºê] Å¸ÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù: ({q}, {r})");
+                Debug.LogError($"[ì  í•˜ì´ë¸Œ] íƒ€ì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: ({q}, {r})");
                 
-                // Å¸ÀÏÀÌ ¾øÀ¸¸é ¿ùµå ÁÂÇ¥·Î ¼³Á¤
+                // íƒ€ì¼ì´ ì—†ìœ¼ë©´ ì›”ë“œ ì¢Œí‘œë¡œ ì„¤ì •
                 Vector3 worldPos = TileHelper.HexToWorld(q, r, 0.5f);
                 transform.position = worldPos;
             }
         }
 
-        // UnitAgent ¼³Á¤
+        // UnitAgent ì„¤ì •
         if (hiveAgent != null)
         {
             hiveAgent.SetPosition(q, r);
@@ -131,58 +131,58 @@ public class EnemyHive : MonoBehaviour
             hiveAgent.isQueen = false;
         }
 
-        // CombatUnit ¼³Á¤
+        // CombatUnit ì„¤ì •
         if (combat != null)
         {
             combat.maxHealth = maxHealth;
             combat.health = maxHealth;
-            combat.attack = 0; // ÇÏÀÌºê´Â °ø°İ ¾È ÇÔ
+            combat.attack = 0; // í•˜ì´ë¸ŒëŠ” ê³µê²© ì•ˆ í•¨
         }
 
-        // ÃÊ±â¿¡´Â ¸ğµç ·»´õ·¯ ºñÈ°¼ºÈ­ (EnemyVisibilityController°¡ Á¦¾î)
+        // ì´ˆê¸°ì—ëŠ” ëª¨ë“  ë Œë”ëŸ¬ ë¹„í™œì„±í™” (EnemyVisibilityControllerê°€ ì œì–´)
         SetAllRenderersEnabled(false);
 
-        // EnemyVisibilityController¿¡ Áï½Ã ¾÷µ¥ÀÌÆ® ¿äÃ»
+        // EnemyVisibilityControllerì— ì¦‰ì‹œ ì—…ë°ì´íŠ¸ ìš”ì²­
         if (EnemyVisibilityController.Instance != null)
         {
             StartCoroutine(InitializeVisibilityCheck());
         }
 
         if (showDebugLogs)
-            Debug.Log($"[Àû ÇÏÀÌºê] ÃÊ±âÈ­ ¿Ï·á: ({q}, {r}), HP: {combat.health}/{combat.maxHealth}");
+            Debug.Log($"[ì  í•˜ì´ë¸Œ] ì´ˆê¸°í™” ì™„ë£Œ: ({q}, {r}), HP: {combat.health}/{combat.maxHealth}");
     }
 
     /// <summary>
-    /// ÃÊ±â °¡½Ã¼º Ã¼Å© (ÇÑ ÇÁ·¹ÀÓ ´ë±â ÈÄ) ?
+    /// ì´ˆê¸° ê°€ì‹œì„± ì²´í¬ (í•œ í”„ë ˆì„ ëŒ€ê¸° í›„) ?
     /// </summary>
     IEnumerator InitializeVisibilityCheck()
     {
-        // ¿ÏÀü ÃÊ±âÈ­ ´ë±â
+        // ì™„ì „ ì´ˆê¸°í™” ëŒ€ê¸°
         yield return null;
         
-        // °¡½Ã¼º Áï½Ã ¾÷µ¥ÀÌÆ®
+        // ê°€ì‹œì„± ì¦‰ì‹œ ì—…ë°ì´íŠ¸
         if (EnemyVisibilityController.Instance != null)
         {
             EnemyVisibilityController.Instance.ForceUpdateVisibility();
             
             if (showDebugLogs)
-                Debug.Log($"[Àû ÇÏÀÌºê] ÃÊ±â °¡½Ã¼º Ã¼Å© ¿Ï·á: ({q}, {r})");
+                Debug.Log($"[ì  í•˜ì´ë¸Œ] ì´ˆê¸° ê°€ì‹œì„± ì²´í¬ ì™„ë£Œ: ({q}, {r})");
         }
     }
 
     /// <summary>
-    /// ¸ğµç ·»´õ·¯ È°¼ºÈ­/ºñÈ°¼ºÈ­ ?
+    /// ëª¨ë“  ë Œë”ëŸ¬ í™œì„±í™”/ë¹„í™œì„±í™” ?
     /// </summary>
     void SetAllRenderersEnabled(bool enabled)
     {
-        // ÀÚ½ÅÀÇ ·»´õ·¯
+        // ìì‹ ì˜ ë Œë”ëŸ¬
         var sprite = GetComponent<SpriteRenderer>();
         if (sprite != null) sprite.enabled = enabled;
         
         var renderer = GetComponent<Renderer>();
         if (renderer != null) renderer.enabled = enabled;
         
-        // ÀÚ½Ä ·»´õ·¯
+        // ìì‹ ë Œë”ëŸ¬
         var childRenderers = GetComponentsInChildren<Renderer>(true);
         foreach (var r in childRenderers)
         {
@@ -195,7 +195,7 @@ public class EnemyHive : MonoBehaviour
             s.enabled = enabled;
         }
         
-        // ºÎ¸ğ ·»´õ·¯
+        // ë¶€ëª¨ ë Œë”ëŸ¬
         if (transform.parent != null)
         {
             var parentRenderer = transform.parent.GetComponent<Renderer>();
@@ -206,11 +206,11 @@ public class EnemyHive : MonoBehaviour
         }
         
         if (showDebugLogs)
-            Debug.Log($"[Àû ÇÏÀÌºê] ¸ğµç ·»´õ·¯ {(enabled ? "È°¼ºÈ­" : "ºñÈ°¼ºÈ­")}");
+            Debug.Log($"[ì  í•˜ì´ë¸Œ] ëª¨ë“  ë Œë”ëŸ¬ {(enabled ? "í™œì„±í™”" : "ë¹„í™œì„±í™”")}");
     }
 
     /// <summary>
-    /// ¸»¹ú »ı¼º ·çÇÁ
+    /// ë§ë²Œ ìƒì„± ë£¨í”„
     /// </summary>
     IEnumerator SpawnLoop()
     {
@@ -218,46 +218,46 @@ public class EnemyHive : MonoBehaviour
         {
             yield return new WaitForSeconds(spawnInterval);
 
-            // null Á¦°Å
+            // null ì œê±°
             wasps.RemoveAll(w => w == null);
 
-            // ÃÖ´ë ¼ö Ã¼Å©
+            // ìµœëŒ€ ìˆ˜ ì²´í¬
             if (wasps.Count < maxWasps)
             {
                 SpawnWasp();
             }
             else if (showDebugLogs)
             {
-                Debug.Log($"[Àû ÇÏÀÌºê] ÃÖ´ë ¸»¹ú ¼ö µµ´Ş: {wasps.Count}/{maxWasps}");
+                Debug.Log($"[ì  í•˜ì´ë¸Œ] ìµœëŒ€ ë§ë²Œ ìˆ˜ ë„ë‹¬: {wasps.Count}/{maxWasps}");
             }
         }
     }
 
     /// <summary>
-    /// ¸»¹ú »ı¼º
+    /// ë§ë²Œ ìƒì„±
     /// </summary>
     void SpawnWasp()
     {
         if (waspPrefab == null)
         {
-            Debug.LogError("[Àû ÇÏÀÌºê] ¸»¹ú ÇÁ¸®ÆÕÀÌ ¾ø½À´Ï´Ù!");
+            Debug.LogError("[ì  í•˜ì´ë¸Œ] ë§ë²Œ í”„ë¦¬íŒ¹ì´ ì—†ìŠµë‹ˆë‹¤!");
             return;
         }
 
-        // ¾ÈÀü Ã¼Å©
+        // ì•ˆì „ ì²´í¬
         if (wasps.Count >= maxWasps)
         {
-            Debug.LogWarning($"[Àû ÇÏÀÌºê] ÀÌ¹Ì ÃÖ´ë ¸»¹ú ¼ö: {wasps.Count}/{maxWasps}");
+            Debug.LogWarning($"[ì  í•˜ì´ë¸Œ] ì´ë¯¸ ìµœëŒ€ ë§ë²Œ ìˆ˜: {wasps.Count}/{maxWasps}");
             return;
         }
 
-        // Å¸ÀÏ ³»ºÎ ·£´ı À§Ä¡
+        // íƒ€ì¼ ë‚´ë¶€ ëœë¤ ìœ„ì¹˜
         Vector3 spawnPos = TileHelper.GetRandomPositionInTile(q, r, 0.5f, 0.15f);
 
         if (showDebugLogs)
-            Debug.Log($"[Àû ÇÏÀÌºê] ¸»¹ú »ı¼º À§Ä¡: ({q}, {r}) ¡æ World: {spawnPos}");
+            Debug.Log($"[ì  í•˜ì´ë¸Œ] ë§ë²Œ ìƒì„± ìœ„ì¹˜: ({q}, {r}) â†’ World: {spawnPos}");
 
-        // ¸»¹ú »ı¼º
+        // ë§ë²Œ ìƒì„±
         GameObject waspObj = Instantiate(waspPrefab, spawnPos, Quaternion.identity);
         var waspAgent = waspObj.GetComponent<UnitAgent>();
         
@@ -266,66 +266,66 @@ public class EnemyHive : MonoBehaviour
             waspAgent = waspObj.AddComponent<UnitAgent>();
         }
 
-        // UnitAgent ¼³Á¤
-        waspAgent.hexSize = 0.5f; // hexSize ¸í½ÃÀû ¼³Á¤
-        waspAgent.SetPosition(q, r); // Å¸ÀÏ ÁÂÇ¥ ¼³Á¤
+        // UnitAgent ì„¤ì •
+        waspAgent.hexSize = 0.5f; // hexSize ëª…ì‹œì  ì„¤ì •
+        waspAgent.SetPosition(q, r); // íƒ€ì¼ ì¢Œí‘œ ì„¤ì •
         waspAgent.faction = Faction.Enemy;
-        waspAgent.homeHive = null; // EnemyHive´Â Hive°¡ ¾Æ´Ï¹Ç·Î null
+        waspAgent.homeHive = null; // EnemyHiveëŠ” Hiveê°€ ì•„ë‹ˆë¯€ë¡œ null
         waspAgent.canMove = true;
         waspAgent.isQueen = false;
 
-        // ¿ùµå À§Ä¡ È®ÀÎ ¹× º¸Á¤
+        // ì›”ë“œ ìœ„ì¹˜ í™•ì¸ ë° ë³´ì •
         Vector3 expectedWorldPos = TileHelper.HexToWorld(q, r, 0.5f);
         if (Vector3.Distance(waspObj.transform.position, expectedWorldPos) > 1f)
         {
-            Debug.LogWarning($"[Àû ÇÏÀÌºê] ¸»¹ú À§Ä¡ º¸Á¤: {waspObj.transform.position} ¡æ {expectedWorldPos}");
+            Debug.LogWarning($"[ì  í•˜ì´ë¸Œ] ë§ë²Œ ìœ„ì¹˜ ë³´ì •: {waspObj.transform.position} â†’ {expectedWorldPos}");
             waspObj.transform.position = TileHelper.GetRandomPositionInTile(q, r, 0.5f, 0.15f);
         }
 
-        // ¸»¹ú ¸®½ºÆ®¿¡ Ãß°¡
+        // ë§ë²Œ ë¦¬ìŠ¤íŠ¸ì— ì¶”ê°€
         wasps.Add(waspAgent);
 
-        // EnemyAI ¼³Á¤
+        // EnemyAI ì„¤ì •
         var enemyAI = waspObj.GetComponent<EnemyAI>();
         if (enemyAI == null)
         {
             enemyAI = waspObj.AddComponent<EnemyAI>();
         }
 
-        // AI ¼³Á¤ (ÇÏÀÌºê Á¤º¸ Àü´Ş)
-        enemyAI.visionRange = 3; // ¸»¹ú ½Ã¾ß ¹üÀ§
-        enemyAI.activityRange = activityRange; // ÇÏÀÌºê È°µ¿ ¹üÀ§
-        enemyAI.attackRange = 0; // ±ÙÁ¢ ÀüÅõ
-        enemyAI.showDebugLogs = showDebugLogs; // µğ¹ö±× ·Î±× µ¿±âÈ­
+        // AI ì„¤ì • (í•˜ì´ë¸Œ ì •ë³´ ì „ë‹¬)
+        enemyAI.visionRange = 3; // ë§ë²Œ ì‹œì•¼ ë²”ìœ„
+        enemyAI.activityRange = activityRange; // í•˜ì´ë¸Œ í™œë™ ë²”ìœ„
+        enemyAI.attackRange = 0; // ê·¼ì ‘ ì „íˆ¬
+        enemyAI.showDebugLogs = showDebugLogs; // ë””ë²„ê·¸ ë¡œê·¸ ë™ê¸°í™”
 
-        // CombatUnit ¼³Á¤ (WaspWaveManager¿¡¼­ ¼³Á¤µÈ °ª »ç¿ë)
+        // CombatUnit ì„¤ì • (WaspWaveManagerì—ì„œ ì„¤ì •ëœ ê°’ ì‚¬ìš©)
         var waspCombat = waspObj.GetComponent<CombatUnit>();
         if (waspCombat != null)
         {
-            // WaspWaveManagerÀÇ °ª »ç¿ë (ÀÌ¹Ì ¼³Á¤µÇ¾î ÀÖÀ½)
+            // WaspWaveManagerì˜ ê°’ ì‚¬ìš© (ì´ë¯¸ ì„¤ì •ë˜ì–´ ìˆìŒ)
             if (showDebugLogs)
-                Debug.Log($"[Àû ÇÏÀÌºê] ¸»¹ú »ı¼º: HP={waspCombat.health}, ATK={waspCombat.attack}");
+                Debug.Log($"[ì  í•˜ì´ë¸Œ] ë§ë²Œ ìƒì„±: HP={waspCombat.health}, ATK={waspCombat.attack}");
         }
 
-        // ½Ã¾ß ½Ã½ºÅÛ¿¡ Áï½Ã ¼û±è
+        // ì‹œì•¼ ì‹œìŠ¤í…œì— ì¦‰ì‹œ ìˆ¨ê¹€
         if (EnemyVisibilityController.Instance != null)
         {
             StartCoroutine(HideWaspOnSpawn(waspAgent));
         }
 
         if (showDebugLogs)
-            Debug.Log($"[Àû ÇÏÀÌºê] ¸»¹ú »ı¼º ¿Ï·á: {wasps.Count}/{maxWasps} at ({q}, {r})");
+            Debug.Log($"[ì  í•˜ì´ë¸Œ] ë§ë²Œ ìƒì„± ì™„ë£Œ: {wasps.Count}/{maxWasps} at ({q}, {r})");
     }
 
     /// <summary>
-    /// ¸»¹ú »ı¼º Áï½Ã °¡½Ã¼º Ã¼Å©ÇÏ¿© ¼û±è
+    /// ë§ë²Œ ìƒì„± ì¦‰ì‹œ ê°€ì‹œì„± ì²´í¬í•˜ì—¬ ìˆ¨ê¹€
     /// </summary>
     IEnumerator HideWaspOnSpawn(UnitAgent wasp)
     {
-        // ÇÑ ÇÁ·¹ÀÓ ´ë±â (¿ÏÀü ÃÊ±âÈ­)
+        // í•œ í”„ë ˆì„ ëŒ€ê¸° (ì™„ì „ ì´ˆê¸°í™”)
         yield return null;
 
-        // Áï½Ã °¡½Ã¼º ¾÷µ¥ÀÌÆ®
+        // ì¦‰ì‹œ ê°€ì‹œì„± ì—…ë°ì´íŠ¸
         if (EnemyVisibilityController.Instance != null)
         {
             EnemyVisibilityController.Instance.ForceUpdateVisibility();
@@ -333,51 +333,51 @@ public class EnemyHive : MonoBehaviour
     }
 
     /// <summary>
-    /// ¸»¹úÁı ÆÄ±«
+    /// ë§ë²Œì§‘ íŒŒê´´
     /// </summary>
     public void DestroyHive()
     {
         if (showDebugLogs)
-            Debug.Log($"[Àû ÇÏÀÌºê] ÆÄ±«: ({q}, {r})");
+            Debug.Log($"[ì  í•˜ì´ë¸Œ] íŒŒê´´: ({q}, {r})");
 
-        // ¸ğµç ¸»¹ú¿¡°Ô ÇÏÀÌºê ÆÄ±« ¾Ë¸²
+        // ëª¨ë“  ë§ë²Œì—ê²Œ í•˜ì´ë¸Œ íŒŒê´´ ì•Œë¦¼
         foreach (var wasp in wasps)
         {
             if (wasp != null)
             {
-                // ¸»¹úÀÇ homeHive ÂüÁ¶ Á¦°Å
-                // (EnemyAI°¡ homeHive¸¦ ÂüÁ¶ÇÏ¹Ç·Î)
+                // ë§ë²Œì˜ homeHive ì°¸ì¡° ì œê±°
+                // (EnemyAIê°€ homeHiveë¥¼ ì°¸ì¡°í•˜ë¯€ë¡œ)
                 var enemyAI = wasp.GetComponent<EnemyAI>();
                 if (enemyAI != null)
                 {
-                    // AI°¡ ÇÏÀÌºê ¾øÀÌ ÀÛµ¿ÇÏµµ·Ï ¼³Á¤
-                    // (ÀÌ¹Ì homeHive == nullÀÌ¸é Á¦ÇÑ ¾øÀÌ ÀÛµ¿)
+                    // AIê°€ í•˜ì´ë¸Œ ì—†ì´ ì‘ë™í•˜ë„ë¡ ì„¤ì •
+                    // (ì´ë¯¸ homeHive == nullì´ë©´ ì œí•œ ì—†ì´ ì‘ë™)
                 }
             }
         }
 
-        // WaspWaveManager¿¡¼­ µî·Ï ÇØÁ¦
+        // WaspWaveManagerì—ì„œ ë“±ë¡ í•´ì œ
         if (WaspWaveManager.Instance != null)
         {
             WaspWaveManager.Instance.UnregisterEnemyHive(this);
         }
 
-        // GameObject ÆÄ±«
+        // GameObject íŒŒê´´
         Destroy(gameObject);
     }
 
     /// <summary>
-    /// »ı¼ºµÈ ¸»¹ú ¸®½ºÆ® °¡Á®¿À±â
+    /// ìƒì„±ëœ ë§ë²Œ ë¦¬ìŠ¤íŠ¸ ê°€ì ¸ì˜¤ê¸°
     /// </summary>
     public List<UnitAgent> GetWasps()
     {
-        // null Á¦°Å
+        // null ì œê±°
         wasps.RemoveAll(w => w == null);
         return new List<UnitAgent>(wasps);
     }
 
     /// <summary>
-    /// ÇöÀç ¸»¹ú ¼ö °¡Á®¿À±â
+    /// í˜„ì¬ ë§ë²Œ ìˆ˜ ê°€ì ¸ì˜¤ê¸°
     /// </summary>
     public int GetWaspCount()
     {
@@ -386,28 +386,28 @@ public class EnemyHive : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÏÀÌºê À§Ä¡ °¡Á®¿À±â (EnemyAI¿¡¼­ »ç¿ë)
+    /// í•˜ì´ë¸Œ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸° (EnemyAIì—ì„œ ì‚¬ìš©)
     /// </summary>
     public Vector2Int GetPosition()
     {
         return new Vector2Int(q, r);
     }
 
-    // Gizmos·Î ÇÏÀÌºê Á¤º¸ Ç¥½Ã
+    // Gizmosë¡œ í•˜ì´ë¸Œ ì •ë³´ í‘œì‹œ
     void OnDrawGizmosSelected()
     {
-        // ÇÏÀÌºê À§Ä¡
+        // í•˜ì´ë¸Œ ìœ„ì¹˜
         Vector3 pos = TileHelper.HexToWorld(q, r, 0.5f);
         
-        // ½Ã¾ß ¹üÀ§ (³ë¶õ»ö)
+        // ì‹œì•¼ ë²”ìœ„ (ë…¸ë€ìƒ‰)
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(pos, visionRange * 0.5f);
 
-        // È°µ¿ ¹üÀ§ (»¡°£»ö)
+        // í™œë™ ë²”ìœ„ (ë¹¨ê°„ìƒ‰)
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(pos, activityRange * 0.5f);
 
-        // ¸»¹ú ¼ö Ç¥½Ã (¿¡µğÅÍ¿¡¼­¸¸) ?
+        // ë§ë²Œ ìˆ˜ í‘œì‹œ (ì—ë””í„°ì—ì„œë§Œ) ?
 #if UNITY_EDITOR
         UnityEditor.Handles.Label(pos + Vector3.up * 0.5f, $"Wasps: {GetWaspCount()}/{maxWasps}");
 #endif

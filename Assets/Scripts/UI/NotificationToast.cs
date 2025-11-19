@@ -3,7 +3,7 @@ using TMPro;
 using System.Collections;
 
 /// <summary>
-/// °£´ÜÇÑ ¾Ë¸² ¸Ş½ÃÁö Ç¥½Ã
+/// ê°„ë‹¨í•œ ì•Œë¦¼ ë©”ì‹œì§€ í‘œì‹œ
 /// </summary>
 public class NotificationToast : MonoBehaviour
 {
@@ -12,7 +12,7 @@ public class NotificationToast : MonoBehaviour
     [Header("UI")]
     public TextMeshProUGUI messageText;
 
-    [Header("¼³Á¤")]
+    [Header("ì„¤ì •")]
     public float fadeDuration = 0.3f;
     public float displayDuration = 2f;
 
@@ -28,18 +28,18 @@ public class NotificationToast : MonoBehaviour
         }
         Instance = this;
 
-        // ¿øº» ÅØ½ºÆ® »ö»ó ÀúÀå
+        // ì›ë³¸ í…ìŠ¤íŠ¸ ìƒ‰ìƒ ì €ì¥
         if (messageText != null)
         {
             originalTextColor = messageText.color;
         }
 
-        // ÃÊ±â »óÅÂ: Åõ¸í
+        // ì´ˆê¸° ìƒíƒœ: íˆ¬ëª…
         HideImmediate();
     }
 
     /// <summary>
-    /// ¾Ë¸² ¸Ş½ÃÁö Ç¥½Ã
+    /// ì•Œë¦¼ ë©”ì‹œì§€ í‘œì‹œ
     /// </summary>
     public void ShowMessage(string message, float duration = -1f)
     {
@@ -74,7 +74,7 @@ public class NotificationToast : MonoBehaviour
             messageText.color = new Color(originalTextColor.r, originalTextColor.g, originalTextColor.b, 1f);
         }
 
-        // Ç¥½Ã ´ë±â
+        // í‘œì‹œ ëŒ€ê¸°
         yield return new WaitForSeconds(duration);
 
         // Fade Out
@@ -96,7 +96,7 @@ public class NotificationToast : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç Åä½ºÆ® Áï½Ã ¼û±è
+    /// í˜„ì¬ í† ìŠ¤íŠ¸ ì¦‰ì‹œ ìˆ¨ê¹€
     /// </summary>
     public void Hide()
     {
@@ -110,7 +110,7 @@ public class NotificationToast : MonoBehaviour
     }
 
     /// <summary>
-    /// Áï½Ã Åõ¸íÇÏ°Ô
+    /// ì¦‰ì‹œ íˆ¬ëª…í•˜ê²Œ
     /// </summary>
     void HideImmediate()
     {

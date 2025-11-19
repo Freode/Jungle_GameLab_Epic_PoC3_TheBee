@@ -4,20 +4,20 @@ using TMPro;
 using System.Collections;
 
 /// <summary>
-/// ¾÷±×·¹ÀÌµå °á°ú¸¦ È­¸é¿¡ Ç¥½ÃÇÏ´Â UI
+/// ì—…ê·¸ë ˆì´ë“œ ê²°ê³¼ë¥¼ í™”ë©´ì— í‘œì‹œí•˜ëŠ” UI
 /// </summary>
 public class UpgradeResultUI : MonoBehaviour
 {
     public static UpgradeResultUI Instance { get; private set; }
 
-    [Header("UI ¿ä¼Ò")]
+    [Header("UI ìš”ì†Œ")]
     public GameObject resultPanel;
     public TextMeshProUGUI upgradeNameText;
     public TextMeshProUGUI upgradeEffectText;
     public TextMeshProUGUI currentValueText;
 
-    [Header("¾Ö´Ï¸ŞÀÌ¼Ç ¼³Á¤")]
-    public float displayDuration = 3f; // Ç¥½Ã ½Ã°£
+    [Header("ì• ë‹ˆë©”ì´ì…˜ ì„¤ì •")]
+    public float displayDuration = 3f; // í‘œì‹œ ì‹œê°„
     public float fadeInDuration = 0.3f;
     public float fadeOutDuration = 0.3f;
 
@@ -33,7 +33,7 @@ public class UpgradeResultUI : MonoBehaviour
         }
         Instance = this;
 
-        // CanvasGroup ÃÊ±âÈ­
+        // CanvasGroup ì´ˆê¸°í™”
         if (resultPanel != null)
         {
             canvasGroup = resultPanel.GetComponent<CanvasGroup>();
@@ -50,7 +50,7 @@ public class UpgradeResultUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ¾÷±×·¹ÀÌµå °á°ú Ç¥½Ã
+    /// ì—…ê·¸ë ˆì´ë“œ ê²°ê³¼ í‘œì‹œ
     /// </summary>
     public void ShowUpgradeResult(string upgradeName, string effect, string currentValue)
     {
@@ -63,11 +63,11 @@ public class UpgradeResultUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ¾÷±×·¹ÀÌµå Ç¥½Ã ·çÆ¾
+    /// ì—…ê·¸ë ˆì´ë“œ í‘œì‹œ ë£¨í‹´
     /// </summary>
     IEnumerator DisplayUpgradeRoutine(string upgradeName, string effect, string currentValue)
     {
-        // ÅØ½ºÆ® ¼³Á¤
+        // í…ìŠ¤íŠ¸ ì„¤ì •
         if (upgradeNameText != null)
             upgradeNameText.text = $"<color=#FFD700>?</color> {upgradeName}";
 
@@ -75,27 +75,27 @@ public class UpgradeResultUI : MonoBehaviour
             upgradeEffectText.text = effect;
 
         if (currentValueText != null)
-            currentValueText.text = $"ÇöÀç: {currentValue}";
+            currentValueText.text = $"í˜„ì¬: {currentValue}";
 
-        // ÆĞ³Î È°¼ºÈ­
+        // íŒ¨ë„ í™œì„±í™”
         if (resultPanel != null)
             resultPanel.SetActive(true);
 
         // Fade In
         yield return StartCoroutine(FadeCanvasGroup(0f, 1f, fadeInDuration));
 
-        // Ç¥½Ã À¯Áö
+        // í‘œì‹œ ìœ ì§€
         yield return new WaitForSeconds(displayDuration);
 
         // Fade Out
         yield return StartCoroutine(FadeCanvasGroup(1f, 0f, fadeOutDuration));
 
-        // ÆĞ³Î ºñÈ°¼ºÈ­
+        // íŒ¨ë„ ë¹„í™œì„±í™”
         Hide();
     }
 
     /// <summary>
-    /// CanvasGroup Fade ¾Ö´Ï¸ŞÀÌ¼Ç
+    /// CanvasGroup Fade ì• ë‹ˆë©”ì´ì…˜
     /// </summary>
     IEnumerator FadeCanvasGroup(float startAlpha, float endAlpha, float duration)
     {
@@ -114,7 +114,7 @@ public class UpgradeResultUI : MonoBehaviour
     }
 
     /// <summary>
-    /// UI ¼û±â±â
+    /// UI ìˆ¨ê¸°ê¸°
     /// </summary>
     void Hide()
     {
@@ -126,10 +126,10 @@ public class UpgradeResultUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ºü¸¥ Ç¥½Ã (µğ¹ö±×/Å×½ºÆ®¿ë)
+    /// ë¹ ë¥¸ í‘œì‹œ (ë””ë²„ê·¸/í…ŒìŠ¤íŠ¸ìš©)
     /// </summary>
     public void ShowQuick(string message)
     {
-        ShowUpgradeResult("¾Ë¸²", message, "");
+        ShowUpgradeResult("ì•Œë¦¼", message, "");
     }
 }

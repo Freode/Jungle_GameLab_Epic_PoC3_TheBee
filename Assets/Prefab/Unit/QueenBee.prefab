@@ -84,6 +84,10 @@ PrefabInstance:
       propertyPath: visionRange
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 7071419041377049769, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: useRandomPosition
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8356495950311495776, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

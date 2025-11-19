@@ -7,6 +7,7 @@ public class UnitAgent : MonoBehaviour
     public int r;
     public int visionRange = 3;
     public float hexSize = 0.5f;
+    public bool useSeqRenderLayerOrder = false;
 
     // faction
     public Faction faction = Faction.Player;
@@ -19,6 +20,10 @@ public class UnitAgent : MonoBehaviour
 
     // Queen bee flag
     public bool isQueen = false;
+
+    // âœ… íƒ€ì¼ ì´ë™ ì‹œ ëœë¤ ìœ„ì¹˜ ì‚¬ìš© ì—¬ë¶€
+    [Tooltip("íƒ€ì¼ ì´ë™ ì‹œ ì •ì¤‘ì•™ ê·¼ì²˜ ëœë¤ ìœ„ì¹˜ë¡œ ì´ë™ (falseë©´ ì •ì¤‘ì•™ìœ¼ë¡œ ì´ë™)")]
+    public bool useRandomPosition = true;
 
     // Worker behavior flags for hive relocation
     public bool isFollowingQueen = false; // Worker is following queen during relocation
@@ -52,6 +57,12 @@ public class UnitAgent : MonoBehaviour
     {
         // Do not auto-register here. Registration should happen after the unit's initial placement via SetPosition or explicit RegisterWithFog().
         TileManager.Instance?.RegisterUnit(this);
+        
+        // âœ… 2. Sorting Order ìë™ í• ë‹¹
+        if (SortingOrderManager.Instance != null && useSeqRenderLayerOrder)
+        {
+            SortingOrderManager.Instance.ApplySortingOrder(this);
+        }
     }
 
     private void OnEnable()
@@ -74,7 +85,7 @@ public class UnitAgent : MonoBehaviour
     // Explicit registration method if needed
     public void RegisterWithFog()
     {
-        // Enemy À¯´ÖÀº ÀüÀåÀÇ ¾È°³¿¡ ¿µÇâÀ» ÁÖÁö ¾ÊÀ½
+        // Enemy ìœ ë‹›ì€ ì „ì¥ì˜ ì•ˆê°œì— ì˜í–¥ì„ ì£¼ì§€ ì•ŠìŒ
         if (faction == Faction.Enemy)
             return;
 
@@ -85,7 +96,7 @@ public class UnitAgent : MonoBehaviour
 
     public void Unregister()
     {
-        // Enemy À¯´ÖÀº µî·ÏµÇÁö ¾Ê¾ÒÀ¸¹Ç·Î ÇØÁ¦µµ ÇÊ¿ä ¾øÀ½
+        // Enemy ìœ ë‹›ì€ ë“±ë¡ë˜ì§€ ì•Šì•˜ìœ¼ë¯€ë¡œ í•´ì œë„ í•„ìš” ì—†ìŒ
         if (faction == Faction.Enemy)
             return;
 
@@ -99,7 +110,7 @@ public class UnitAgent : MonoBehaviour
     {
         q = nq; r = nr;
 
-        // Enemy À¯´ÖÀº ÀüÀåÀÇ ¾È°³¿¡ ¿µÇâÀ» ÁÖÁö ¾ÊÀ½
+        // Enemy ìœ ë‹›ì€ ì „ì¥ì˜ ì•ˆê°œì— ì˜í–¥ì„ ì£¼ì§€ ì•ŠìŒ
         if (faction == Faction.Enemy)
             return;
 
@@ -117,7 +128,7 @@ public class UnitAgent : MonoBehaviour
 
     public void SetSelected(bool selected)
     {
-        // ¿¬ÇÑ ¿¬µÎ»ö: RGB(144, 238, 144) = Light Green
+        // ì—°í•œ ì—°ë‘ìƒ‰: RGB(144, 238, 144) = Light Green
         Color selectedColor = new Color(144f / 255f, 238f / 255f, 144f / 255f, 1f);
         Color target = selected ? selectedColor : originalColor;
         

@@ -1,21 +1,21 @@
 using UnityEngine;
 
 /// <summary>
-/// ¸¶¿ì½º ÈÙÀ» »ç¿ëÇÑ Ä«¸Ş¶ó ÁÜÀÎ/ÁÜ¾Æ¿ô
+/// ë§ˆìš°ìŠ¤ íœ ì„ ì‚¬ìš©í•œ ì¹´ë©”ë¼ ì¤Œì¸/ì¤Œì•„ì›ƒ
 /// </summary>
 public class CameraZoom : MonoBehaviour
 {
-    [Header("ÁÜ ¼³Á¤")]
-    [Tooltip("ÁÜ ¼Óµµ")]
+    [Header("ì¤Œ ì„¤ì •")]
+    [Tooltip("ì¤Œ ì†ë„")]
     public float zoomSpeed = 2f;
     
-    [Tooltip("ÃÖ¼Ò ÁÜ (Ä«¸Ş¶ó Å©±â ÃÖ¼Ò°ª)")]
+    [Tooltip("ìµœì†Œ ì¤Œ (ì¹´ë©”ë¼ í¬ê¸° ìµœì†Œê°’)")]
     public float minZoom = 2f;
     
-    [Tooltip("ÃÖ´ë ÁÜ (Ä«¸Ş¶ó Å©±â ÃÖ´ë°ª)")]
+    [Tooltip("ìµœëŒ€ ì¤Œ (ì¹´ë©”ë¼ í¬ê¸° ìµœëŒ€ê°’)")]
     public float maxZoom = 10f;
     
-    [Tooltip("ÁÜ ºÎµå·¯¿ò Á¤µµ (0 = Áï½Ã, 1 = ¸Å¿ì ºÎµå·¯¿ò)")]
+    [Tooltip("ì¤Œ ë¶€ë“œëŸ¬ì›€ ì •ë„ (0 = ì¦‰ì‹œ, 1 = ë§¤ìš° ë¶€ë“œëŸ¬ì›€)")]
     [Range(0f, 1f)]
     public float zoomSmoothness = 0.1f;
 
@@ -30,12 +30,12 @@ public class CameraZoom : MonoBehaviour
             cam = Camera.main;
         }
 
-        // 2D Ä«¸Ş¶óÀÎ °æ¿ì orthographicSize »ç¿ë
+        // 2D ì¹´ë©”ë¼ì¸ ê²½ìš° orthographicSize ì‚¬ìš©
         if (cam != null && cam.orthographic)
         {
             targetZoom = cam.orthographicSize;
         }
-        // 3D Ä«¸Ş¶óÀÎ °æ¿ì ÇöÀç Z À§Ä¡ »ç¿ë
+        // 3D ì¹´ë©”ë¼ì¸ ê²½ìš° í˜„ì¬ Z ìœ„ì¹˜ ì‚¬ìš©
         else if (cam != null)
         {
             targetZoom = -cam.transform.position.z;
@@ -46,27 +46,27 @@ public class CameraZoom : MonoBehaviour
     {
         if (cam == null) return;
 
-        // ¸¶¿ì½º ÈÙ ÀÔ·Â
+        // ë§ˆìš°ìŠ¤ íœ  ì…ë ¥
         float scrollInput = Input.GetAxis("Mouse ScrollWheel");
 
         if (Mathf.Abs(scrollInput) > 0.01f)
         {
-            // ÁÜ ¹æÇâ (ÈÙ À§·Î = ÁÜÀÎ = °ª °¨¼Ò)
+            // ì¤Œ ë°©í–¥ (íœ  ìœ„ë¡œ = ì¤Œì¸ = ê°’ ê°ì†Œ)
             targetZoom -= scrollInput * zoomSpeed;
             
-            // ÁÜ ¹üÀ§ Á¦ÇÑ
+            // ì¤Œ ë²”ìœ„ ì œí•œ
             targetZoom = Mathf.Clamp(targetZoom, minZoom, maxZoom);
         }
 
-        // ºÎµå·¯¿î ÁÜ Àû¿ë
+        // ë¶€ë“œëŸ¬ìš´ ì¤Œ ì ìš©
         if (cam.orthographic)
         {
-            // 2D Ä«¸Ş¶ó: orthographicSize Á¶Á¤
+            // 2D ì¹´ë©”ë¼: orthographicSize ì¡°ì •
             cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, targetZoom, 1f - zoomSmoothness);
         }
         else
         {
-            // 3D Ä«¸Ş¶ó: Z À§Ä¡ Á¶Á¤
+            // 3D ì¹´ë©”ë¼: Z ìœ„ì¹˜ ì¡°ì •
             Vector3 pos = cam.transform.position;
             pos.z = Mathf.Lerp(pos.z, -targetZoom, 1f - zoomSmoothness);
             cam.transform.position = pos;
@@ -74,7 +74,7 @@ public class CameraZoom : MonoBehaviour
     }
 
     /// <summary>
-    /// Æ¯Á¤ ÁÜ ·¹º§·Î Áï½Ã ¼³Á¤
+    /// íŠ¹ì • ì¤Œ ë ˆë²¨ë¡œ ì¦‰ì‹œ ì„¤ì •
     /// </summary>
     public void SetZoom(float zoom)
     {
@@ -96,7 +96,7 @@ public class CameraZoom : MonoBehaviour
     }
 
     /// <summary>
-    /// Æ¯Á¤ ÁÜ ·¹º§·Î ºÎµå·´°Ô ÀüÈ¯
+    /// íŠ¹ì • ì¤Œ ë ˆë²¨ë¡œ ë¶€ë“œëŸ½ê²Œ ì „í™˜
     /// </summary>
     public void SetZoomSmooth(float zoom)
     {
@@ -104,7 +104,7 @@ public class CameraZoom : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç ÁÜ ·¹º§ °¡Á®¿À±â
+    /// í˜„ì¬ ì¤Œ ë ˆë²¨ ê°€ì ¸ì˜¤ê¸°
     /// </summary>
     public float GetCurrentZoom()
     {

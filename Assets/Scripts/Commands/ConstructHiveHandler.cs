@@ -40,33 +40,33 @@ public class ConstructHiveHandler : MonoBehaviour
         hiveAgent.faction = Faction.Player;
         hiveAgent.SetPosition(q, r);
         
-        // Update queen's home hive and hive's queen reference (Initialize Àü¿¡!) ?
+        // Update queen's home hive and hive's queen reference (Initialize ì „ì—!) ?
         if (agent.isQueen)
         {
             agent.homeHive = hive;
             hive.queenBee = agent;
             
-            Debug.Log($"[ÇÏÀÌºê °Ç¼³] ¿©¿Õ¹ú ÂüÁ¶ ¼³Á¤ ¿Ï·á");
+            Debug.Log($"[í•˜ì´ë¸Œ ê±´ì„¤] ì—¬ì™•ë²Œ ì°¸ì¡° ì„¤ì • ì™„ë£Œ");
         }
         
-        // Initialize hive (¿©¿Õ¹ú ºñÈ°¼ºÈ­ Æ÷ÇÔ) ?
+        // Initialize hive (ì—¬ì™•ë²Œ ë¹„í™œì„±í™” í¬í•¨) ?
         hive.Initialize(q, r);
         
         // Transfer workers from old hive or find homeless workers
         if (agent.isQueen)
         {
-            // Note: agent.homeHive´Â ÀÌ¹Ì À§¿¡¼­ »õ hive·Î ¼³Á¤µÊ
-            // ÀÌÀü ÇÏÀÌºê¿¡¼­ ÀÏ²Û ÀÌÀüÀº ÇÊ¿ä ¾øÀ½ (»õ ÇÏÀÌºêÀÌ¹Ç·Î)
+            // Note: agent.homeHiveëŠ” ì´ë¯¸ ìœ„ì—ì„œ ìƒˆ hiveë¡œ ì„¤ì •ë¨
+            // ì´ì „ í•˜ì´ë¸Œì—ì„œ ì¼ê¾¼ ì´ì „ì€ í•„ìš” ì—†ìŒ (ìƒˆ í•˜ì´ë¸Œì´ë¯€ë¡œ)
             
-            // homeHive°¡ ¾ø´Â ÀÏ²ÛµéÀ» Ã£¾Æ¼­ ÇÒ´ç
+            // homeHiveê°€ ì—†ëŠ” ì¼ê¾¼ë“¤ì„ ì°¾ì•„ì„œ í• ë‹¹
             AssignHomelessWorkersToHive(hive, q, r);
         }
         
-        Debug.Log($"[ÇÏÀÌºê °Ç¼³] ÇÏÀÌºê °Ç¼³ ¿Ï·á: ({q}, {r})");
+        Debug.Log($"[í•˜ì´ë¸Œ ê±´ì„¤] í•˜ì´ë¸Œ ê±´ì„¤ ì™„ë£Œ: ({q}, {r})");
     }
 
     /// <summary>
-    /// homeHive°¡ ¾ø´Â ÀÏ²ÛµéÀ» »õ ÇÏÀÌºê¿¡ ÇÒ´ç
+    /// homeHiveê°€ ì—†ëŠ” ì¼ê¾¼ë“¤ì„ ìƒˆ í•˜ì´ë¸Œì— í• ë‹¹
     /// </summary>
     private static void AssignHomelessWorkersToHive(Hive hive, int q, int r)
     {
@@ -78,15 +78,15 @@ public class ConstructHiveHandler : MonoBehaviour
             if (unit.faction != Faction.Player) continue;
             if (unit.isQueen) continue;
             
-            // homeHive°¡ ¾ø´Â ÀÏ²Û¸¸
+            // homeHiveê°€ ì—†ëŠ” ì¼ê¾¼ë§Œ
             if (unit.homeHive == null)
             {
-                // »õ ÇÏÀÌºê¸¦ homeHive·Î ¼³Á¤
+                // ìƒˆ í•˜ì´ë¸Œë¥¼ homeHiveë¡œ ì„¤ì •
                 unit.homeHive = hive;
                 unit.isFollowingQueen = false;
                 unit.hasManualOrder = false;
                 
-                // ÇÏÀÌºê·Î ÀÌµ¿
+                // í•˜ì´ë¸Œë¡œ ì´ë™
                 var start = TileManager.Instance.GetTile(unit.q, unit.r);
                 var dest = TileManager.Instance.GetTile(q, r);
                 if (start != null && dest != null)
@@ -101,25 +101,25 @@ public class ConstructHiveHandler : MonoBehaviour
                     }
                 }
                 
-                Debug.Log($"[ÇÏÀÌºê °Ç¼³] {unit.name}ÀÌ(°¡) »õ ÇÏÀÌºê¿¡ ÇÒ´çµÇ¾ú½À´Ï´Ù.");
+                Debug.Log($"[í•˜ì´ë¸Œ ê±´ì„¤] {unit.name}ì´(ê°€) ìƒˆ í•˜ì´ë¸Œì— í• ë‹¹ë˜ì—ˆìŠµë‹ˆë‹¤.");
             }
         }
     }
 
     /// <summary>
-    /// ¿©¿Õ¹úÀ» ÇÏÀÌºê Å¸ÀÏ À§Ä¡·Î ÀÌµ¿
+    /// ì—¬ì™•ë²Œì„ í•˜ì´ë¸Œ íƒ€ì¼ ìœ„ì¹˜ë¡œ ì´ë™
     /// </summary>
     private static void MoveQueenToHive(UnitAgent queen, int q, int r)
     {
         if (queen == null) return;
         
-        // Å¸ÀÏ ÁÂÇ¥ ¾÷µ¥ÀÌÆ®
+        // íƒ€ì¼ ì¢Œí‘œ ì—…ë°ì´íŠ¸
         queen.SetPosition(q, r);
         
-        // ¿ùµå À§Ä¡ ¾÷µ¥ÀÌÆ® (ÇÏÀÌºê Áß½É)
+        // ì›”ë“œ ìœ„ì¹˜ ì—…ë°ì´íŠ¸ (í•˜ì´ë¸Œ ì¤‘ì‹¬)
         Vector3 hivePos = TileHelper.HexToWorld(q, r, queen.hexSize);
         queen.transform.position = hivePos;
         
-        Debug.Log($"[ÇÏÀÌºê °Ç¼³] ¿©¿Õ¹úÀÌ ÇÏÀÌºê À§Ä¡·Î ÀÌµ¿: ({q}, {r})");
+        Debug.Log($"[í•˜ì´ë¸Œ ê±´ì„¤] ì—¬ì™•ë²Œì´ í•˜ì´ë¸Œ ìœ„ì¹˜ë¡œ ì´ë™: ({q}, {r})");
     }
 }

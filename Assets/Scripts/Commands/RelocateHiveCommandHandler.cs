@@ -4,7 +4,7 @@ public static class RelocateHiveCommandHandler
 {
     public static void ExecuteRelocate(UnitAgent agent, CommandTarget target)
     {
-        Debug.Log("[RelocateHive] ExecuteRelocate ½ÃÀÛ");
+        Debug.Log("[RelocateHive] ExecuteRelocate ì‹œì‘");
         
         if (agent == null)
         {
@@ -19,7 +19,7 @@ public static class RelocateHiveCommandHandler
         
         if (hive == null)
         {
-            Debug.Log("[RelocateHive] agent¿¡ Hive ÄÄÆ÷³ÍÆ® ¾øÀ½, À§Ä¡·Î °Ë»ö ½Ãµµ");
+            Debug.Log("[RelocateHive] agentì— Hive ì»´í¬ë„ŒíŠ¸ ì—†ìŒ, ìœ„ì¹˜ë¡œ ê²€ìƒ‰ ì‹œë„");
             // If agent doesn't have Hive component, try to find hive at agent's location
             hive = FindHiveAtPosition(agent.q, agent.r);
         }
@@ -30,18 +30,18 @@ public static class RelocateHiveCommandHandler
             return;
         }
 
-        Debug.Log($"[RelocateHive] ÇÏÀÌºê ¹ß°ß: {hive.name}");
+        Debug.Log($"[RelocateHive] í•˜ì´ë¸Œ ë°œê²¬: {hive.name}");
 
         // Check if hive can relocate (not already relocating)
         if (!hive.CanRelocate())
         {
-            Debug.LogWarning("[RelocateHive] ÇÏÀÌºê°¡ ÀÌ¹Ì ÀÌ»ç ÁßÀÔ´Ï´Ù");
+            Debug.LogWarning("[RelocateHive] í•˜ì´ë¸Œê°€ ì´ë¯¸ ì´ì‚¬ ì¤‘ì…ë‹ˆë‹¤");
             return;
         }
 
         // Get resource cost from the relocate_hive command
         int resourceCost = GetRelocateResourceCost(hive);
-        Debug.Log($"[RelocateHive] ÇÊ¿ä ÀÚ¿ø: {resourceCost}");
+        Debug.Log($"[RelocateHive] í•„ìš” ìì›: {resourceCost}");
         
         // Check if HiveManager has enough resources
         if (HiveManager.Instance == null)
@@ -51,15 +51,15 @@ public static class RelocateHiveCommandHandler
         }
         
         int available = HiveManager.Instance.playerStoredResources;
-        Debug.Log($"[RelocateHive] ÇöÀç ÀÚ¿ø: {available}");
+        Debug.Log($"[RelocateHive] í˜„ì¬ ìì›: {available}");
         
         if (!HiveManager.Instance.HasResources(resourceCost))
         {
-            Debug.LogWarning($"[RelocateHive] ÀÚ¿øÀÌ ºÎÁ·ÇÕ´Ï´Ù. ÇÊ¿ä: {resourceCost}, º¸À¯: {available}");
+            Debug.LogWarning($"[RelocateHive] ìì›ì´ ë¶€ì¡±í•©ë‹ˆë‹¤. í•„ìš”: {resourceCost}, ë³´ìœ : {available}");
             return;
         }
 
-        Debug.Log($"[RelocateHive] ÀÚ¿ø ÃæºĞ. ÀÌ»ç ½ÃÀÛ!");
+        Debug.Log($"[RelocateHive] ìì› ì¶©ë¶„. ì´ì‚¬ ì‹œì‘!");
         
         // Start relocation process
         hive.StartRelocation(resourceCost);
@@ -73,13 +73,13 @@ public static class RelocateHiveCommandHandler
         {
             if (cmd is SOCommand soCmd && soCmd.id == "relocate_hive")
             {
-                Debug.Log($"[GetResourceCost] relocate_hive ¸í·É Ã£À½, ºñ¿ë: {soCmd.resourceCost}");
+                Debug.Log($"[GetResourceCost] relocate_hive ëª…ë ¹ ì°¾ìŒ, ë¹„ìš©: {soCmd.resourceCost}");
                 return soCmd.resourceCost;
             }
         }
         
         // Default to 10 if not found ?
-        Debug.LogWarning("[GetResourceCost] relocate_hive ¸í·ÉÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù. ±âº» ºñ¿ë 10 »ç¿ë");
+        Debug.LogWarning("[GetResourceCost] relocate_hive ëª…ë ¹ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤. ê¸°ë³¸ ë¹„ìš© 10 ì‚¬ìš©");
         return 10;
     }
 
@@ -96,12 +96,12 @@ public static class RelocateHiveCommandHandler
         {
             if (hive.q == q && hive.r == r)
             {
-                Debug.Log($"[FindHiveAtPosition] ÇÏÀÌºê ¹ß°ß: ({q}, {r})");
+                Debug.Log($"[FindHiveAtPosition] í•˜ì´ë¸Œ ë°œê²¬: ({q}, {r})");
                 return hive;
             }
         }
         
-        Debug.LogWarning($"[FindHiveAtPosition] ({q}, {r}) À§Ä¡¿¡ ÇÏÀÌºê ¾øÀ½");
+        Debug.LogWarning($"[FindHiveAtPosition] ({q}, {r}) ìœ„ì¹˜ì— í•˜ì´ë¸Œ ì—†ìŒ");
         return null;
     }
 }
