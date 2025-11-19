@@ -36,12 +36,20 @@ public class TileClickMover : MonoBehaviour
         // Left click: selection / UI interactions
         if (Input.GetMouseButtonDown(0))
         {
-            // UI 클릭은 명령 버튼 클릭을 위해 허용
-            // 단, 드래그 중이 아닐 때만 월드 클릭 처리
-            bool isDragging = DragSelector.Instance != null && DragSelector.Instance.GetSelectedCount() > 0;
+            // 드래그 선택된 유닛이 있으면 모두 선택 해제 ?
+            if (DragSelector.Instance != null && DragSelector.Instance.GetSelectedCount() > 0)
+            {
+                DragSelector.Instance.DeselectAll();
+            }
             
-            // 드래그 중이 아니고, UI가 아니면 월드 클릭 처리
-            if (!isDragging && !IsPointerOverUI())
+            // 단일 선택된 유닛이 있으면 선택 해제 ?
+            if (selectedUnitInstance != null && !IsPointerOverUI())
+            {
+                DeselectUnit();
+            }
+            
+            // UI가 아니면 월드 클릭 처리 ?
+            if (!IsPointerOverUI())
             {
                 HandleLeftClick();
             }
@@ -88,83 +96,90 @@ public class TileClickMover : MonoBehaviour
         return EventSystem.current.IsPointerOverGameObject();
     }
 
+    //void OnDrawGizmos()
+    //{
+    //    Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+    //    pos.z = 0f;
+    //    Gizmos.color = Color.green;
+    //    Gizmos.DrawSphere(pos, 0.1f);
+    //}
+
     void HandleLeftClick()
     {
-        var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+        // Try 2D - 모든 히트 수집 ?
+        Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        wp.z = 0f;
+        RaycastHit2D[] hits2D = Physics2D.RaycastAll(wp, Vector2.zero);
+            
+        if (hits2D.Length > 0)
         {
-            // 먼저 Hive 체크 (우선순위) ?
-            var hive = hit.collider.GetComponentInParent<Hive>();
-            if (hive != null)
-            {
-                var hiveAgent = hive.GetComponent<UnitAgent>();
-                if (hiveAgent != null)
+            // 렌더링 순서로 정렬 (sortingOrder + UnitAgent ID) ?
+            System.Array.Sort(hits2D, (a, b) => {
+                var spriteA = a.collider.GetComponentInChildren<SpriteRenderer>();
+                var spriteB = b.collider.GetComponentInChildren<SpriteRenderer>();
+                    
+                if (spriteA != null && spriteB != null)
                 {
-                    SelectUnit(hiveAgent);
-                    return;
-                }
-            }
-
-            // 그 다음 UnitAgent 체크
-            var unit = hit.collider.GetComponentInParent<UnitAgent>();
-            if (unit != null)
-            {
-                SelectUnit(unit);
-                return;
-            }
-
-            var tile = hit.collider.GetComponentInParent<HexTile>();
-            if (tile != null)
-            {
-                // Clicked on tile - deselect current unit
-                DeselectUnit();
-                
-                if (debugText != null) debugText.text = $"Tile: ({tile.q}, {tile.r})";
-                return;
-            }
-        }
-        else
-        {
-            // Try 2D
-            Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            var hit2 = Physics2D.Raycast(wp, Vector2.zero);
-            if (hit2.collider != null)
-            {
-                // 먼저 Hive 체크 (우선순위) ?
-                var hive = hit2.collider.GetComponentInParent<Hive>();
-                if (hive != null)
-                {
-                    var hiveAgent = hive.GetComponent<UnitAgent>();
-                    if (hiveAgent != null)
+                    // 1. sortingOrder 비교 (높은 값이 위 = 먼저 선택) ?
+                    if (spriteA.sortingOrder != spriteB.sortingOrder)
                     {
-                        SelectUnit(hiveAgent);
-                        return;
+                        return spriteB.sortingOrder.CompareTo(spriteA.sortingOrder);
+                    }
+                        
+                    // 2. 같은 sortingOrder면 UnitAgent ID로 비교 (낮은 ID = 나중 생성 = 먼저 선택) ?
+                    var unitA = a.collider.GetComponent<UnitAgent>();
+                    var unitB = b.collider.GetComponent<UnitAgent>();
+                        
+                    if (unitA != null && unitB != null)
+                    {
+                        // 낮은 ID가 먼저 (나중에 생성 = 위에 있음) ?
+                        return unitA.id.CompareTo(unitB.id);
                     }
                 }
+                    
+                return 0;
+            });
                 
+            // 가장 위에 있는 UnitAgent 찾기 (Hive 포함) ?
+            UnitAgent topUnit = null;
+            foreach (var hit2 in hits2D)
+            {              
+                // UnitAgent 체크
                 var unit = hit2.collider.GetComponentInParent<UnitAgent>();
                 if (unit != null)
                 {
-                    SelectUnit(unit);
-                    return;
+                    topUnit = unit;
+                    break;
                 }
+            }
                 
-                var tile = hit2.collider.GetComponentInParent<HexTile>();
-                if (tile != null)
+            // UnitAgent가 있으면 선택, 없으면 타일 선택 ?
+            if (topUnit != null)
+            {
+                SelectUnit(topUnit);
+                return;
+            }
+            else
+            {
+                // UnitAgent가 없으면 타일 선택
+                foreach (var hit2 in hits2D)
                 {
-                    DeselectUnit();
-                    
-                    if (debugText != null) debugText.text = $"Tile: ({tile.q}, {tile.r})";
-                    return;
+                    var tile = hit2.collider.GetComponentInParent<HexTile>();
+                    if (tile != null)
+                    {
+                        DeselectUnit();
+                        if (debugText != null) debugText.text = $"Tile: ({tile.q}, {tile.r})";
+                        return;
+                    }
                 }
             }
         }
+        
     }
 
     void HandleRightClick()
     {
-        // 드래그로 선택된 유닛들이 있으면 모두 이동
+        // 드래그로 선택된 유닛들이 있으면 그룹 이동
         if (DragSelector.Instance != null)
         {
             var dragSelected = DragSelector.Instance.GetSelectedUnits();
@@ -176,56 +191,48 @@ public class TileClickMover : MonoBehaviour
         }
 
         var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+        
+        // 모든 히트를 가져와서 렌더링 순서대로 정렬 ?
+        RaycastHit[] hits = Physics.RaycastAll(ray, 100f);
+        
+        if (hits.Length > 0)
         {
-            // 먼저 유닛 체크 (타일보다 우선) ?
-            var unit = hit.collider.GetComponentInParent<UnitAgent>();
-            if (unit != null)
-            {
-                // 적 유닛 우클릭 시 공격 명령 ?
-                if (unit.faction == Faction.Enemy && selectedUnitInstance != null && selectedUnitInstance.faction == Faction.Player)
+            // 렌더링 순서 기준으로 정렬 ?
+            System.Array.Sort(hits, (a, b) => {
+                var spriteA = a.collider.GetComponentInParent<SpriteRenderer>();
+                var spriteB = b.collider.GetComponentInParent<SpriteRenderer>();
+                
+                if (spriteA != null && spriteB != null)
                 {
-                    HandleAttackCommand(unit);
-                    return;
+                    // 1. sortingOrder 비교 (높은 값이 위 = 먼저 선택) ?
+                    if (spriteA.sortingOrder != spriteB.sortingOrder)
+                    {
+                        return spriteB.sortingOrder.CompareTo(spriteA.sortingOrder);
+                    }
+                    
+                    // 2. 같은 sortingOrder면 UnitAgent ID로 비교 (낮은 ID = 나중 생성 = 먼저 선택) ?
+                    var unitA = a.collider.GetComponentInParent<UnitAgent>();
+                    var unitB = b.collider.GetComponentInParent<UnitAgent>();
+                    
+                    if (unitA != null && unitB != null)
+                    {
+                        // 낮은 ID가 먼저 (나중에 생성 = 위에 있음) ?
+                        return unitA.id.CompareTo(unitB.id);
+                    }
                 }
-                // 아군 유닛은 선택
-                else if (unit.faction == Faction.Player)
-                {
-                    SelectUnit(unit);
-                    return;
-                }
-            }
-
-            var tile = hit.collider.GetComponentInParent<HexTile>();
-            if (tile != null)
-            {
-                OnTileCommand(tile);
-                return;
-            }
+                
+                // 3. 카메라 거리로 최종 정렬
+                return a.distance.CompareTo(b.distance);
+            });
             
-            var hive = hit.collider.GetComponentInParent<Hive>();
-            if (hive != null)
+            // 가장 가까운 것부터 순서대로 체크 ?
+            foreach (var hit in hits)
             {
-                var hiveAgent = hive.GetComponent<UnitAgent>();
-                if (hiveAgent != null)
-                {
-                    SelectUnit(hiveAgent);
-                    return;
-                }
-            }
-        }
-        else
-        {
-            // Try 2D
-            Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            var hit2 = Physics2D.Raycast(wp, Vector2.zero);
-            if (hit2.collider != null)
-            {
-                // 먼저 유닛 체크 ?
-                var unit = hit2.collider.GetComponentInParent<UnitAgent>();
+                // 유닛 우선 체크 (타일보다 우선)
+                var unit = hit.collider.GetComponentInParent<UnitAgent>();
                 if (unit != null)
                 {
-                    // 적 유닛 우클릭 시 공격 명령 ?
+                    // 적 유닛 우클릭 시 공격 명령
                     if (unit.faction == Faction.Enemy && selectedUnitInstance != null && selectedUnitInstance.faction == Faction.Player)
                     {
                         HandleAttackCommand(unit);
@@ -239,20 +246,106 @@ public class TileClickMover : MonoBehaviour
                     }
                 }
                 
-                var tile = hit2.collider.GetComponentInParent<HexTile>();
-                if (tile != null) 
-                {
-                    OnTileCommand(tile);
-                    return;
-                }
-                
-                var hive = hit2.collider.GetComponentInParent<Hive>();
+                // Hive 체크
+                var hive = hit.collider.GetComponentInParent<Hive>();
                 if (hive != null)
                 {
                     var hiveAgent = hive.GetComponent<UnitAgent>();
                     if (hiveAgent != null)
                     {
                         SelectUnit(hiveAgent);
+                        return;
+                    }
+                }
+            }
+            
+            // 유닛이 없으면 타일 명령 (가장 가까운 타일)
+            foreach (var hit in hits)
+            {
+                var tile = hit.collider.GetComponentInParent<HexTile>();
+                if (tile != null)
+                {
+                    OnTileCommand(tile);
+                    return;
+                }
+            }
+        }
+        else
+        {
+            // Try 2D - 모든 히트 수집 ?
+            Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            RaycastHit2D[] hits2D = Physics2D.RaycastAll(wp, Vector2.zero);
+            
+            if (hits2D.Length > 0)
+            {
+                // 렌더링 순서로 정렬 (sortingOrder + UnitAgent ID) ?
+                System.Array.Sort(hits2D, (a, b) => {
+                    var spriteA = a.collider.GetComponentInParent<SpriteRenderer>();
+                    var spriteB = b.collider.GetComponentInParent<SpriteRenderer>();
+                    
+                    if (spriteA != null && spriteB != null)
+                    {
+                        // 1. sortingOrder 비교 (높은 값이 위 = 먼저 선택) ?
+                        if (spriteA.sortingOrder != spriteB.sortingOrder)
+                        {
+                            return spriteB.sortingOrder.CompareTo(spriteA.sortingOrder);
+                        }
+                        
+                        // 2. 같은 sortingOrder면 UnitAgent ID로 비교 (낮은 ID = 나중 생성 = 먼저 선택) ?
+                        var unitA = a.collider.GetComponentInParent<UnitAgent>();
+                        var unitB = b.collider.GetComponentInParent<UnitAgent>();
+                        
+                        if (unitA != null && unitB != null)
+                        {
+                            // 낮은 ID가 먼저 (나중에 생성 = 위에 있음) ?
+                            return unitA.id.CompareTo(unitB.id);
+                        }
+                    }
+                    
+                    return 0;
+                });
+                
+                // 가장 위에 있는 것부터 순서대로 체크 ?
+                foreach (var hit2 in hits2D)
+                {
+                    // 유닛 우선 체크
+                    var unit = hit2.collider.GetComponentInParent<UnitAgent>();
+                    if (unit != null)
+                    {
+                        // 적 유닛 우클릭 시 공격 명령
+                        if (unit.faction == Faction.Enemy && selectedUnitInstance != null && selectedUnitInstance.faction == Faction.Player)
+                        {
+                            HandleAttackCommand(unit);
+                            return;
+                        }
+                        // 아군 유닛은 선택
+                        else if (unit.faction == Faction.Player)
+                        {
+                            SelectUnit(unit);
+                            return;
+                        }
+                    }
+                    
+                    // Hive 체크
+                    var hive = hit2.collider.GetComponentInParent<Hive>();
+                    if (hive != null)
+                    {
+                        var hiveAgent = hive.GetComponent<UnitAgent>();
+                        if (hiveAgent != null)
+                        {
+                            SelectUnit(hiveAgent);
+                            return;
+                        }
+                    }
+                }
+                
+                // 유닛이 없으면 타일 명령 (가장 위에 있는 타일)
+                foreach (var hit2 in hits2D)
+                {
+                    var tile = hit2.collider.GetComponentInParent<HexTile>();
+                    if (tile != null) 
+                    {
+                        OnTileCommand(tile);
                         return;
                     }
                 }
