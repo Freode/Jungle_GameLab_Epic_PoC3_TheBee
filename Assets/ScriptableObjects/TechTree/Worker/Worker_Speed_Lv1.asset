@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 967c7867fe3a7b14da9b6bb0819b1796, type: 3}
+  m_Name: Worker_Speed_Lv1
+  m_EditorClassIdentifier: 
+  techType: 20
+  techName: "\uAFC0\uBC8C \uC774\uB3D9 \uC18D\uB3C4 Lv.1"
+  description: "\uAFC0\uBC8C \uC774\uB3D9 \uC18D\uB3C4\uAC00 0.2\uB9CC\uD07C \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  category: 0
+  honeyResearchCost: 150
+  prerequisites:
+  - {fileID: 11400000, guid: 3c526b3ec78bbf740a01f0720f1cb106, type: 2}
+  nextTechs:
+  - {fileID: 11400000, guid: 3811fdb26584aba47b11b59ca93f5a75, type: 2}
+  uiPosition: {x: 900, y: -900}
+  effects:
+  - effectName: "\uAFC0\uBC8C \uC774\uB3D9 \uC18D\uB3C4"
+    currentValue: +0.2
+    upgradeValue: +0.2

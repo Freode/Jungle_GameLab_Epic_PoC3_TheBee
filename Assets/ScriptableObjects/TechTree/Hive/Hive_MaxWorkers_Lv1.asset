@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 967c7867fe3a7b14da9b6bb0819b1796, type: 3}
+  m_Name: Hive_MaxWorkers_Lv1
+  m_EditorClassIdentifier: 
+  techType: 39
+  techName: "\uAFC0\uBC8C \uCD5C\uB300 \uC218 Lv.1"
+  description: "\uAFC0\uBC8C \uCD5C\uB300 \uC218\uAC00 5\uB9CC\uD07C \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  category: 2
+  honeyResearchCost: 40
+  prerequisites:
+  - {fileID: 11400000, guid: 7291801b791ae8e43b8f37f1646c3846, type: 2}
+  nextTechs:
+  - {fileID: 11400000, guid: 03c28fc3ab85ef148b2174b73a951104, type: 2}
+  - {fileID: 11400000, guid: 8293e4d0c6cb384449269d4dd3cb46a6, type: 2}
+  - {fileID: 11400000, guid: 7fb772052293e8a448f1e78286393732, type: 2}
+  uiPosition: {x: 600, y: 600}
+  effects:
+  - effectName: "\uAFC0\uBC8C \uCD5C\uB300 \uC218"
+    currentValue: +5
+    upgradeValue: +5

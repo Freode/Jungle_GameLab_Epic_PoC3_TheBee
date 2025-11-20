@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 967c7867fe3a7b14da9b6bb0819b1796, type: 3}
+  m_Name: Hive_Regen_Lv2
+  m_EditorClassIdentifier: 
+  techType: 36
+  techName: "\uAFC0\uBC8C\uC9D1 \uD68C\uBCF5 Lv.2"
+  description: "\uAFC0\uBC8C\uC9D1 \uCCB4\uB825 \uD68C\uBCF5 \uC18D\uB3C4\uAC00 \uCD08\uB2F9
+    0.50\uB9CC\uD07C \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  category: 2
+  honeyResearchCost: 125
+  prerequisites:
+  - {fileID: 11400000, guid: ee9f2948b81cd85458295847ab1920ec, type: 2}
+  nextTechs:
+  - {fileID: 11400000, guid: 01545bac874a7e44f896d490169257ec, type: 2}
+  uiPosition: {x: 900, y: -300}
+  effects:
+  - effectName: "\uAFC0\uBC8C\uC9D1 \uCCB4\uB825 \uD68C\uBCF5"
+    currentValue: 0.50/s
+    upgradeValue: 0.50/s

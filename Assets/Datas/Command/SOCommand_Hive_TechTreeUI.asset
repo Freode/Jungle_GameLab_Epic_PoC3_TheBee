@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a479a4d2100d9e4db00156a0f56251f, type: 3}
+  m_Name: SOCommand_Hive_TechTreeUI
+  m_EditorClassIdentifier: 
+  id: 
+  displayName: "\uD14C\uD06C\uD2B8\uB9AC \uC5F4\uAE30"
+  icon: {fileID: 0}
+  requiresTarget: 0
+  hidePanelOnClick: 1
+  resourceCost: 0

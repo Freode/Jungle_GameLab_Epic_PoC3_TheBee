@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 967c7867fe3a7b14da9b6bb0819b1796, type: 3}
+  m_Name: Worker_AutoSearch
+  m_EditorClassIdentifier: 
+  techType: 15
+  techName: "\uC8FC\uBCC0 \uD0D0\uC0C9 \uCC44\uCDE8"
+  description: "\uBA85\uB839 \uB0B4\uB9B0 \uC9C0\uC5ED\uC758 \uC790\uC6D0\uC774 \uBAA8\uB450
+    \uACE0\uAC08\uB418\uBA74, \uADF8 \uADFC\uCC98\uC5D0 \uC790\uC6D0\uC774 \uC788\uB294\uC9C0
+    \uC790\uB3D9\uC73C\uB85C \uD0D0\uC0C9\uD569\uB2C8\uB2E4."
+  category: 0
+  honeyResearchCost: 1250
+  prerequisites:
+  - {fileID: 11400000, guid: b81f555ae16dcbe44bb7dcdbd7214518, type: 2}
+  nextTechs: []
+  uiPosition: {x: 1500, y: 0}
+  effects:
+  - effectName: "\uC790\uC6D0 \uD0C0\uC77C \uC8FC\uBCC0 \uC790\uB3D9 \uD0D0\uC0AC"
+    currentValue: "\uD65C\uC131\uD654"
+    upgradeValue: "\uD65C\uC131\uD654"

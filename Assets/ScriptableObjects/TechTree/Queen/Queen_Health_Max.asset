@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 967c7867fe3a7b14da9b6bb0819b1796, type: 3}
+  m_Name: Queen_Health_Max
+  m_EditorClassIdentifier: 
+  techType: 26
+  techName: "\uC5EC\uC655\uBC8C \uCCB4\uB825 Lv.Max"
+  description: "\uC5EC\uC655\uBC8C \uCCB4\uB825\uC774 75 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  category: 1
+  honeyResearchCost: 1250
+  prerequisites:
+  - {fileID: 11400000, guid: 8cf202963f5968945b7bb155df1eee64, type: 2}
+  nextTechs: []
+  uiPosition: {x: 1500, y: 0}
+  effects:
+  - effectName: "\uC5EC\uC655\uBC8C \uCCB4\uB825"
+    currentValue: +75
+    upgradeValue: +75

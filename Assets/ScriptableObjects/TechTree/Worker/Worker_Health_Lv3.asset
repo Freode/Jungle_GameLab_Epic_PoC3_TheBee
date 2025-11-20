@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 967c7867fe3a7b14da9b6bb0819b1796, type: 3}
+  m_Name: Worker_Health_Lv3
+  m_EditorClassIdentifier: 
+  techType: 7
+  techName: "\uAFC0\uBC8C \uCCB4\uB825 Lv.3"
+  description: "\uAFC0\uBC8C \uCCB4\uB825\uC774 7 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  category: 0
+  honeyResearchCost: 500
+  prerequisites:
+  - {fileID: 11400000, guid: 30faf63b69b447247ae4cb54bb8b2aae, type: 2}
+  nextTechs:
+  - {fileID: 11400000, guid: bb8359dbccd04ec4aa110ba5af83428a, type: 2}
+  uiPosition: {x: 1200, y: 300}
+  effects:
+  - effectName: "\uAFC0\uBC8C \uCCB4\uB825"
+    currentValue: +7
+    upgradeValue: +7

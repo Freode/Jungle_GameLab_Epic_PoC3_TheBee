@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 967c7867fe3a7b14da9b6bb0819b1796, type: 3}
+  m_Name: Worker_GatherTime_Lv2
+  m_EditorClassIdentifier: 
+  techType: 13
+  techName: "\uCC44\uCDE8 \uC2DC\uAC04 \uB2E8\uCD95 Lv.2"
+  description: "\uAFC0\uBC8C \uCC44\uCDE8 \uC2DC\uAC04\uC774 -0.3\uCD08 \uAC10\uC18C\uD569\uB2C8\uB2E4."
+  category: 0
+  honeyResearchCost: 150
+  prerequisites:
+  - {fileID: 11400000, guid: c75bfbec62deef04ca3de7573aa69ed5, type: 2}
+  nextTechs:
+  - {fileID: 11400000, guid: 45a42ce045e0c8b43ab4737535b853d3, type: 2}
+  uiPosition: {x: 900, y: -300}
+  effects:
+  - effectName: "\uAFC0\uBC8C \uCC44\uCDE8 \uC2DC\uAC04"
+    currentValue: -0.3s
+    upgradeValue: -0.3s

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 967c7867fe3a7b14da9b6bb0819b1796, type: 3}
+  m_Name: Queen_Health_Lv1
+  m_EditorClassIdentifier: 
+  techType: 23
+  techName: "\uC5EC\uC655\uBC8C \uCCB4\uB825 Lv.1"
+  description: "\uC5EC\uC655\uBC8C \uCCB4\uB825\uC774 15 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  category: 1
+  honeyResearchCost: 60
+  prerequisites: []
+  nextTechs:
+  - {fileID: 11400000, guid: eb50e6dc390d2cc4fb292fc5f917ad5c, type: 2}
+  uiPosition: {x: 300, y: 0}
+  effects:
+  - effectName: "\uC5EC\uC655\uBC8C \uCCB4\uB825"
+    currentValue: +15
+    upgradeValue: +15

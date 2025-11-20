@@ -27,7 +27,7 @@ public class WorkerBehaviorController : UnitBehaviorController
     [Header("Worker Settings")]
     [SerializeField] private float idleRandomMoveMinDelay = 0.2f;
     [SerializeField] private float idleRandomMoveMaxDelay = 1.5f;
-    [SerializeField] private float gatheringDuration = 2.0f;
+    [SerializeField] public static float gatheringDuration = 3.0f;
     [SerializeField] private float scoutRandomMoveMinDelay = 0.2f;
     [SerializeField] private float scoutRandomMoveMaxDelay = 1.5f;
     [SerializeField] private float workerEnemyDetectionInterval = 0.2f;
@@ -36,7 +36,7 @@ public class WorkerBehaviorController : UnitBehaviorController
     private List<Coroutine> activeCoroutines = new List<Coroutine>(); // ✅ 실행 중인 모든 코루틴 추적
     private bool isCarryingResource = false;
     private HexTile lastGatherTile = null; // ✅ 마지막 자원 채취 타일
-    private bool isAutoSearchNearResource = false;      // 자동 자원 탐색 모드
+    public static bool isAutoSearchNearResource = false;      // 자동 자원 탐색 모드
 
     protected override void Start()
     {

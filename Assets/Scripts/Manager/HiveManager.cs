@@ -292,7 +292,7 @@ public class HiveManager : MonoBehaviour
 
     // ========== 업데이트 메서드 ==========
 
-    void UpdateAllWorkerCombat()
+    public void UpdateAllWorkerCombat()
     {
         if (TileManager.Instance == null) return;
 
@@ -324,7 +324,7 @@ public class HiveManager : MonoBehaviour
         }
     }
 
-    void UpdateAllWorkerSpeed()
+    public void UpdateAllWorkerSpeed()
     {
         if (TileManager.Instance == null) return;
 
@@ -347,7 +347,7 @@ public class HiveManager : MonoBehaviour
         }
     }
 
-    void UpdateAllHiveHealth()
+    public void UpdateAllHiveHealth()
     {
         foreach (var hive in hives)
         {
@@ -372,7 +372,7 @@ public class HiveManager : MonoBehaviour
         }
     }
 
-    void UpdateAllHiveMaxWorkers()
+    public void UpdateAllHiveMaxWorkers()
     {
         foreach (var hive in hives)
         {
@@ -383,7 +383,7 @@ public class HiveManager : MonoBehaviour
         }
     }
 
-    void UpdateAllWorkerGatherAmount()
+    public void UpdateAllWorkerGatherAmount()
     {
         if (TileManager.Instance == null) return;
 
