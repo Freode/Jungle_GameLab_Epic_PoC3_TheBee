@@ -36,7 +36,8 @@ public class WorkerBehaviorController : UnitBehaviorController
     private List<Coroutine> activeCoroutines = new List<Coroutine>(); // ✅ 실행 중인 모든 코루틴 추적
     private bool isCarryingResource = false;
     private HexTile lastGatherTile = null; // ✅ 마지막 자원 채취 타일
-    
+    private bool isAutoSearchNearResource = false;      // 자동 자원 탐색 모드
+
     protected override void Start()
     {
         base.Start();
@@ -239,14 +240,14 @@ public class WorkerBehaviorController : UnitBehaviorController
             isCarryingResource = false;
 
             // ✅ 4. 이전 채취 타일이 있고 활동 범위 내면 복귀
-            if (lastGatherTile != null && lastGatherTile.resourceAmount > 0)
+            if (lastGatherTile != null)
             {
                 int distanceToHive = Pathfinder.AxialDistance(
                     agent.homeHive.q, agent.homeHive.r,
                     lastGatherTile.q, lastGatherTile.r
                 );
 
-                if (distanceToHive <= activityRadius)
+                if (distanceToHive <= activityRadius && lastGatherTile.resourceAmount > 0)
                 {
                     Debug.Log($"[Worker State] 이전 채취 타일로 복귀: 하이브 ({agent.homeHive.q}, {agent.homeHive.r}) → 자원 ({lastGatherTile.q}, {lastGatherTile.r})");
                     
@@ -257,6 +258,26 @@ public class WorkerBehaviorController : UnitBehaviorController
                     targetTile = lastGatherTile;
                     TransitionToState(WorkerState.Moving);
                     yield break;
+                }
+                // ✅ 이전 채취 타일이 활동 범위 내에 있으며, 자동 탐색 모드인 경우에 유지
+                else if (isAutoSearchNearResource && distanceToHive <= activityRadius)
+                {
+                    // ✅ 주변 6방향 타일 탐색 (거리 1)
+                    HexTile nearbyResourceTile = FindNearbyResourceTile(lastGatherTile.q, lastGatherTile.r);
+                    
+                    if (nearbyResourceTile != null)
+                    {
+                        Debug.Log($"[Worker State] 주변 자원 타일 발견: ({nearbyResourceTile.q}, {nearbyResourceTile.r}), 자원량: {nearbyResourceTile.resourceAmount}");
+                        lastGatherTile = nearbyResourceTile;
+                        targetTile = nearbyResourceTile;
+                        TransitionToState(WorkerState.Moving);
+                        yield break;
+                    }
+                    else
+                    {
+                        Debug.Log($"[Worker State] 주변에 자원 타일 없음, 이전 채취 타일 초기화");
+                        lastGatherTile = null;
+                    }
                 }
                 else
                 {
@@ -610,6 +631,53 @@ public class WorkerBehaviorController : UnitBehaviorController
         }
 
         transform.position = targetPos;
+    }
+
+    /// <summary>
+    /// 주변 6방향 타일 중 자원이 있고 활동 범위 내에 있는 타일 찾기
+    /// </summary>
+    /// <param name="centerQ">중심 타일의 q 좌표</param>
+    /// <param name="centerR">중심 타일의 r 좌표</param>
+    /// <returns>자원이 있는 타일 (없으면 null)</returns>
+    HexTile FindNearbyResourceTile(int centerQ, int centerR)
+    {
+        if (agent.homeHive == null)
+        {
+            return null;
+        }
+
+        // 6방향 이웃 타일 탐색
+        foreach (var direction in HexTile.NeighborDirections)
+        {
+            int neighborQ = centerQ + direction.x;
+            int neighborR = centerR + direction.y;
+
+            // 타일 가져오기
+            HexTile neighborTile = TileManager.Instance.GetTile(neighborQ, neighborR);
+            if (neighborTile == null)
+            {
+                continue;
+            }
+
+            // 자원이 있는지 확인
+            if (neighborTile.resourceAmount <= 0)
+            {
+                continue;
+            }
+
+            // 활동 범위 내에 있는지 확인
+            int distanceToHive = Pathfinder.AxialDistance(
+                agent.homeHive.q, agent.homeHive.r,
+                neighborQ, neighborR
+            );
+
+            if (distanceToHive <= activityRadius)
+            {
+                return neighborTile;
+            }
+        }
+
+        return null;
     }
 
     #endregion
