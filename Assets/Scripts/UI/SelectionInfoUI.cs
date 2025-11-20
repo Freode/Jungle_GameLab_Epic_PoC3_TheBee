@@ -17,6 +17,7 @@ public class SelectionInfoUI : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private Vector2 fixedPosition = new Vector2(10f, 10f);
+    [SerializeField] private float verticalOffset = 0f; // 추가 여유 공간
 
     private Camera mainCamera;
     private UnitAgent selectedUnit; // 단일 선택된 유닛
@@ -138,6 +139,7 @@ public class SelectionInfoUI : MonoBehaviour
 
         titleText.text = $"선택된 꿀벌 : {dragSelectedUnits.Count}마리";
         UpdateDragSelectedInfo();
+        AdjustPanelPosition();
     }
 
     void UpdateDragSelectedInfo()
@@ -182,6 +184,7 @@ public class SelectionInfoUI : MonoBehaviour
         }
 
         detailsText.text = details.TrimEnd('\n');
+        AdjustPanelPosition();
     }
 
     void ShowUnitInfo(UnitAgent unit)
@@ -198,6 +201,7 @@ public class SelectionInfoUI : MonoBehaviour
         titleText.text = displayName;
 
         UpdateUnitInfo(unit);
+        AdjustPanelPosition();
     }
 
     void UpdateUnitInfo(UnitAgent unit)
@@ -222,6 +226,7 @@ public class SelectionInfoUI : MonoBehaviour
         }
 
         detailsText.text = details.TrimEnd('\n');
+        AdjustPanelPosition();
     }
 
     void ShowTileInfo(HexTile tile)
@@ -238,6 +243,7 @@ public class SelectionInfoUI : MonoBehaviour
         titleText.text = tileName;
 
         UpdateTileInfo(tile);
+        AdjustPanelPosition();
     }
 
     void UpdateTileInfo(HexTile tile)
@@ -280,6 +286,26 @@ public class SelectionInfoUI : MonoBehaviour
         }
 
         detailsText.text = details.TrimEnd('\n');
+        AdjustPanelPosition();
+    }
+
+    /// <summary>
+    /// 텍스트 길이에 따라 패널 위치를 위로 조정
+    /// </summary>
+    void AdjustPanelPosition()
+    {
+        if (panelRect == null) return;
+
+        // Canvas 업데이트를 강제하여 최신 크기 정보 가져오기
+        Canvas.ForceUpdateCanvases();
+        
+        // 패널의 현재 높이 가져오기
+        float panelHeight = panelRect.rect.height;
+        
+        // 기본 위치에서 패널 높이만큼 위로 이동 (+ 추가 오프셋)
+        Vector2 adjustedPosition = new Vector2(fixedPosition.x, fixedPosition.y + panelHeight + verticalOffset);
+        
+        panelRect.anchoredPosition = adjustedPosition;
     }
 
     void HideInfo()
