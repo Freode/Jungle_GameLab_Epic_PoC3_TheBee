@@ -18,6 +18,9 @@ public class UnitController : MonoBehaviour
     private Queue<HexTile> pathQueue = new Queue<HexTile>();
     private bool isMoving = false;
     private Coroutine moveCoroutine;
+    
+    // ✅ 현재 이동 중인 타일 추적
+    private HexTile currentMovingToTile = null;
 
     void Update()
     {
@@ -40,40 +43,211 @@ public class UnitController : MonoBehaviour
         // ✅ 1. 이동 중이면 현재 코루틴 중단하고 새 경로로 재계산
         if (isMoving || pathQueue.Count > 0)
         {
+            // ✅ 현재 이동 중인 타일 정보 저장 (코루틴 중단 전에!)
+            HexTile oldMovingToTile = currentMovingToTile;
+            
             // ✅ 현재 이동 중인 코루틴 중단
             if (moveCoroutine != null)
             {
                 StopCoroutine(moveCoroutine);
                 moveCoroutine = null;
                 isMoving = false;
+                currentMovingToTile = null; // 이동 중단
             }
             
             // 기존 경로 클리어
             pathQueue.Clear();
             
-            // 현재 위치에서 목적지로 새 경로 찾기
+            // ✅ 새 경로의 시작점 결정
             if (agent != null && TileManager.Instance != null)
             {
-                var currentTile = TileManager.Instance.GetTile(agent.q, agent.r);
                 var destTile = path[path.Count - 1];
+                var currentTile = TileManager.Instance.GetTile(agent.q, agent.r);
                 
-                var newPath = Pathfinder.FindPath(currentTile, destTile);
-                if (newPath != null && newPath.Count > 0)
+                // ✅ 목적지가 현재 타일과 같으면 방향에 따라 처리
+                if (destTile.q == agent.q && destTile.r == agent.r)
                 {
-                    Debug.Log($"[UnitController] 이동 중 새 명령: ({agent.q}, {agent.r}) → ({destTile.q}, {destTile.r})");
-                    
-                    // 첫 타일이 현재 타일이면 스킵
-                    int newStartIndex = (newPath[0].q == agent.q && newPath[0].r == agent.r) ? 1 : 0;
-                    for (int i = newStartIndex; i < newPath.Count; i++)
+                    // 이동 중이었으면 정지 명령
+                    if (oldMovingToTile != null)
                     {
-                        pathQueue.Enqueue(newPath[i]);
+                        Debug.Log($"[UnitController] 현재 타일 클릭: 정지 명령, 현재 타일 ({agent.q}, {agent.r})에서 대기");
                     }
+                    else
+                    {
+                        Debug.Log($"[UnitController] 현재 타일 클릭 (대기 중): ({destTile.q}, {destTile.r})");
+                    }
+                    pathQueue.Enqueue(currentTile);
+                    return;
+                }
+                
+                // ✅ 이동 중이었고, 이동 방향 정보가 있는 경우
+                if (oldMovingToTile != null && currentTile != null)
+                {
+                    // 1. 기존 이동 방향 벡터 계산 (현재 타일 → 이동 중이던 타일)
+                    Vector2Int oldDirection = new Vector2Int(
+                        oldMovingToTile.q - agent.q,
+                        oldMovingToTile.r - agent.r
+                    );
+                    
+                    // 2. 새 경로의 첫 방향 벡터 계산 (현재 타일 기준)
+                    var newPath = Pathfinder.FindPath(currentTile, destTile);
+                    
+                    // ✅ 경로가 유효한지 확인
+                    if (newPath != null && newPath.Count > 1)
+                    {
+                        // 새 경로의 첫 번째 이동 방향
+                        Vector2Int newDirection = new Vector2Int(
+                            newPath[1].q - newPath[0].q,
+                            newPath[1].r - newPath[0].r
+                        );
+                        
+                        // 3. 방향 비교
+                        bool isSameDirection = (oldDirection.x == newDirection.x && oldDirection.y == newDirection.y);
+                        bool isOppositeDirection = (oldDirection.x == -newDirection.x && oldDirection.y == -newDirection.y);
+                        
+                        if (isSameDirection)
+                        {
+                            // ✅ 같은 방향: 바로 새로운 경로 설정 (처음부터)
+                            Debug.Log($"[UnitController] 같은 방향 감지: 현재 타일 ({agent.q}, {agent.r})에서 새 경로 시작 → 목적지 ({destTile.q}, {destTile.r})");
+                            
+                            // 새 경로를 pathQueue에 추가
+                            for (int i = 0; i < newPath.Count; i++)
+                            {
+                                pathQueue.Enqueue(newPath[i]);
+                            }
+                            
+                            Debug.Log($"[UnitController] 새 경로 설정 완료: {newPath.Count}개 타일");
+                            return;
+                        }
+                        else if (isOppositeDirection)
+                        {
+                            // ✅ 반대 방향: 현재 타일에서 시작 (즉시 유턴)
+                            Debug.Log($"[UnitController] 반대 방향 감지: 현재 타일 ({agent.q}, {agent.r})에서 즉시 유턴 → 목적지 ({destTile.q}, {destTile.r})");
+                            
+                            // 새 경로를 pathQueue에 추가
+                            for (int i = 0; i < newPath.Count; i++)
+                            {
+                                pathQueue.Enqueue(newPath[i]);
+                            }
+                            
+                            Debug.Log($"[UnitController] 새 경로 설정 완료: {newPath.Count}개 타일");
+                            return;
+                        }
+                        else
+                        {
+                            // ✅ 다른 방향 (대각선 등): 주변에서 가장 가까운 타일부터 시작
+                            HexTile startTile = FindClosestTileAroundAgent(destTile);
+                            if (startTile != null)
+                            {
+                                Debug.Log($"[UnitController] 다른 방향 감지: 가장 가까운 타일 ({startTile.q}, {startTile.r})에서 시작 → 목적지 ({destTile.q}, {destTile.r})");
+                                
+                                var finalPath = Pathfinder.FindPath(startTile, destTile);
+                                if (finalPath != null && finalPath.Count > 0)
+                                {
+                                    for (int i = 0; i < finalPath.Count; i++)
+                                    {
+                                        pathQueue.Enqueue(finalPath[i]);
+                                    }
+                                    Debug.Log($"[UnitController] 새 경로 설정 완료: {finalPath.Count}개 타일");
+                                }
+                            }
+                            return;
+                        }
+                    }
+                    else if (newPath != null && newPath.Count == 1)
+                    {
+                        // ✅ 경로가 1개(목적지만) = 인접 타일
+                        Vector2Int newDirection = new Vector2Int(
+                            destTile.q - agent.q,
+                            destTile.r - agent.r
+                        );
+                        
+                        bool isSameDirection = (oldDirection.x == newDirection.x && oldDirection.y == newDirection.y);
+                        bool isOppositeDirection = (oldDirection.x == -newDirection.x && oldDirection.y == -newDirection.y);
+                        
+                        if (isSameDirection)
+                        {
+                            // ✅ 같은 방향: 바로 새로운 경로 설정
+                            Debug.Log($"[UnitController] 인접 타일 - 같은 방향: 현재 타일 ({agent.q}, {agent.r})에서 새 경로 시작");
+                            
+                            pathQueue.Enqueue(destTile);
+                            Debug.Log($"[UnitController] 새 경로 설정 완료: 1개 타일");
+                            return;
+                        }
+                        else if (isOppositeDirection)
+                        {
+                            // ✅ 반대 방향: 현재 타일에서 시작
+                            Debug.Log($"[UnitController] 인접 타일 - 반대 방향: 현재 타일 ({agent.q}, {agent.r})에서 시작");
+                            
+                            pathQueue.Enqueue(destTile);
+                            Debug.Log($"[UnitController] 새 경로 설정 완료: 1개 타일");
+                            return;
+                        }
+                        else
+                        {
+                            // ✅ 다른 방향: 가장 가까운 타일
+                            HexTile startTile = FindClosestTileAroundAgent(destTile);
+                            Debug.Log($"[UnitController] 인접 타일 - 다른 방향: 가장 가까운 타일에서 시작");
+                            
+                            if (startTile != null)
+                            {
+                                var finalPath = Pathfinder.FindPath(startTile, destTile);
+                                if (finalPath != null && finalPath.Count > 0)
+                                {
+                                    for (int i = 0; i < finalPath.Count; i++)
+                                    {
+                                        pathQueue.Enqueue(finalPath[i]);
+                                    }
+                                    Debug.Log($"[UnitController] 새 경로 설정 완료: {finalPath.Count}개 타일");
+                                }
+                            }
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        // 경로를 찾을 수 없으면 가장 가까운 타일 사용
+                        HexTile startTile = FindClosestTileAroundAgent(destTile);
+                        Debug.Log($"[UnitController] 경로 없음: 가장 가까운 타일에서 시작");
+                        
+                        if (startTile != null)
+                        {
+                            var finalPath = Pathfinder.FindPath(startTile, destTile);
+                            if (finalPath != null && finalPath.Count > 0)
+                            {
+                                for (int i = 0; i < finalPath.Count; i++)
+                                {
+                                    pathQueue.Enqueue(finalPath[i]);
+                                }
+                                Debug.Log($"[UnitController] 새 경로 설정 완료: {finalPath.Count}개 타일");
+                            }
+                        }
+                        return;
+                    }
+                }
+                else
+                {
+                    // ✅ 이동 중이 아니었거나 방향 정보가 없는 경우: 현재 타일에서 새 경로 시작
+                    Debug.Log($"[UnitController] 대기 중이거나 방향 정보 없음: 현재 타일에서 새 경로 시작");
+                    
+                    var newPath = Pathfinder.FindPath(currentTile, destTile);
+                    if (newPath != null && newPath.Count > 0)
+                    {
+                        // 현재 타일이 첫 타일이면 스킵
+                        int startIdx = (newPath[0].q == agent.q && newPath[0].r == agent.r) ? 1 : 0;
+                        for (int i = startIdx; i < newPath.Count; i++)
+                        {
+                            pathQueue.Enqueue(newPath[i]);
+                        }
+                        Debug.Log($"[UnitController] 새 경로 설정 완료: {newPath.Count - startIdx}개 타일");
+                    }
+                    return;
                 }
             }
             return;
         }
 
-        // 새로운 경로 설정
+        // 새로운 경로 설정 (이동 중이 아닐 때)
         pathQueue.Clear();
         
         int startIndex = 0;
@@ -86,6 +260,63 @@ public class UnitController : MonoBehaviour
             pathQueue.Enqueue(path[i]);
         }
     }
+    
+    /// <summary>
+    /// 현재 위치 주변 1칸 타일 중 가장 가까운 타일 찾기 ✅
+    /// </summary>
+    HexTile FindClosestTileAroundAgent(HexTile destTile)
+    {
+        if (agent == null || TileManager.Instance == null) return null;
+        
+        // 1. 현재 위치 및 주변 1칸 타일 수집
+        List<HexTile> candidateTiles = new List<HexTile>();
+        
+        // 현재 타일 추가
+        var currentTile = TileManager.Instance.GetTile(agent.q, agent.r);
+        if (currentTile != null)
+        {
+            candidateTiles.Add(currentTile);
+        }
+        
+        // 주변 6방향 타일 추가
+        foreach (var dir in HexTile.NeighborDirections)
+        {
+            int neighborQ = agent.q + dir.x;
+            int neighborR = agent.r + dir.y;
+            var neighborTile = TileManager.Instance.GetTile(neighborQ, neighborR);
+            
+            if (neighborTile != null)
+            {
+                // ✅ 이미 경로에 포함된 타일은 제외
+                if (pathQueue.Count > 0 && pathQueue.Contains(neighborTile))
+                {
+                    continue;
+                }
+                
+                candidateTiles.Add(neighborTile);
+            }
+        }
+        
+        // 2. 가장 가까운 타일 찾기 (현재 월드 위치 기준)
+        HexTile closestTile = null;
+        float minDistance = float.MaxValue;
+        
+        Vector3 currentWorldPos = transform.position;
+        
+        foreach (var tile in candidateTiles)
+        {
+            Vector3 tileWorldPos = TileHelper.HexToWorld(tile.q, tile.r, agent.hexSize);
+            float distance = Vector3.Distance(currentWorldPos, tileWorldPos);
+            
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closestTile = tile;
+            }
+        }
+        
+        return closestTile;
+    }
 
     public void ClearPath()
     {
@@ -96,6 +327,7 @@ public class UnitController : MonoBehaviour
             moveCoroutine = null;
         }
         isMoving = false;
+        currentMovingToTile = null; // ✅ 이동 정보 초기화
     }
 
     public bool IsMoving()
@@ -218,6 +450,8 @@ public class UnitController : MonoBehaviour
     System.Collections.IEnumerator MoveToTileCoroutine(HexTile dest)
     {
         isMoving = true;
+        currentMovingToTile = dest; // ✅ 현재 이동 중인 타일 저장
+        
         Vector3 startPos = transform.position;
         
         // ✅ UnitAgent의 useRandomPosition 설정에 따라 위치 결정
@@ -231,6 +465,7 @@ public class UnitController : MonoBehaviour
             transform.position = endPos;
             agent.SetPosition(dest.q, dest.r);
             isMoving = false;
+            currentMovingToTile = null; // ✅ 이동 완료
             yield break;
         }
 
@@ -248,5 +483,6 @@ public class UnitController : MonoBehaviour
 
         yield return null;
         isMoving = false;
+        currentMovingToTile = null; // ✅ 이동 완료
     }
 }
