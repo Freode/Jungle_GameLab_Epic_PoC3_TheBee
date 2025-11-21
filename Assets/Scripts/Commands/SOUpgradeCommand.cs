@@ -11,6 +11,13 @@ public class SOUpgradeCommand : SOCommand
     [Tooltip("업그레이드 종류를 선택하세요")]
     public UpgradeType upgradeType;
 
+    [Header("비용 설정")]
+    [Tooltip("초기 업그레이드 비용 (매 업그레이드마다 이 값만큼 증가)")]
+    public int baseCost = 10; // 초기 비용
+
+    [Tooltip("최대 업그레이드 레벨 (0 = 무제한)")]
+    public int maxLevel = 0; // 최대 레벨
+
     public override bool IsAvailable(UnitAgent agent)
     {
         if (agent == null) return false;
@@ -19,10 +26,23 @@ public class SOUpgradeCommand : SOCommand
         Hive hive = agent.GetComponent<Hive>();
         if (hive == null) return false;
 
-        // 자원 확인
-        if (resourceCost > 0 && HiveManager.Instance != null)
+        // 최대 레벨 체크
+        if (maxLevel > 0 && HiveManager.Instance != null)
         {
-            if (!HiveManager.Instance.HasResources(resourceCost))
+            int currentLevel = GetCurrentLevel(upgradeType);
+            if (currentLevel >= maxLevel)
+            {
+                return false; // 최대 레벨 도달
+            }
+        }
+
+        // 현재 비용 계산
+        int currentCost = GetCurrentCost();
+
+        // 자원 확인
+        if (currentCost > 0 && HiveManager.Instance != null)
+        {
+            if (!HiveManager.Instance.HasResources(currentCost))
             {
                 return false;
             }
@@ -31,9 +51,70 @@ public class SOUpgradeCommand : SOCommand
         return true;
     }
 
+    /// <summary>
+    /// 현재 비용 계산 (레벨에 따라 증가)
+    /// </summary>
+    public int GetCurrentCost()
+    {
+        if (HiveManager.Instance == null) return baseCost;
+
+        int currentLevel = GetCurrentLevel(upgradeType);
+        return baseCost + (baseCost * currentLevel);
+    }
+
+    /// <summary>
+    /// 현재 레벨 가져오기
+    /// </summary>
+    int GetCurrentLevel(UpgradeType type)
+    {
+        if (HiveManager.Instance == null) return 0;
+
+        switch (type)
+        {
+            case UpgradeType.HiveRange:
+                return HiveManager.Instance.hiveRangeLevel;
+            case UpgradeType.WorkerAttack:
+                return HiveManager.Instance.workerAttackLevel;
+            case UpgradeType.WorkerHealth:
+                return HiveManager.Instance.workerHealthLevel;
+            case UpgradeType.WorkerSpeed:
+                return HiveManager.Instance.workerSpeedLevel;
+            case UpgradeType.HiveHealth:
+                return HiveManager.Instance.hiveHealthLevel;
+            case UpgradeType.MaxWorkers:
+                return HiveManager.Instance.maxWorkersLevel;
+            case UpgradeType.GatherAmount:
+                return HiveManager.Instance.gatherAmountLevel;
+            default:
+                return 0;
+        }
+    }
+    
+    // ✅ ICommand.GetCurrentLevel() 구현 (public으로 오버라이드)
+    public override int GetCurrentLevel()
+    {
+        return GetCurrentLevel(upgradeType);
+    }
+
     public override void Execute(UnitAgent agent, CommandTarget target)
     {
-        // UpgradeCommandHandler에 위임
-        UpgradeCommandHandler.ExecuteUpgrade(upgradeType, resourceCost);
+        // 현재 비용으로 업그레이드 실행
+        int currentCost = GetCurrentCost();
+        UpgradeCommandHandler.ExecuteUpgrade(upgradeType, currentCost);
+    }
+    
+    // CostText 오버라이드 (현재 비용과 레벨 표시) ✅
+    public new string CostText
+    {
+        get
+        {
+            int currentCost = GetCurrentCost();
+            int currentLevel = HiveManager.Instance != null ? GetCurrentLevel(upgradeType) : 0;
+            
+            string levelText = maxLevel > 0 ? $" (Lv.{currentLevel}/{maxLevel})" : $" (Lv.{currentLevel})";
+            
+            if (currentCost <= 0) return levelText;
+            return $"꿀: <color=#00FF00>{currentCost}</color>{levelText}";
+        }
     }
 }

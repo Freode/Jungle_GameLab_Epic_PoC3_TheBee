@@ -333,123 +333,100 @@ public class EnemyHive : MonoBehaviour
     }
 
     /// <summary>
-    /// 말벌집 파괴
+    /// 하이브 파괴 (체력 0일 때 CombatUnit에서 호출)
     /// </summary>
     public void DestroyHive()
     {
         if (showDebugLogs)
-            Debug.Log($"[적 하이브] 파괴: ({q}, {r})");
+            Debug.Log($"[적 하이브] 파괴됨: ({q}, {r})");
 
-        // ✅ 3. 타일을 자원 타일로 변환
-        if (TileManager.Instance != null)
-        {
-            var tile = TileManager.Instance.GetTile(q, r);
-            if (tile != null)
-            {
-                // 자원 타일로 설정
-                if (GameManager.Instance != null && GameManager.Instance.terrainTypes != null)
-                {
-                    // 자원이 있는 지형 타입 찾기 (resourceYield > 0인 첫 번째 지형)
-                    TerrainType resourceTerrain = null;
-                    foreach (var terrain in GameManager.Instance.terrainTypes)
-                    {
-                        if (terrain != null && terrain.resourceYield > 0)
-                        {
-                            resourceTerrain = terrain;
-                            break;
-                        }
-                    }
+        // ✅ 하이브 위치를 자원 타일로 변경
+        ConvertToResourceTile();
 
-                    // 자원 지형이 있으면 적용
-                    if (resourceTerrain != null)
-                    {
-                        tile.SetTerrain(resourceTerrain);
-                        tile.SetResourceAmount(500); // ✅ 자원량 500으로 설정
-                        
-                        if (showDebugLogs)
-                            Debug.Log($"[적 하이브] 타일을 자원 타일로 변환: ({q}, {r}), 자원량: 500");
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"[적 하이브] 자원 지형 타입을 찾을 수 없습니다.");
-                    }
-                }
-
-                // 타일의 enemyHive 참조 제거
-                tile.enemyHive = null;
-            }
-        }
-
-        // 모든 말벌에게 하이브 파괴 알림
+        // 모든 말벌 제거
         foreach (var wasp in wasps)
         {
             if (wasp != null)
-            {
-                // 말벌의 homeHive 참조 제거
-                // (EnemyAI가 homeHive를 참조하므로)
-                var enemyAI = wasp.GetComponent<EnemyAI>();
-                if (enemyAI != null)
-                {
-                    // AI가 하이브 없이 작동하도록 설정
-                    // (이미 homeHive == null이면 제한 없이 작동)
-                }
-            }
+                Destroy(wasp.gameObject);
         }
+        wasps.Clear();
 
-        // WaspWaveManager에서 등록 해제
-        if (WaspWaveManager.Instance != null)
+        // EnemyHiveSpawner에서 등록 해제
+        if (EnemyHiveSpawner.Instance != null)
         {
-            WaspWaveManager.Instance.UnregisterEnemyHive(this);
+            EnemyHiveSpawner.Instance.UnregisterHive(gameObject);
         }
 
         // GameObject 파괴
         Destroy(gameObject);
     }
-
+    
     /// <summary>
-    /// 생성된 말벌 리스트 가져오기
+    /// 하이브 위치를 자원 타일로 변경 ✅
     /// </summary>
-    public List<UnitAgent> GetWasps()
+    void ConvertToResourceTile()
     {
-        // null 제거
-        wasps.RemoveAll(w => w == null);
-        return new List<UnitAgent>(wasps);
-    }
-
-    /// <summary>
-    /// 현재 말벌 수 가져오기
-    /// </summary>
-    public int GetWaspCount()
-    {
-        wasps.RemoveAll(w => w == null);
-        return wasps.Count;
-    }
-
-    /// <summary>
-    /// 하이브 위치 가져오기 (EnemyAI에서 사용)
-    /// </summary>
-    public Vector2Int GetPosition()
-    {
-        return new Vector2Int(q, r);
-    }
-
-    // Gizmos로 하이브 정보 표시
-    void OnDrawGizmosSelected()
-    {
-        // 하이브 위치
-        Vector3 pos = TileHelper.HexToWorld(q, r, 0.5f);
+        if (TileManager.Instance == null || GameManager.Instance == null) return;
         
-        // 시야 범위 (노란색)
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(pos, visionRange * 0.5f);
-
-        // 활동 범위 (빨간색)
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(pos, activityRange * 0.5f);
-
-        // 말벌 수 표시 (에디터에서만) ?
-#if UNITY_EDITOR
-        UnityEditor.Handles.Label(pos + Vector3.up * 0.5f, $"Wasps: {GetWaspCount()}/{maxWasps}");
-#endif
+        var tile = TileManager.Instance.GetTile(q, r);
+        if (tile == null) return;
+        
+        // 자원 지형 찾기
+        TerrainType resourceTerrain = null;
+        if (GameManager.Instance.terrainTypes != null)
+        {
+            foreach (var terrain in GameManager.Instance.terrainTypes)
+            {
+                if (terrain != null && terrain.resourceYield > 0)
+                {
+                    resourceTerrain = terrain;
+                    break;
+                }
+            }
+        }
+        
+        if (resourceTerrain == null)
+        {
+            Debug.LogWarning($"[적 하이브] 자원 지형을 찾을 수 없습니다.");
+            return;
+        }
+        
+        // (0,0)으로부터의 거리 계산
+        int distanceFromOrigin = Pathfinder.AxialDistance(0, 0, q, r);
+        
+        // 거리에 따라 자원량 결정 ✅
+        int resourceAmount = 0;
+        System.Random rnd = new System.Random(q * 1000 + r);
+        
+        if (distanceFromOrigin <= 5)
+        {
+            // 5칸 이내: 1000~1500
+            resourceAmount = rnd.Next(1000, 1501);
+            Debug.Log($"[적 하이브] 자원 타일 생성: ({q}, {r}), 거리: {distanceFromOrigin}, 자원: {resourceAmount} (5칸 이내)");
+        }
+        else if (distanceFromOrigin <= 7)
+        {
+            // 7칸 이내: 600~900
+            resourceAmount = rnd.Next(600, 901);
+            Debug.Log($"[적 하이브] 자원 타일 생성: ({q}, {r}), 거리: {distanceFromOrigin}, 자원: {resourceAmount} (7칸 이내)");
+        }
+        else if (distanceFromOrigin <= 10)
+        {
+            // 10칸 이내: 350~500
+            resourceAmount = rnd.Next(350, 501);
+            Debug.Log($"[적 하이브] 자원 타일 생성: ({q}, {r}), 거리: {distanceFromOrigin}, 자원: {resourceAmount} (10칸 이내)");
+        }
+        else
+        {
+            // 그 외: 200~300
+            resourceAmount = rnd.Next(200, 301);
+            Debug.Log($"[적 하이브] 자원 타일 생성: ({q}, {r}), 거리: {distanceFromOrigin}, 자원: {resourceAmount} (10칸 이상)");
+        }
+        
+        // 타일 변경
+        tile.SetTerrain(resourceTerrain);
+        tile.SetResourceAmount(resourceAmount);
+        
+        Debug.Log($"[적 하이브] ({q}, {r}) 위치가 자원 타일로 변경되었습니다. 자원량: {resourceAmount}");
     }
 }

@@ -25,8 +25,20 @@ public class SOCommand : ScriptableObject, ICommand
         get
         {
             if (resourceCost <= 0) return "";
-            return $"비용: {resourceCost}";
+            return $"꿀: <color=#00FF00>{resourceCost}</color>";
         }
+    }
+
+    public string LevelCostText(int level = 1)
+    {
+        if (resourceCost <= 0) return "";
+        return $"꿀 : <color=#00FF00>{resourceCost * level}</color>";
+    }
+    
+    // ✅ 현재 레벨 가져오기 (기본 구현: 0 반환, SOUpgradeCommand에서 오버라이드)
+    public virtual int GetCurrentLevel()
+    {
+        return 0;
     }
 
     // Default availability checks - can be overridden by subclassing or by external validator

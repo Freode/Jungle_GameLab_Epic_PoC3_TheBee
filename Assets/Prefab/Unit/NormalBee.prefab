@@ -207,7 +207,7 @@ MonoBehaviour:
   currentState: 0
   idleRandomMoveMinDelay: 0.2
   idleRandomMoveMaxDelay: 1.5
-  gatheringDuration: 2
+  gatheringDuration: 3
   scoutRandomMoveMinDelay: 0.2
   scoutRandomMoveMaxDelay: 1.5
   workerEnemyDetectionInterval: 0.2

@@ -27,6 +27,21 @@ public class UnitBehaviorController : MonoBehaviour
     public HexTile targetTile;
     public UnitAgent targetUnit;
 
+    // 작업 변경 이벤트 ✅
+    public event System.Action OnTaskChanged;
+
+    /// <summary>
+    /// 작업 설정 (이벤트 발생) ✅
+    /// </summary>
+    public void SetCurrentTask(UnitTaskType newTask)
+    {
+        if (currentTask != newTask)
+        {
+            currentTask = newTask;
+            OnTaskChanged?.Invoke();
+        }
+    }
+
     protected virtual void Start()
     {
         if (agent == null) agent = GetComponent<UnitAgent>();

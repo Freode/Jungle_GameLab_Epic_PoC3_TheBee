@@ -17,7 +17,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8966654276236750660
 RectTransform:
   m_ObjectHideFlags: 0
@@ -232,10 +232,10 @@ MonoBehaviour:
   panelRoot: {fileID: 2371112532937872901}
   buttonContainer: {fileID: 1589553779757176821}
   commandButtonPrefab: {fileID: 5988676082666246489, guid: 04411c0a4a737684cb910c9b5f82d505, type: 3}
-  unitNameText: {fileID: 295866513169863677}
-  unitHealthText: {fileID: 5674404402471772193}
-  unitAttackText: {fileID: 5428137592340462358}
-  workerCountText: {fileID: 4498522873334949230}
+  unitNameText: {fileID: 0}
+  unitHealthText: {fileID: 0}
+  unitAttackText: {fileID: 0}
+  workerCountText: {fileID: 0}
   defaultCommands: []
 --- !u!1 &3629253034488275266
 GameObject:
@@ -254,7 +254,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2817027312189434827
 RectTransform:
   m_ObjectHideFlags: 0
@@ -390,7 +390,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &4051280269206051282
 RectTransform:
   m_ObjectHideFlags: 0
@@ -526,7 +526,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7895437979630490028
 RectTransform:
   m_ObjectHideFlags: 0
@@ -678,8 +678,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 608, y: 0}
-  m_SizeDelta: {x: 750, y: 150}
+  m_AnchoredPosition: {x: 502, y: 0}
+  m_SizeDelta: {x: 950, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2880967467021167105
 MonoBehaviour:

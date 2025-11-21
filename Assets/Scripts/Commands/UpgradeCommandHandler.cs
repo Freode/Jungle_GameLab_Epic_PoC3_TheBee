@@ -35,6 +35,11 @@ public static class UpgradeCommandHandler
             case UpgradeType.GatherAmount:
                 success = HiveManager.Instance.UpgradeGatherAmount(cost);
                 break;
+            case UpgradeType.AutoResourceSearch:
+                if (WorkerBehaviorController.isAutoSearchNearResource) return false;
+                success = true;
+                WorkerBehaviorController.isAutoSearchNearResource = true;
+                break;
         }
 
         if (!success)
@@ -54,5 +59,6 @@ public enum UpgradeType
     WorkerSpeed,    // 일꾼 이동 속도 +1
     HiveHealth,     // 하이브 체력 +30
     MaxWorkers,     // 최대 일꾼 수 +5
-    GatherAmount    // 자원 채취량 +2
+    GatherAmount,    // 자원 채취량 +2
+    AutoResourceSearch // 자동 자원 탐색 기능 활성화
 }

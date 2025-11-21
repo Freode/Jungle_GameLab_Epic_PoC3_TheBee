@@ -134,6 +134,10 @@ public class CombatUnit : MonoBehaviour
 
     void Die()
     {
+        // 일꾼인지 확인
+        bool isWorker = false;
+        UnitAgent workerAgent = null;
+        
         // 플레이어 하이브인 경우 DestroyHive() 호출
         var hive = GetComponent<Hive>();
         if (hive != null)
@@ -162,6 +166,16 @@ public class CombatUnit : MonoBehaviour
             }
             else
             {
+                // 일반 유닛 (일꾼)
+                isWorker = true;
+                workerAgent = GetComponent<UnitAgent>();
+                
+                // HiveManager에서 일꾼 해제 ✅
+                if (workerAgent != null && HiveManager.Instance != null)
+                {
+                    HiveManager.Instance.UnregisterWorker(workerAgent);
+                }
+                
                 // 일반 유닛은 바로 파괴
                 Destroy(gameObject);
             }

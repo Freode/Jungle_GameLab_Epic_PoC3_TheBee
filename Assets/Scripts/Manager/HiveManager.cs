@@ -15,6 +15,14 @@ public class HiveManager : MonoBehaviour
 
     // 자원 변경 이벤트
     public event System.Action OnResourcesChanged;
+    
+    // 일꾼 수 변경 이벤트 ✅
+    public event System.Action<int, int> OnWorkerCountChanged; // (현재 일꾼 수, 최대 일꾼 수)
+
+    [Header("Worker Management")]
+    public int currentWorkers = 0; // 현재 일꾼 수 ✅
+    public int maxWorkers = 10; // 최대 일꾼 수 (기본값) ✅
+    private List<UnitAgent> allWorkers = new List<UnitAgent>(); // 모든 일꾼 목록 ✅
 
     [Header("Upgrade Levels")]
     public int hiveRangeLevel = 0;          // 하이브 활동 범위 레벨
@@ -84,6 +92,60 @@ public class HiveManager : MonoBehaviour
             }
         }
         return found;
+    }
+
+    /// <summary>
+    /// 일꾼 등록 (생성 시 호출) ✅
+    /// </summary>
+    public void RegisterWorker(UnitAgent worker)
+    {
+        if (worker == null || allWorkers.Contains(worker)) return;
+        
+        allWorkers.Add(worker);
+        currentWorkers = allWorkers.Count;
+        
+        Debug.Log($"[HiveManager] 일꾼 등록: {currentWorkers}/{maxWorkers}");
+        
+        // 일꾼 수 변경 이벤트 발생
+        OnWorkerCountChanged?.Invoke(currentWorkers, maxWorkers);
+    }
+
+    /// <summary>
+    /// 일꾼 해제 (죽음 시 호출) ✅
+    /// </summary>
+    public void UnregisterWorker(UnitAgent worker)
+    {
+        if (worker == null || !allWorkers.Contains(worker)) return;
+        
+        allWorkers.Remove(worker);
+        currentWorkers = allWorkers.Count;
+        
+        Debug.Log($"[HiveManager] 일꾼 해제: {currentWorkers}/{maxWorkers}");
+        
+        // 일꾼 수 변경 이벤트 발생
+        OnWorkerCountChanged?.Invoke(currentWorkers, maxWorkers);
+    }
+
+    /// <summary>
+    /// 모든 일꾼 목록 가져오기 ✅
+    /// </summary>
+    public List<UnitAgent> GetAllWorkers()
+    {
+        // null 제거
+        allWorkers.RemoveAll(w => w == null);
+        currentWorkers = allWorkers.Count;
+        return new List<UnitAgent>(allWorkers);
+    }
+
+    /// <summary>
+    /// 현재 일꾼 수 가져오기 ✅
+    /// </summary>
+    public int GetCurrentWorkers()
+    {
+        // null 제거
+        allWorkers.RemoveAll(w => w == null);
+        currentWorkers = allWorkers.Count;
+        return currentWorkers;
     }
 
     // Add resources to player's storage
@@ -374,13 +436,30 @@ public class HiveManager : MonoBehaviour
 
     void UpdateAllHiveMaxWorkers()
     {
+        // HiveManager의 maxWorkers 업데이트 ✅
+        maxWorkers = GetMaxWorkers();
+        
+        // 각 하이브의 maxWorkers도 동기화
         foreach (var hive in hives)
         {
             if (hive != null)
             {
-                hive.maxWorkers = GetMaxWorkers();
+                hive.maxWorkers = maxWorkers;
             }
         }
+        
+        // 최대 일꾼 수 변경 이벤트 발생 ✅
+        OnWorkerCountChanged?.Invoke(currentWorkers, maxWorkers);
+    }
+    
+    /// <summary>
+    /// 일꾼 수 변경 알림 (공개 메서드)
+    /// Hive에서 일꾼 생성/죽음 시 호출 (더 이상 사용 안 함 - RegisterWorker/UnregisterWorker 사용) ✅
+    /// </summary>
+    public void NotifyWorkerCountChanged()
+    {
+        // 간단하게 현재 상태로 이벤트 발생
+        OnWorkerCountChanged?.Invoke(currentWorkers, maxWorkers);
     }
 
     void UpdateAllWorkerGatherAmount()
@@ -430,7 +509,7 @@ public class HiveManager : MonoBehaviour
 
     public int GetMaxWorkers()
     {
-        return 10 + (maxWorkersLevel * 3);
+        return 3 + (maxWorkersLevel * 3);
     }
 
     public int GetGatherAmount()

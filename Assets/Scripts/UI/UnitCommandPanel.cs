@@ -30,10 +30,6 @@ public class UnitCommandPanel : MonoBehaviour
     void Start()
     {
         Hide();
-    }
-
-    void OnEnable()
-    {
         // 자원 변경 이벤트 구독
         if (HiveManager.Instance != null)
         {
@@ -41,7 +37,7 @@ public class UnitCommandPanel : MonoBehaviour
         }
     }
 
-    void OnDisable()
+    void OnDestroy()
     {
         // 자원 변경 이벤트 구독 해제
         if (HiveManager.Instance != null)
@@ -75,7 +71,7 @@ public class UnitCommandPanel : MonoBehaviour
 
     public void Hide()
     {
-        // 이벤트 구독 해제 ?
+        // 이벤트 구독 해제
         if (currentAgent != null)
         {
             UnsubscribeFromEvents(currentAgent);
@@ -205,22 +201,35 @@ public class UnitCommandPanel : MonoBehaviour
         // 일꾼 수 정보 업데이트
         if (workerCountText != null)
         {
-            // 플레이어 하이브인 경우
+            // 플레이어 하이브인 경우 - HiveManager의 값 사용 ✅
             if (hive != null && currentAgent.faction == Faction.Player)
             {
-                int workerCount = hive.GetWorkers().Count;
-                workerCountText.text = $"일꾼 수: {workerCount}/{hive.maxWorkers}";
+                if (HiveManager.Instance != null)
+                {
+                    workerCountText.text = $"일꾼 수: {HiveManager.Instance.currentWorkers}/{HiveManager.Instance.maxWorkers}";
+                }
+                else
+                {
+                    workerCountText.text = $"일꾼 수: {hive.GetWorkers().Count}/{hive.maxWorkers}";
+                }
             }
-            // 여왕벌인 경우 (전체 일꾼 수)
+            // 여왕벌인 경우 (전체 일꾼 수) - HiveManager의 값 사용 ✅
             else if (currentAgent.faction == Faction.Player && currentAgent.isQueen)
             {
-                int workerCount = 0;
-                foreach (var unit in FindObjectsOfType<UnitAgent>())
+                if (HiveManager.Instance != null)
                 {
-                    if (unit.faction == Faction.Player && !unit.isQueen)
-                        workerCount++;
+                    workerCountText.text = $"일꾼 수: {HiveManager.Instance.currentWorkers}/{HiveManager.Instance.maxWorkers}";
                 }
-                workerCountText.text = $"일꾼 수: {workerCount}";
+                else
+                {
+                    int workerCount = 0;
+                    foreach (var unit in FindObjectsOfType<UnitAgent>())
+                    {
+                        if (unit.faction == Faction.Player && !unit.isQueen)
+                            workerCount++;
+                    }
+                    workerCountText.text = $"일꾼 수: {workerCount}";
+                }
             }
             else
             {
@@ -337,11 +346,32 @@ public class UnitCommandPanel : MonoBehaviour
             
             // 텍스트 설정 (이름 + 비용)
             string buttonText = command.DisplayName;
-            if (!string.IsNullOrEmpty(command.CostText))
+            // ✅ SOUpgradeCommand인 경우 현재 비용과 레벨 표시
+            if (cmd is SOUpgradeCommand upgradeCmd)
             {
-                buttonText += $"\n{command.CostText}";
+                int currentCost = upgradeCmd.GetCurrentCost();
+                int currentLevel = upgradeCmd.GetCurrentLevel();
+                int maxLv = upgradeCmd.maxLevel;
+
+                string levelText = maxLv > 0
+                    ? $" (Lv.<color=#00FF00>{currentLevel}</color>/{maxLv})"
+                    : $" (Lv.<color=#00FF00>{currentLevel}</color>)";
+
+                if (currentCost > 0)
+                {
+                    buttonText += $"\n꿀: <color=#00FF00>{currentCost}</color>{levelText}";
+                }
+                else
+                {
+                    buttonText += $"\n{levelText}";
+                }
             }
-            
+            else if (!string.IsNullOrEmpty(cmd.CostText))
+            {
+                // 일반 명령은 기본 CostText 사용
+                buttonText += $"\n{cmd.CostText}";
+            }
+
             if (tmp != null) 
                 tmp.text = buttonText;
             else if (txt != null) 
@@ -444,7 +474,7 @@ public class UnitCommandPanel : MonoBehaviour
             }
         }
 
-        // Update button states
+        // Update button states and text ✅
         foreach (Transform t in buttonContainer)
         {
             var btn = t.GetComponentInChildren<Button>();
@@ -459,7 +489,46 @@ public class UnitCommandPanel : MonoBehaviour
                 {
                     if (cmd.Id == cmdId)
                     {
+                        // ✅ 버튼 활성화 상태 업데이트
                         btn.interactable = cmd.IsAvailable(currentAgent);
+                        
+                        // ✅ 버튼 텍스트 업데이트 (비용 변경 반영)
+                        var tmp = t.GetComponentInChildren<TextMeshProUGUI>();
+                        var txt = t.GetComponentInChildren<UnityEngine.UI.Text>();
+                        
+                        string buttonText = cmd.DisplayName;
+                        
+                        // ✅ SOUpgradeCommand인 경우 현재 비용과 레벨 표시
+                        if (cmd is SOUpgradeCommand upgradeCmd)
+                        {
+                            int currentCost = upgradeCmd.GetCurrentCost();
+                            int currentLevel = upgradeCmd.GetCurrentLevel();
+                            int maxLv = upgradeCmd.maxLevel;
+                            
+                            string levelText = maxLv > 0 
+                                ? $" (Lv.<color=#00FF00>{currentLevel}</color>/{maxLv})" 
+                                : $" (Lv.<color=#00FF00>{currentLevel}</color>)";
+
+                            if (currentCost > 0)
+                            {
+                                buttonText += $"\n꿀: <color=#00FF00>{currentCost}</color>{levelText}";
+                            }
+                            else
+                            {
+                                buttonText += $"\n{levelText}";
+                            }
+                        }
+                        else if (!string.IsNullOrEmpty(cmd.CostText))
+                        {
+                            // 일반 명령은 기본 CostText 사용
+                            buttonText += $"\n{cmd.CostText}";
+                        }
+                        
+                        if (tmp != null)
+                            tmp.text = buttonText;
+                        else if (txt != null)
+                            txt.text = buttonText;
+                        
                         break;
                     }
                 }

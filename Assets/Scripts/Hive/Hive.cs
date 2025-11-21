@@ -159,6 +159,12 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                         workers.Add(unit);
                         unit.homeHive = this;
                         
+                        // HiveManager에 등록 ✅
+                        if (HiveManager.Instance != null)
+                        {
+                            HiveManager.Instance.RegisterWorker(unit);
+                        }
+                        
                         // 수동 명령 플래그 초기화
                         unit.hasManualOrder = false;
                         unit.isFollowingQueen = false;
@@ -264,6 +270,12 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         workers.Add(agent);
         
         Debug.Log($"[하이브 스폰] 일꾼 생성: {workers.Count}/{maxWorkers}");
+        
+        // HiveManager에 일꾼 등록 ✅
+        if (HiveManager.Instance != null)
+        {
+            HiveManager.Instance.RegisterWorker(agent);
+        }
         
         // Apply upgrades to newly spawned worker (Player만)
         if (agent.faction == Faction.Player && HiveManager.Instance != null)
@@ -386,10 +398,10 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         }
 
         // 알림 토스트 표시 ?
-        if (NotificationToast.Instance != null)
-        {
-            NotificationToast.Instance.ShowMessage("이사 준비. 10초 후 벌집이 파괴됩니다.", 3f);
-        }
+//         if (NotificationToast.Instance != null)
+//         {
+//             NotificationToast.Instance.ShowMessage("이사 준비. 10초 후 벌집이 파괴됩니다.", 3f);
+//         }
 
         // 10초 카운트다운 시작
         if (relocateRoutine != null)
@@ -411,10 +423,10 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         Debug.Log($"[하이브 이사] 카운트다운 시작: {countdown}초");
         
         // UI 텍스트 활성화 ?
-        if (relocateTimerText != null)
-        {
-            relocateTimerText.gameObject.SetActive(true);
-        }
+//         if (relocateTimerText != null)
+//         {
+//             relocateTimerText.gameObject.SetActive(true);
+//         }
 
         while (countdown > 0f)
         {
@@ -428,11 +440,11 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             }
             
             // UI 텍스트 업데이트 ?
-            if (relocateTimerText != null)
-            {
-                int remainingSeconds = Mathf.CeilToInt(countdown);
-                relocateTimerText.text = $"이사 준비 중...\n{remainingSeconds}초";
-            }
+//             if (relocateTimerText != null)
+//             {
+//                 int remainingSeconds = Mathf.CeilToInt(countdown);
+//                 relocateTimerText.text = $"이사 준비 중...\n{remainingSeconds}초";
+//             }
             
             // 1초마다 로그 출력 (디버그용)
             if (showDebugLogs && Mathf.FloorToInt(countdown) != Mathf.FloorToInt(countdown + Time.deltaTime))
@@ -446,10 +458,10 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         Debug.Log("[하이브 이사] 카운트다운 완료! 하이브 파괴 시작");
         
         // UI 텍스트 비활성화 ?
-        if (relocateTimerText != null)
-        {
-            relocateTimerText.gameObject.SetActive(false);
-        }
+//         if (relocateTimerText != null)
+//         {
+//             relocateTimerText.gameObject.SetActive(false);
+//         }
         
         // Countdown finished 후 destroy this hive
         DestroyHive();
@@ -487,31 +499,31 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             //queenBee.canMove = true;
             
             // 5. 여왕벌 플래그 초기화 ?
-            queenBee.isFollowingQueen = false;
-            queenBee.hasManualOrder = false;
-            queenBee.homeHive = null; // 하이브 참조 제거 ?
+//             queenBee.isFollowingQueen = false;
+//             queenBee.hasManualOrder = false;
+//             queenBee.homeHive = null; // 하이브 참조 제거 ?
             
             // 6. UnitBehaviorController 초기화 ?
-            var queenBehavior = queenBee.GetComponent<UnitBehaviorController>();
-            if (queenBehavior != null)
-            {
-                queenBehavior.CancelCurrentTask(); // 모든 작업 취소
-            }
+//             var queenBehavior = queenBee.GetComponent<UnitBehaviorController>();
+//             if (queenBehavior != null)
+//             {
+//                 queenBehavior.CancelCurrentTask(); // 모든 작업 취소
+//             }
             
             //// 7. 렌더러 재활성화 (활성화 전에!)
-            //var queenRenderer = queenBee.GetComponent<Renderer>();
-            //if (queenRenderer != null) queenRenderer.enabled = true;
-            
-            //var queenSprite = queenBee.GetComponent<SpriteRenderer>();
-            //if (queenSprite != null) queenSprite.enabled = true;
-            
-            //// 8. 컬라이더 재활성화 (클릭 가능하게)
-            //var queenCollider2D = queenBee.GetComponent<Collider2D>();
-            //if (queenCollider2D != null) queenCollider2D.enabled = true;
-            
-            //var queenCollider3D = queenBee.GetComponent<Collider>();
-            //if (queenCollider3D != null) queenCollider3D.enabled = true;
-            
+//             var queenRenderer = queenBee.GetComponent<Renderer>();
+//             if (queenRenderer != null) queenRenderer.enabled = true;
+//             
+//             var queenSprite = queenBee.GetComponent<SpriteRenderer>();
+//             if (queenSprite != null) queenSprite.enabled = true;
+//             
+//             //// 8. 컬라이더 재활성화 (클릭 가능하게)
+//             var queenCollider2D = queenBee.GetComponent<Collider2D>();
+//             if (queenCollider2D != null) queenCollider2D.enabled = true;
+//             
+//             var queenCollider3D = queenBee.GetComponent<Collider>();
+//             if (queenCollider3D != null) queenCollider3D.enabled = true;
+//             
             // 9. 여왕벌 무적 상태 해제
             var queenCombat = queenBee.GetComponent<CombatUnit>();
             if (queenCombat != null)

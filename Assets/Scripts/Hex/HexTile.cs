@@ -36,16 +36,16 @@ public class HexTile : MonoBehaviour
     [SerializeField] private Color resourceVeryHighColor = new Color(1.0f, 0.9f, 0.0f); // 진한 노란색
     
     [Tooltip("자원량 300~399")]
-    [SerializeField] private Color resourceHighColor = new Color(1.0f, 1.0f, 0.3f); // 밝은 노란색
+    [SerializeField] private Color resourceHighColor = new Color(1.0f, 0.9f, 0.3f); // 밝은 노란색
     
     [Tooltip("자원량 200~299")]
     [SerializeField] private Color resourceMediumColor = new Color(1.0f, 0.9f, 0.5f); // 연한 노란색
     
     [Tooltip("자원량 100~199")]
-    [SerializeField] private Color resourceLowColor = new Color(1.0f, 0.7f, 0.2f); // 주황색
+    [SerializeField] private Color resourceLowColor = new Color(1.0f, 0.5f, 0.1f); // 진한 주황색
     
     [Tooltip("자원량 1~99")]
-    [SerializeField] private Color resourceVeryLowColor = new Color(1.0f, 0.5f, 0.1f); // 진한 주황색
+    [SerializeField] private Color resourceVeryLowColor = new Color(1.0f, 0.7f, 0.2f); // 주황색
     
     [Tooltip("자원 고갈 (0)")]
     [SerializeField] private Color depletedColor = new Color(0.8f, 0.4f, 0.2f); // 갈색
@@ -167,24 +167,24 @@ public class HexTile : MonoBehaviour
         if (resourceAmount > 0)
         {
             // 400 이상: 매우 높음 (진한 노란색)
-            if (resourceAmount >= 400)
+            if (resourceAmount >= 1000)
             {
                 return resourceVeryHighColor;
             }
             // 300~399: 높음 (밝은 노란색)
-            else if (resourceAmount >= 300)
+            else if (resourceAmount >= 500)
             {
                 float t = (resourceAmount - 300) / 100f;
                 return Color.Lerp(resourceHighColor, resourceVeryHighColor, t);
             }
             // 200~299: 중간 (연한 노란색)
-            else if (resourceAmount >= 200)
+            else if (resourceAmount >= 300)
             {
                 float t = (resourceAmount - 200) / 100f;
                 return Color.Lerp(resourceMediumColor, resourceHighColor, t);
             }
             // 100~199: 낮음 (주황색)
-            else if (resourceAmount >= 100)
+            else if (resourceAmount >= 150)
             {
                 float t = (resourceAmount - 100) / 100f;
                 return Color.Lerp(resourceLowColor, resourceMediumColor, t);

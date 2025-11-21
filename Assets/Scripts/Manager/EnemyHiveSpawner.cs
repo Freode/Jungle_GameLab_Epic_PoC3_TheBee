@@ -134,6 +134,14 @@ public class EnemyHiveSpawner : MonoBehaviour
             return;
         }
 
+        // ✅ 자원 타일이면 일반 타일로 변경
+        if (tile.resourceAmount > 0 && GameManager.Instance != null && GameManager.Instance.normalTerrain != null)
+        {
+            Debug.Log($"[적 하이브 생성] 자원 타일 ({q}, {r})을 일반 타일로 변경");
+            tile.SetTerrain(GameManager.Instance.normalTerrain);
+            tile.SetResourceAmount(0);
+        }
+
         // 프리팹 생성 (위치는 Initialize에서 설정됨)
         eliteHive = Instantiate(eliteWaspHivePrefab, Vector3.zero, Quaternion.identity);
         eliteHive.name = "EliteWaspHive";
@@ -168,6 +176,15 @@ public class EnemyHiveSpawner : MonoBehaviour
             Vector2Int pos = FindValidHivePosition(spawnedPositions);
             
             if (pos.x == int.MinValue) continue;
+
+            // ✅ 자원 타일이면 일반 타일로 변경
+            var tile = TileManager.Instance?.GetTile(pos.x, pos.y);
+            if (tile != null && tile.resourceAmount > 0 && GameManager.Instance != null && GameManager.Instance.normalTerrain != null)
+            {
+                Debug.Log($"[적 하이브 생성] 자원 타일 ({pos.x}, {pos.y})을 일반 타일로 변경");
+                tile.SetTerrain(GameManager.Instance.normalTerrain);
+                tile.SetResourceAmount(0);
+            }
 
             // 프리팹 생성 (위치는 Initialize에서 설정됨)
             GameObject hive = Instantiate(normalWaspHivePrefab, Vector3.zero, Quaternion.identity);

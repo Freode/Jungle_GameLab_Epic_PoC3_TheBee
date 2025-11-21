@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 /// <summary>
 /// 유닛/타일 선택 시 정보 표시 UI
@@ -17,12 +18,22 @@ public class SelectionInfoUI : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private Vector2 fixedPosition = new Vector2(10f, 10f);
-    [SerializeField] private float verticalOffset = 0f; // 추가 여유 공간
+    [SerializeField] private float verticalOffset = 10f; // 추가 여유 공간
+    [SerializeField] private float minPanelHeight = 100f; // 최소 패널 높이
+    [SerializeField] private float maxPanelHeight = 500f; // 최대 패널 높이
+    [SerializeField] private float fixedPanelWidth = 500f; // 고정 패널 너비 ?
 
     private Camera mainCamera;
     private UnitAgent selectedUnit; // 단일 선택된 유닛
     private HexTile selectedTile; // 선택된 타일
     private List<UnitAgent> dragSelectedUnits = new List<UnitAgent>(); // 드래그 선택된 유닛들
+    
+    private ContentSizeFitter sizeFitter; // 자동 크기 조절
+    private LayoutElement layoutElement; // 크기 제한용
+    
+    // 이벤트 구독 관리 ?
+    private CombatUnit subscribedCombat; // 현재 구독 중인 CombatUnit
+    private UnitBehaviorController subscribedBehavior; // 현재 구독 중인 UnitBehaviorController ?
 
     void Awake()
     {
@@ -42,11 +53,103 @@ public class SelectionInfoUI : MonoBehaviour
         {
             infoPanel.SetActive(false);
             
+            // VerticalLayoutGroup 확인/추가 (텍스트들을 자동 배치)
+            var layoutGroup = infoPanel.GetComponent<VerticalLayoutGroup>();
+            if (layoutGroup == null)
+            {
+                layoutGroup = infoPanel.AddComponent<VerticalLayoutGroup>();
+                layoutGroup.childAlignment = TextAnchor.UpperLeft;
+                layoutGroup.childControlWidth = true;
+                layoutGroup.childControlHeight = true;
+                layoutGroup.childForceExpandWidth = true;
+                layoutGroup.childForceExpandHeight = false;
+                layoutGroup.spacing = 5f;
+                layoutGroup.padding = new RectOffset(10, 10, 10, 10);
+                Debug.Log("[SelectionInfoUI] VerticalLayoutGroup 자동 추가됨");
+            }
+            
+            // ContentSizeFitter 확인/추가
+            sizeFitter = infoPanel.GetComponent<ContentSizeFitter>();
+            if (sizeFitter == null)
+            {
+                sizeFitter = infoPanel.AddComponent<ContentSizeFitter>();
+                sizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained; // 가로 크기 고정 ?
+                sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;   // 세로 크기 자동
+                Debug.Log("[SelectionInfoUI] ContentSizeFitter 자동 추가됨");
+            }
+            
+            // LayoutElement 확인/추가 (크기 제한용)
+            layoutElement = infoPanel.GetComponent<LayoutElement>();
+            if (layoutElement == null)
+            {
+                layoutElement = infoPanel.AddComponent<LayoutElement>();
+                Debug.Log("[SelectionInfoUI] LayoutElement 자동 추가됨");
+            }
+            
+            // 크기 제한 설정
+            layoutElement.minHeight = minPanelHeight;
+            layoutElement.preferredHeight = -1; // 자동
+            layoutElement.flexibleHeight = 0; // 고정
+            layoutElement.preferredWidth = fixedPanelWidth; // 가로 크기 고정 ?
+            
+            // RectTransform 설정 (가로 크기 고정)
             if (panelRect != null)
             {
-                panelRect.anchoredPosition = fixedPosition;
+                panelRect.sizeDelta = new Vector2(fixedPanelWidth, panelRect.sizeDelta.y);
+                // 앵커를 Bottom-Left로 설정 ?
+                panelRect.anchorMin = new Vector2(0, 0);
+                panelRect.anchorMax = new Vector2(0, 0);
+                panelRect.pivot = new Vector2(0, 0); // 좌하단 기준
             }
+            
+            // 텍스트 컴포넌트 설정
+            if (titleText != null)
+            {
+                SetupTextComponent(titleText, "titleText");
+            }
+            
+            if (detailsText != null)
+            {
+                SetupTextComponent(detailsText, "detailsText");
+            }
+            
+            // 초기 위치 설정은 AdjustPanelPosition에서 처리
         }
+    }
+    
+    void OnDisable()
+    {
+        // 이벤트 구독 해제 (스크립트 비활성화 시) ?
+        UnsubscribeFromCombat();
+        UnsubscribeFromBehavior(); // ?
+    }
+
+    /// <summary>
+    /// TextMeshProUGUI 컴포넌트 설정
+    /// </summary>
+    void SetupTextComponent(TextMeshProUGUI textComponent, string name)
+    {
+        if (textComponent == null) return;
+        
+        // 텍스트 설정
+        textComponent.overflowMode = TextOverflowModes.Overflow;
+        textComponent.enableWordWrapping = true;
+        textComponent.alignment = TextAlignmentOptions.TopLeft;
+        
+        // LayoutElement 확인/추가
+        var textLayout = textComponent.GetComponent<LayoutElement>();
+        if (textLayout == null)
+        {
+            textLayout = textComponent.gameObject.AddComponent<LayoutElement>();
+            Debug.Log($"[SelectionInfoUI] {name} LayoutElement 추가됨");
+        }
+        
+        // 텍스트 자동 크기 조절
+        textLayout.preferredHeight = -1; // 자동
+        textLayout.flexibleHeight = 1; // 유연하게
+        textLayout.minHeight = 20f; // 최소 높이
+        
+        Debug.Log($"[SelectionInfoUI] {name} 설정 완료");
     }
 
     void FixedUpdate()
@@ -137,7 +240,7 @@ public class SelectionInfoUI : MonoBehaviour
             infoPanel.SetActive(true);
         }
 
-        titleText.text = $"선택된 꿀벌 : {dragSelectedUnits.Count}마리";
+        titleText.text = $"선택된 꿀벌 : <color=#00FF00>{dragSelectedUnits.Count}마리</color>";
         UpdateDragSelectedInfo();
         AdjustPanelPosition();
     }
@@ -175,12 +278,12 @@ public class SelectionInfoUI : MonoBehaviour
             float avgAttack = (float)totalAttack / validCount;
 
             details += $"===평균 능력치===\n";
-            details += $"체력: {avgHealth:F1}/{avgMaxHealth:F1}\n";
-            details += $"공격력: {avgAttack:F1}\n";
+            details += $"체력: <color=#00FF00>{avgHealth:F1}</color>/{avgMaxHealth:F1}\n";
+            details += $"공격력: <color=#00FF00>{avgAttack:F1}</color>\n";
             
             details += $"===총합===\n";
-            details += $"체력: {totalHealth}/{totalMaxHealth}\n";
-            details += $"공격력: {totalAttack}\n";
+            details += $"체력: <color=#00FF00>{totalHealth}</color>/{totalMaxHealth}\n";
+            details += $"공격력: <color=#00FF00>{totalAttack}</color>\n";
         }
 
         detailsText.text = details.TrimEnd('\n');
@@ -196,14 +299,115 @@ public class SelectionInfoUI : MonoBehaviour
             infoPanel.SetActive(true);
         }
 
+        // 이전 구독 해제 ?
+        UnsubscribeFromCombat();
+        UnsubscribeFromBehavior(); // ?
+
         // ? UnitAgent의 unitName 사용
         string displayName = GetUnitDisplayName(unit);
         titleText.text = displayName;
 
+        // CombatUnit 이벤트 구독 ?
+        SubscribeToCombat(unit);
+        
+        // UnitBehaviorController 이벤트 구독 ?
+        SubscribeToBehavior(unit);
+
         UpdateUnitInfo(unit);
         AdjustPanelPosition();
     }
+    
+    /// <summary>
+    /// CombatUnit 이벤트 구독 ?
+    /// </summary>
+    void SubscribeToCombat(UnitAgent unit)
+    {
+        if (unit == null) return;
+        
+        // 하이브의 경우 Hive의 CombatUnit 구독
+        var hive = unit.GetComponent<Hive>();
+        if (hive != null)
+        {
+            subscribedCombat = hive.GetComponent<CombatUnit>();
+        }
+        else
+        {
+            subscribedCombat = unit.GetComponent<CombatUnit>();
+        }
+        
+        if (subscribedCombat != null)
+        {
+            subscribedCombat.OnStatsChanged += OnCombatStatsChanged;
+            Debug.Log($"[SelectionInfoUI] CombatUnit 이벤트 구독: {unit.name}");
+        }
+    }
 
+    /// <summary>
+    /// UnitBehaviorController 이벤트 구독 ?
+    /// </summary>
+    void SubscribeToBehavior(UnitAgent unit)
+    {
+        if (unit == null) return;
+        
+        subscribedBehavior = unit.GetComponent<UnitBehaviorController>();
+        
+        if (subscribedBehavior != null)
+        {
+            subscribedBehavior.OnTaskChanged += OnTaskChanged;
+            Debug.Log($"[SelectionInfoUI] UnitBehaviorController 이벤트 구독: {unit.name}");
+        }
+    }
+    
+    /// <summary>
+    /// CombatUnit 이벤트 구독 해제 ?
+    /// </summary>
+    void UnsubscribeFromCombat()
+    {
+        if (subscribedCombat != null)
+        {
+            subscribedCombat.OnStatsChanged -= OnCombatStatsChanged;
+            Debug.Log($"[SelectionInfoUI] CombatUnit 이벤트 구독 해제");
+            subscribedCombat = null;
+        }
+    }
+
+    /// <summary>
+    /// UnitBehaviorController 이벤트 구독 해제 ?
+    /// </summary>
+    void UnsubscribeFromBehavior()
+    {
+        if (subscribedBehavior != null)
+        {
+            subscribedBehavior.OnTaskChanged -= OnTaskChanged;
+            Debug.Log($"[SelectionInfoUI] UnitBehaviorController 이벤트 구독 해제");
+            subscribedBehavior = null;
+        }
+    }
+    
+    /// <summary>
+    /// CombatUnit 이벤트 핸들러 ?
+    /// </summary>
+    void OnCombatStatsChanged()
+    {
+        // 선택된 유닛이 있으면 정보 업데이트
+        if (selectedUnit != null)
+        {
+            UpdateUnitInfo(selectedUnit);
+        }
+    }
+    
+    /// <summary>
+    /// UnitBehaviorController 이벤트 핸들러
+    /// </summary>
+    void OnTaskChanged()
+    {
+        // 선택된 유닛이 있으면 정보 업데이트
+        if (selectedUnit != null)
+        {
+            UpdateUnitInfo(selectedUnit);
+        }
+    }
+    
     void UpdateUnitInfo(UnitAgent unit)
     {
         if (detailsText == null || unit == null) return;
@@ -215,14 +419,14 @@ public class SelectionInfoUI : MonoBehaviour
         var combat = unit.GetComponent<CombatUnit>();
         if (combat != null)
         {
-            details += $"체력: {combat.health}/{combat.maxHealth}\n";
-            details += $"공격력: {combat.attack}\n";
+            details += $"체력: <color=#00FF00>{combat.health}</color>/{combat.maxHealth}\n";
+            details += $"공격력: <color=#00FF00>{combat.attack}</color>\n";
         }
 
         var behavior = unit.GetComponent<UnitBehaviorController>();
         if (behavior != null)
         {
-            details += $"현재 작업: {GetTaskString(behavior.currentTask)}\n";
+            details += $"현재 작업: <color=#00FF00>{GetTaskString(behavior.currentTask)}</color>\n";
         }
 
         detailsText.text = details.TrimEnd('\n');
@@ -263,11 +467,11 @@ public class SelectionInfoUI : MonoBehaviour
 
             if (tile.resourceAmount > 0)
             {
-                details += $"자원량: {tile.resourceAmount}\n";
+                details += $"남은 꿀: <color=#FFFF00>{tile.resourceAmount}</color>\n";
             }
             else if (tile.terrain != null && tile.terrain.resourceYield > 0)
             {
-                details += "자원: 고갈됨\n";
+                details += "남은 꿀: 고갈됨\n";
             }
 
             if (tile.enemyHive != null)
@@ -276,12 +480,13 @@ public class SelectionInfoUI : MonoBehaviour
                 var hiveCombat = tile.enemyHive.GetComponent<CombatUnit>();
                 if (hiveCombat != null)
                 {
-                    details += $"하이브 체력: {hiveCombat.health}/{hiveCombat.maxHealth}\n";
+                    details += $"하이브 체력: <color=#00FF00>{hiveCombat.health}</color>/{hiveCombat.maxHealth}\n";
                 }
             }
         }
         else
         {
+            details += $"위치: ({tile.q}, {tile.r})\n";
             details += $"시야 상태: {GetFogStateString(tile.fogState)}\n";
         }
 
@@ -291,21 +496,86 @@ public class SelectionInfoUI : MonoBehaviour
 
     /// <summary>
     /// 텍스트 길이에 따라 패널 위치를 위로 조정
+    /// 화면 하단 기준: padding + 패널 높이의 절반
     /// </summary>
     void AdjustPanelPosition()
     {
         if (panelRect == null) return;
 
-        // Canvas 업데이트를 강제하여 최신 크기 정보 가져오기
+        // 1. 텍스트 메쉬 강제 업데이트
+        if (titleText != null)
+        {
+            titleText.ForceMeshUpdate();
+        }
+        if (detailsText != null)
+        {
+            detailsText.ForceMeshUpdate();
+        }
+        
+        // 2. 레이아웃 강제 재계산
+        LayoutRebuilder.ForceRebuildLayoutImmediate(panelRect);
+        
+        // 3. ContentSizeFitter 강제 업데이트
+        if (sizeFitter != null)
+        {
+            sizeFitter.SetLayoutVertical();
+        }
+        
+        // 4. Canvas 강제 업데이트
         Canvas.ForceUpdateCanvases();
         
-        // 패널의 현재 높이 가져오기
+        // 5. 다시 한 번 레이아웃 재계산
+        LayoutRebuilder.ForceRebuildLayoutImmediate(panelRect);
+        
+        // 6. 패널의 현재 높이 가져오기
         float panelHeight = panelRect.rect.height;
         
-        // 기본 위치에서 패널 높이만큼 위로 이동 (+ 추가 오프셋)
-        Vector2 adjustedPosition = new Vector2(fixedPosition.x, fixedPosition.y + panelHeight + verticalOffset);
+        // 7. 최대 높이 제한 적용
+        if (panelHeight > maxPanelHeight)
+        {
+            if (layoutElement != null)
+            {
+                layoutElement.preferredHeight = maxPanelHeight;
+            }
+            panelHeight = maxPanelHeight;
+            
+            // 스크롤 가능하도록 detailsText 설정
+            if (detailsText != null)
+            {
+                detailsText.overflowMode = TextOverflowModes.Ellipsis;
+            }
+        }
+        else
+        {
+            if (layoutElement != null)
+            {
+                layoutElement.preferredHeight = -1; // 자동
+            }
+            
+            if (detailsText != null)
+            {
+                detailsText.overflowMode = TextOverflowModes.Overflow;
+            }
+        }
         
+        // 8. 최소 높이 보장
+        if (panelHeight < minPanelHeight)
+        {
+            panelHeight = minPanelHeight;
+        }
+        
+        // 9. 위치 계산: 화면 하단 기준
+        // X: 왼쪽에서 fixedPosition.x 만큼
+        // Y: 하단에서 padding + 패널 높이의 절반 ?
+        float xPos = fixedPosition.x;
+        float yPos = verticalOffset; // padding + 패널 높이의 절반
+        
+        Vector2 adjustedPosition = new Vector2(xPos, yPos);
         panelRect.anchoredPosition = adjustedPosition;
+        
+        // 디버그 로그
+        Debug.Log($"[SelectionInfoUI] 패널 크기: {fixedPanelWidth} x {panelHeight}");
+        Debug.Log($"[SelectionInfoUI] 패널 위치: {adjustedPosition} (하단 기준)");
     }
 
     void HideInfo()
@@ -314,6 +584,10 @@ public class SelectionInfoUI : MonoBehaviour
         {
             infoPanel.SetActive(false);
         }
+        
+        // 이벤트 구독 해제 ?
+        UnsubscribeFromCombat();
+        UnsubscribeFromBehavior(); // ?
     }
 
     /// <summary>
@@ -331,6 +605,11 @@ public class SelectionInfoUI : MonoBehaviour
         selectedUnit = null;
         dragSelectedUnits.Clear();
         selectedTile = tile;
+        
+        // 이벤트 구독 해제 (타일 선택 시) ?
+        UnsubscribeFromCombat();
+        UnsubscribeFromBehavior(); // ?
+        
         ShowTileInfo(tile);
     }
 
@@ -342,6 +621,11 @@ public class SelectionInfoUI : MonoBehaviour
         selectedUnit = null;
         selectedTile = null;
         dragSelectedUnits.Clear();
+        
+        // 이벤트 구독 해제 ?
+        UnsubscribeFromCombat();
+        UnsubscribeFromBehavior(); // ?
+        
         HideInfo();
     }
 
@@ -353,7 +637,24 @@ public class SelectionInfoUI : MonoBehaviour
         // 1. UnitAgent의 unitName이 있으면 사용
         if (!string.IsNullOrEmpty(unit.unitName))
         {
-            return unit.unitName;
+            string name = "";
+            switch(unit.faction)
+            {
+                case Faction.Player:
+                    name = $"<color=#00FF00>{unit.unitName}</color>";
+                    break;
+                case Faction.Enemy:
+                    name = $"<color=#FF0000>{unit.unitName}</color>";
+                    break;
+                case Faction.Neutral:
+                    name = $"<color=#FFFF00>{unit.unitName}</color>";
+                    break;
+                default:
+                    name = unit.unitName;
+                    break;
+            }
+
+            return name;
         }
 
         // 2. 기본 타입 이름 생성
