@@ -14,8 +14,19 @@ public class CombatUnit : MonoBehaviour
     [Header("무적 상태")]
     public bool isInvincible = false; // 무적 상태 ?
     
+    [Header("피격 이펙트")]
+    [Tooltip("피격 시 색상")]
+    public Color hitFlashColor = Color.white;
+    [Tooltip("플래시 지속 시간")]
+    public float hitFlashDuration = 0.2f;
+    
     private float lastAttackTime = -999f; // 마지막 공격 시간
     private UnitAgent agent;
+    private SpriteRenderer spriteRenderer;
+    private Renderer meshRenderer;
+    private Color originalColor;
+    private MaterialPropertyBlock mpb;
+    private Coroutine hitFlashCoroutine;
     
     // 체력/공격력 변경 이벤트
     public event System.Action OnStatsChanged;
@@ -24,6 +35,43 @@ public class CombatUnit : MonoBehaviour
     {
         agent = GetComponent<UnitAgent>();
         health = maxHealth;
+        
+        // 렌더러 초기화
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            originalColor = spriteRenderer.color;
+        }
+        else
+        {
+            // 자식에서 찾기
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            if (spriteRenderer != null)
+            {
+                originalColor = spriteRenderer.color;
+            }
+        }
+        
+        // 3D Renderer도 지원
+        if (spriteRenderer == null)
+        {
+            meshRenderer = GetComponent<Renderer>();
+            if (meshRenderer == null)
+            {
+                meshRenderer = GetComponentInChildren<Renderer>();
+            }
+            
+            if (meshRenderer != null)
+            {
+                mpb = new MaterialPropertyBlock();
+                meshRenderer.GetPropertyBlock(mpb);
+                originalColor = mpb.GetColor("_Color");
+                if (originalColor == Color.clear)
+                {
+                    originalColor = Color.white;
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -78,6 +126,13 @@ public class CombatUnit : MonoBehaviour
         
         health -= dmg;
         
+        // ✅ 피격 색상 플래시 효과
+        if (hitFlashCoroutine != null)
+        {
+            StopCoroutine(hitFlashCoroutine);
+        }
+        hitFlashCoroutine = StartCoroutine(HitFlashEffect());
+        
         // 이벤트 발생
         OnStatsChanged?.Invoke();
         
@@ -86,6 +141,83 @@ public class CombatUnit : MonoBehaviour
             health = 0;
             Die();
         }
+    }
+    
+    /// <summary>
+    /// 피격 색상 플래시 효과 ✅
+    /// </summary>
+    System.Collections.IEnumerator HitFlashEffect()
+    {
+        // SpriteRenderer 사용
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = hitFlashColor;
+            yield return new WaitForSeconds(hitFlashDuration);
+            
+            // ✅ 선택 상태 및 자원 보유 상태 확인 후 색상 복원
+            if (agent != null && agent.GetComponent<UnitAgent>() != null)
+            {
+                var unitAgent = agent.GetComponent<UnitAgent>();
+                if (unitAgent != null)
+                {
+                    // 현재 선택 상태 확인
+                    bool isSelected = false;
+                    
+                    if (TileClickMover.Instance != null && TileClickMover.Instance.GetSelectedUnit() == unitAgent)
+                    {
+                        isSelected = true;
+                    }
+                    else if (DragSelector.Instance != null && DragSelector.Instance.IsUnitSelected(unitAgent))
+                    {
+                        isSelected = true;
+                    }
+                    
+                    // SetSelected 호출 (내부에서 자원 보유 상태도 고려)
+                    unitAgent.SetSelected(isSelected);
+                }
+            }
+            else
+            {
+                // UnitAgent가 없으면 원래 색상으로 복원
+                spriteRenderer.color = originalColor;
+            }
+        }
+        // Mesh Renderer 사용
+        else if (meshRenderer != null && mpb != null)
+        {
+            mpb.SetColor("_Color", hitFlashColor);
+            meshRenderer.SetPropertyBlock(mpb);
+            
+            yield return new WaitForSeconds(hitFlashDuration);
+            
+            // ✅ 선택 상태 및 자원 보유 상태 확인 후 색상 복원
+            if (agent != null && agent.GetComponent<UnitAgent>() != null)
+            {
+                var unitAgent = agent.GetComponent<UnitAgent>();
+                if (unitAgent != null)
+                {
+                    bool isSelected = false;
+                    
+                    if (TileClickMover.Instance != null && TileClickMover.Instance.GetSelectedUnit() == unitAgent)
+                    {
+                        isSelected = true;
+                    }
+                    else if (DragSelector.Instance != null && DragSelector.Instance.IsUnitSelected(unitAgent))
+                    {
+                        isSelected = true;
+                    }
+                    
+                    unitAgent.SetSelected(isSelected);
+                }
+            }
+            else
+            {
+                mpb.SetColor("_Color", originalColor);
+                meshRenderer.SetPropertyBlock(mpb);
+            }
+        }
+        
+        hitFlashCoroutine = null;
     }
 
     /// <summary>

@@ -18,12 +18,14 @@ public class UnitBehaviorController : MonoBehaviour
     [Header("Gather Settings")]
     public int gatherAmount = 1;
     public float gatherCooldown = 1.0f;
+    public Color gatherColor = Color.yellow;
 
     [Header("Activity Settings")]
     public int activityRadius = 5;
 
     [Header("Current Task")]
     public UnitTaskType currentTask = UnitTaskType.Idle;
+    public string currentTaskString = string.Empty;
     public HexTile targetTile;
     public UnitAgent targetUnit;
 

@@ -33,8 +33,15 @@ public class UnitAgent : MonoBehaviour
     // Worker behavior flags for hive relocation
     public bool isFollowingQueen = false; // Worker is following queen during relocation
     public bool hasManualOrder = false; // Worker received manual move order
+    
+    // ✅ 자원 보유 상태
+    [HideInInspector]
+    public bool isCarryingResource = false; // 자원을 들고 있는지 여부
+    [HideInInspector]
+    public Color gatherColor = Color.yellow; // 자원 채취 시 색상
 
     private bool isRegistered = false;
+    private bool isSelected = false; // ✅ 선택 상태 추적
 
     // selection visuals
     private Renderer cachedRenderer;
@@ -133,19 +140,73 @@ public class UnitAgent : MonoBehaviour
 
     public void SetSelected(bool selected)
     {
-        // 연한 연두색: RGB(144, 238, 144) = Light Green
-        Color selectedColor = new Color(144f / 255f, 238f / 255f, 144f / 255f, 1f);
-        Color target = selected ? selectedColor : originalColor;
+        isSelected = selected; // ✅ 선택 상태 저장
         
+        Color targetColor;
+        
+        if (selected)
+        {
+            // 선택된 경우: 항상 선택 색상 (연한 연두색)
+            targetColor = new Color(144f / 255f, 238f / 255f, 144f / 255f, 1f);
+        }
+        else
+        {
+            // 선택 해제된 경우
+            if (isCarryingResource)
+            {
+                // 자원을 들고 있으면 gatherColor
+                targetColor = gatherColor;
+            }
+            else
+            {
+                // 자원이 없으면 원래 색상
+                targetColor = originalColor;
+            }
+        }
+        
+        // 색상 적용
         if (cachedSprite != null)
         {
-            cachedSprite.color = target;
+            cachedSprite.color = targetColor;
             return;
         }
         if (cachedRenderer != null)
         {
             mpb.Clear();
-            mpb.SetColor("_Color", target);
+            mpb.SetColor("_Color", targetColor);
+            cachedRenderer.SetPropertyBlock(mpb);
+        }
+    }
+    
+    /// <summary>
+    /// 자원 보유 상태 설정 ✅
+    /// </summary>
+    public void SetCarryingResource(bool carrying)
+    {
+        isCarryingResource = carrying;
+        
+        // 선택되지 않은 상태에서만 색상 변경
+        if (!isSelected)
+        {
+            UpdateColor();
+        }
+    }
+    
+    /// <summary>
+    /// 색상 업데이트 (내부용) ✅
+    /// </summary>
+    private void UpdateColor()
+    {
+        Color targetColor = isCarryingResource ? gatherColor : originalColor;
+        
+        if (cachedSprite != null)
+        {
+            cachedSprite.color = targetColor;
+        }
+        else if (cachedRenderer != null)
+        {
+            mpb.Clear();
+            mpb.SetColor("_Color", targetColor);
             cachedRenderer.SetPropertyBlock(mpb);
         }
     }

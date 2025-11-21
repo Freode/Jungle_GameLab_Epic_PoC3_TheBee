@@ -415,11 +415,12 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
 
     IEnumerator RelocationCountdown()
     {
-        float countdown = 10f;
+        float countdown = 5f;
         var combat = GetComponent<CombatUnit>();
         int initialHealth = combat != null ? combat.health : 0;
         float healthDrainRate = initialHealth / countdown; // 초당 감소량
         
+        NotificationToast.Instance.ShowMessage("이사 준비! 5초 후 벌집이 파괴됩니다.");
         Debug.Log($"[하이브 이사] 카운트다운 시작: {countdown}초");
         
         // UI 텍스트 활성화 ?

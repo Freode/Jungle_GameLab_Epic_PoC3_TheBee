@@ -182,6 +182,8 @@ MonoBehaviour:
   attackRange: 0
   attackCooldown: 2
   isInvincible: 0
+  hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  hitFlashDuration: 0.2
 --- !u!114 &598892566347766434
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,8 +202,10 @@ MonoBehaviour:
   role: {fileID: 5903837824391282830}
   gatherAmount: 1
   gatherCooldown: 1
+  gatherColor: {r: 0.7830189, g: 0.7830189, b: 0, a: 1}
   activityRadius: 5
   currentTask: 0
+  currentTaskString: 
   targetTile: {fileID: 0}
   targetUnit: {fileID: 0}
   currentState: 0

@@ -33,7 +33,7 @@ public class HexTile : MonoBehaviour
     // ✅ 2. 자원량에 따른 색상 단계 설정 (절대 수치 기반)
     [Header("자원 색상 설정")]
     [Tooltip("자원량 400 이상")]
-    [SerializeField] private Color resourceVeryHighColor = new Color(1.0f, 0.9f, 0.0f); // 진한 노란색
+    [SerializeField] private Color resourceVeryHighColor = new Color(1.0f, 0.9f, 0.1f); // 진한 노란색
     
     [Tooltip("자원량 300~399")]
     [SerializeField] private Color resourceHighColor = new Color(1.0f, 0.9f, 0.3f); // 밝은 노란색

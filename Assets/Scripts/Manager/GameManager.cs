@@ -337,28 +337,28 @@ public class GameManager : MonoBehaviour
         
         if (distanceFromOrigin <= 3)
         {
-            // 3칸 이내: 500~700
-            resourceAmount = rnd.Next(500, 701);
+            // 3칸 이내: 400~450
+            resourceAmount = rnd.Next(400, 451);
         }
         else if (distanceFromOrigin <= 5)
         {
-            // 7칸 이내: 300~500
-            resourceAmount = rnd.Next(350, 501);
+            // 7칸 이내: 275~325
+            resourceAmount = rnd.Next(275, 326);
         }
         else if (distanceFromOrigin <= 7)
         {
-            // 10칸 이내: 150~300
-            resourceAmount = rnd.Next(200, 301);
+            // 10칸 이내: 175~225
+            resourceAmount = rnd.Next(175, 226);
         }
         else if (distanceFromOrigin <= 10)
         {
-            // 10칸 이내: 150~300
-            resourceAmount = rnd.Next(100, 151);
+            // 10칸 이내: 90~130
+            resourceAmount = rnd.Next(90, 131);
         }
         else
         {
-            // 그 외: 50
-            resourceAmount = rnd.Next(50, 101);
+            // 그 외: 35~75
+            resourceAmount = rnd.Next(35, 76);
         }
         
         // 중심으로부터의 거리에 따라 추가 감소 (클러스터 중심이 더 많음)

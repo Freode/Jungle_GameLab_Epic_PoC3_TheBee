@@ -41,6 +41,13 @@ public class WorkerBehaviorController : UnitBehaviorController
     protected override void Start()
     {
         base.Start();
+        
+        // ✅ gatherColor를 UnitAgent에 전달
+        if (agent != null)
+        {
+            agent.gatherColor = gatherColor;
+        }
+        
         TransitionToState(WorkerState.Idle);
     }
 
@@ -85,21 +92,27 @@ public class WorkerBehaviorController : UnitBehaviorController
         {
             case WorkerState.Idle:
                 currentStateCoroutine = StartCoroutine(IdleStateCoroutine());
+                currentTaskString = "대기";
                 break;
             case WorkerState.Moving:
                 currentStateCoroutine = StartCoroutine(MovingStateCoroutine());
+                currentTaskString = "이동";
                 break;
             case WorkerState.Gathering:
                 currentStateCoroutine = StartCoroutine(GatheringStateCoroutine());
+                currentTaskString = "꿀 채취";
                 break;
             case WorkerState.Attacking:
                 currentStateCoroutine = StartCoroutine(AttackingStateCoroutine());
+                currentTaskString = "공격";
                 break;
             case WorkerState.FollowingQueen:
                 currentStateCoroutine = StartCoroutine(FollowingQueenStateCoroutine());
+                currentTaskString = "여왕벌 호위";
                 break;
             case WorkerState.Scouting:
                 currentStateCoroutine = StartCoroutine(ScoutingStateCoroutine());
+                currentTaskString = "정찰";
                 break;
         }
     }
@@ -238,6 +251,12 @@ public class WorkerBehaviorController : UnitBehaviorController
                 Debug.Log($"[Worker State] 자원 전달: {gatherAmount}");
             }
             isCarryingResource = false;
+            
+            // ✅ UnitAgent에 자원 보유 상태 해제 (색상 복원)
+            if (agent != null)
+            {
+                agent.SetCarryingResource(false);
+            }
 
             // ✅ 4. 이전 채취 타일이 있고 활동 범위 내면 복귀
             if (lastGatherTile != null)
@@ -338,6 +357,13 @@ public class WorkerBehaviorController : UnitBehaviorController
         if (gathered > 0)
         {
             isCarryingResource = true;
+            
+            // ✅ UnitAgent에 자원 보유 상태 전달 (색상 변경)
+            if (agent != null)
+            {
+                agent.SetCarryingResource(true);
+            }
+            
             Debug.Log($"[Worker State] 자원 채취 완료: {gathered}");
         }
         else
@@ -745,6 +771,12 @@ public class WorkerBehaviorController : UnitBehaviorController
         targetUnit = null;
         isCarryingResource = false;
         lastGatherTile = null;
+        
+        // ✅ UnitAgent에 자원 보유 상태 해제
+        if (agent != null)
+        {
+            agent.SetCarryingResource(false);
+        }
 
         if (mover != null)
         {

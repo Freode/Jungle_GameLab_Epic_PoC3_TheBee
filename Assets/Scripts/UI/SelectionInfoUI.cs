@@ -426,7 +426,7 @@ public class SelectionInfoUI : MonoBehaviour
         var behavior = unit.GetComponent<UnitBehaviorController>();
         if (behavior != null)
         {
-            details += $"현재 작업: <color=#00FF00>{GetTaskString(behavior.currentTask)}</color>\n";
+            details += $"현재 작업: <color=#00FF00>{behavior.currentTaskString}</color>\n";
         }
 
         detailsText.text = details.TrimEnd('\n');
