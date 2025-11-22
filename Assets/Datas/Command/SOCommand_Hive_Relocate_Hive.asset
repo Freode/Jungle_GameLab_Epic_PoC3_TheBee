@@ -17,4 +17,4 @@ MonoBehaviour:
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0
-  resourceCost: 10
+  resourceCost: 0

@@ -266,6 +266,21 @@ public class CombatUnit : MonoBehaviour
 
     void Die()
     {
+        // 여왕벌인지 확인
+        if (agent != null && agent.isQueen)
+        {
+            Debug.Log("[CombatUnit] 여왕벌 사망!");
+            
+            // GameManager에 알림
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.OnQueenDied();
+            }
+            
+            Destroy(gameObject);
+            return;
+        }
+        
         // 일꾼인지 확인
         bool isWorker = false;
         UnitAgent workerAgent = null;

@@ -59,11 +59,14 @@ public class UnitBehaviorController : MonoBehaviour
     }
 
     /// <summary>
-    /// 주변 범위 내 적 유닛 찾기
+    /// 주변 범위 내 적 유닛 찾기 (개선: 일꾼 우선 → 건물 공격)
     /// </summary>
     protected UnitAgent FindNearbyEnemy(int range)
     {
         if (TileManager.Instance == null) return null;
+        
+        List<UnitAgent> workers = new List<UnitAgent>();
+        List<UnitAgent> structures = new List<UnitAgent>();
         
         foreach (var unit in TileManager.Instance.GetAllUnits())
         {
@@ -82,48 +85,87 @@ public class UnitBehaviorController : MonoBehaviour
             
             // 거리 체크
             int distance = Pathfinder.AxialDistance(agent.q, agent.r, unit.q, unit.r);
-            if (distance <= range)
+            if (distance > range) continue;
+            
+            // 활동 범위 체크
+            if (agent.homeHive != null)
             {
-                // 하이브가 있는 경우 활동 범위 체크
-                if (agent.homeHive != null)
+                int distanceToHive = Pathfinder.AxialDistance(agent.homeHive.q, agent.homeHive.r, unit.q, unit.r);
+                if (distanceToHive > activityRadius)
                 {
-                    int distanceToHive = Pathfinder.AxialDistance(agent.homeHive.q, agent.homeHive.r, unit.q, unit.r);
-                    if (distanceToHive > activityRadius)
+                    continue;
+                }
+            }
+            // 하이브가 없는 경우 (여왕벌 모드)
+            else if (agent.isQueen)
+            {
+                if (distance > 1)
+                {
+                    continue;
+                }
+            }
+            // 하이브도 없고 여왕벌도 아닌 경우 (일반 일꾼)
+            else
+            {
+                UnitAgent queen = FindQueenInScene();
+                if (queen != null)
+                {
+                    int distanceToQueen = Pathfinder.AxialDistance(queen.q, queen.r, unit.q, unit.r);
+                    if (distanceToQueen > 1)
                     {
                         continue;
                     }
                 }
-                // 하이브가 없는 경우 (여왕벌 모드)
-                else if (agent.isQueen)
-                {
-                    if (distance > 1)
-                    {
-                        continue;
-                    }
-                }
-                // 하이브도 없고 여왕벌도 아닌 경우 (일반 일꾼)
                 else
                 {
-                    UnitAgent queen = FindQueenInScene();
-                    if (queen != null)
-                    {
-                        int distanceToQueen = Pathfinder.AxialDistance(queen.q, queen.r, unit.q, unit.r);
-                        if (distanceToQueen > 1)
-                        {
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                    continue;
                 }
-                
-                return unit;
+            }
+            
+            // ✅ 타입별 분류
+            if (unit.GetComponent<Hive>() != null || unit.GetComponent<EnemyHive>() != null)
+            {
+                structures.Add(unit);
+            }
+            else
+            {
+                workers.Add(unit);
             }
         }
         
-        return null;
+        // ✅ 1순위: 가장 가까운 일꾼
+        UnitAgent target = GetClosestUnit(workers);
+        
+        // ✅ 2순위: 가장 가까운 건물
+        if (target == null)
+        {
+            target = GetClosestUnit(structures);
+        }
+        
+        return target;
+    }
+    
+    /// <summary>
+    /// 리스트에서 가장 가까운 유닛 찾기 ✅
+    /// </summary>
+    protected UnitAgent GetClosestUnit(List<UnitAgent> units)
+    {
+        if (units == null || units.Count == 0) return null;
+        
+        UnitAgent closest = null;
+        int minDistance = int.MaxValue;
+        
+        foreach (var unit in units)
+        {
+            int distance = Pathfinder.AxialDistance(agent.q, agent.r, unit.q, unit.r);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closest = unit;
+            }
+        }
+        
+        return closest;
     }
 
     /// <summary>

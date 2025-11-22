@@ -157,7 +157,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: roleCommands.Array.size
-      value: 9
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: 'roleCommands.Array.data[0]'
@@ -299,7 +299,7 @@ MonoBehaviour:
   r: 0
   workerPrefab: {fileID: 122535924390814216, guid: 9b4e582aa5b040e4fba39b28bd92b7c8, type: 3}
   spawnInterval: 4
-  maxWorkers: 10
+  maxWorkers: 5
   isRelocating: 0
   queenBee: {fileID: 0}
   hiveCommands: []
@@ -317,12 +317,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a08076ae41a3aea44bb6530b084b50cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 200
+  maxHealth: 100
   health: 0
   attack: 0
   attackRange: 0
   attackCooldown: 2
   isInvincible: 0
+  hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  hitFlashDuration: 0.2
 --- !u!4 &7137265993117279580 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8356495950311495776, guid: fbd489a349676d34997f12e8c68a8424, type: 3}

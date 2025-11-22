@@ -78,9 +78,9 @@ public static class RelocateHiveCommandHandler
             }
         }
         
-        // Default to 10 if not found ?
-        Debug.LogWarning("[GetResourceCost] relocate_hive 명령을 찾을 수 없습니다. 기본 비용 10 사용");
-        return 10;
+        // Default to 0 if not found (이사 비용 무료)
+        Debug.LogWarning("[GetResourceCost] relocate_hive 명령을 찾을 수 없습니다. 기본 비용 0 사용");
+        return 0;
     }
 
     private static Hive FindHiveAtPosition(int q, int r)

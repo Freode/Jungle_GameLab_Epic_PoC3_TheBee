@@ -19,6 +19,10 @@ public class EnemyHive : MonoBehaviour
     public GameObject waspPrefab; // 말벌 프리팹
     public float spawnInterval = 8f; // 생성 간격 (초)
     public int maxWasps = 15; // 최대 말벌 수
+    
+    [Header("하이브 타입")]
+    [Tooltip("장수말벌집 여부 (웨이브 공격용)")]
+    public bool isBossHive = false; // ✅ 장수말벌집 플래그
 
     [Header("전투 설정")]
     public int visionRange = 5; // 말벌집 시야 범위
@@ -31,6 +35,9 @@ public class EnemyHive : MonoBehaviour
     private Coroutine spawnRoutine;
     private UnitAgent hiveAgent; // 하이브 자신의 UnitAgent
     private CombatUnit combat; // 하이브 전투 유닛
+    
+    // ✅ 하이브 파괴 이벤트
+    public static event System.Action<EnemyHive> OnHiveDestroyed;
 
     void Awake()
     {
@@ -293,6 +300,7 @@ public class EnemyHive : MonoBehaviour
         }
 
         // AI 설정 (하이브 정보 전달)
+        // ✅ isWaveWasp는 기본값(false) 유지 - 활동 범위 제한됨
         enemyAI.visionRange = 3; // 말벌 시야 범위
         enemyAI.activityRange = activityRange; // 하이브 활동 범위
         enemyAI.attackRange = 0; // 근접 전투
@@ -339,6 +347,21 @@ public class EnemyHive : MonoBehaviour
     {
         if (showDebugLogs)
             Debug.Log($"[적 하이브] 파괴됨: ({q}, {r})");
+
+        // ✅ isBossHive 플래그로 장수말벌집 확인
+        if (isBossHive)
+        {
+            Debug.Log("[적 하이브] 장수말벌집 파괴!");
+            
+            // GameManager에 승리 알림
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.OnBossHiveDestroyed();
+            }
+        }
+
+        // ✅ 하이브 파괴 이벤트 발생
+        OnHiveDestroyed?.Invoke(this);
 
         // ✅ 하이브 위치를 자원 타일로 변경
         ConvertToResourceTile();

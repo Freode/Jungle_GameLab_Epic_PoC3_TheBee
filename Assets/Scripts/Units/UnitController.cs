@@ -107,16 +107,19 @@ public class UnitController : MonoBehaviour
                         
                         if (isSameDirection)
                         {
-                            // ✅ 같은 방향: 바로 새로운 경로 설정 (처음부터)
+                            // ✅ 같은 방향: 바로 새로운 경로 설정 (현재 타일 스킵!)
                             Debug.Log($"[UnitController] 같은 방향 감지: 현재 타일 ({agent.q}, {agent.r})에서 새 경로 시작 → 목적지 ({destTile.q}, {destTile.r})");
                             
+                            // ✅ 현재 타일이 첫 타일이면 스킵
+                            int startIdx = (newPath[0].q == agent.q && newPath[0].r == agent.r) ? 1 : 0;
+                            
                             // 새 경로를 pathQueue에 추가
-                            for (int i = 0; i < newPath.Count; i++)
+                            for (int i = startIdx; i < newPath.Count; i++)
                             {
                                 pathQueue.Enqueue(newPath[i]);
                             }
                             
-                            Debug.Log($"[UnitController] 새 경로 설정 완료: {newPath.Count}개 타일");
+                            Debug.Log($"[UnitController] 새 경로 설정 완료: {newPath.Count - startIdx}개 타일");
                             return;
                         }
                         else if (isOppositeDirection)
@@ -124,13 +127,16 @@ public class UnitController : MonoBehaviour
                             // ✅ 반대 방향: 현재 타일에서 시작 (즉시 유턴)
                             Debug.Log($"[UnitController] 반대 방향 감지: 현재 타일 ({agent.q}, {agent.r})에서 즉시 유턴 → 목적지 ({destTile.q}, {destTile.r})");
                             
+                            // ✅ 현재 타일이 첫 타일이면 스킵
+                            int startIdx = (newPath[0].q == agent.q && newPath[0].r == agent.r) ? 1 : 0;
+                            
                             // 새 경로를 pathQueue에 추가
-                            for (int i = 0; i < newPath.Count; i++)
+                            for (int i = startIdx; i < newPath.Count; i++)
                             {
                                 pathQueue.Enqueue(newPath[i]);
                             }
                             
-                            Debug.Log($"[UnitController] 새 경로 설정 완료: {newPath.Count}개 타일");
+                            Debug.Log($"[UnitController] 새 경로 설정 완료: {newPath.Count - startIdx}개 타일");
                             return;
                         }
                         else
@@ -333,6 +339,38 @@ public class UnitController : MonoBehaviour
     public bool IsMoving()
     {
         return isMoving || pathQueue.Count > 0;
+    }
+    
+    /// <summary>
+    /// 단순 경로 설정 (방향 체크 없이, AI 전용) ✅
+    /// </summary>
+    public void SetPathSimple(List<HexTile> path)
+    {
+        if (path == null || path.Count == 0) return;
+
+        // ✅ 기존 경로 클리어
+        pathQueue.Clear();
+        if (moveCoroutine != null)
+        {
+            StopCoroutine(moveCoroutine);
+            moveCoroutine = null;
+            isMoving = false;
+            currentMovingToTile = null;
+        }
+
+        // ✅ 새 경로 설정 (현재 타일이 첫 타일이면 스킵)
+        int startIndex = 0;
+        if (path.Count > 0 && agent != null && path[0].q == agent.q && path[0].r == agent.r)
+        {
+            startIndex = 1;
+        }
+        
+        for (int i = startIndex; i < path.Count; i++)
+        {
+            pathQueue.Enqueue(path[i]);
+        }
+        
+        Debug.Log($"[UnitController] 단순 경로 설정: {pathQueue.Count}개 타일");
     }
 
     public void MoveWithinCurrentTile()

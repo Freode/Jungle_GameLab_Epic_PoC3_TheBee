@@ -38,7 +38,11 @@ public class GameManager : MonoBehaviour
     public GameObject queenPrefab; // Initial queen spawned at game start
     public GameObject hivePrefab; // prefab used when constructing a hive
     public GameObject normalBeePrefab; // worker bee prefab for hive spawning
-
+    
+    [Header("Game State")]
+    public bool isGameOver = false; // 게임 종료 상태
+    public UnitAgent queenBee; // 여왕벌 참조
+    
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -47,14 +51,50 @@ public class GameManager : MonoBehaviour
             return;
         }
         Instance = this;
-        // optional: persist across scenes
-        // DontDestroyOnLoad(gameObject);
     }
 
     void Start()
     {
         GenerateMap();
         SpawnQueenNearEdge();
+    }
+    
+    /// <summary>
+    /// 여왕벌 사망 처리 (패배)
+    /// </summary>
+    public void OnQueenDied()
+    {
+        if (isGameOver) return;
+        
+        isGameOver = true;
+        Time.timeScale = 0f; // 게임 일시정지
+        
+        Debug.Log("[GameManager] 여왕벌 사망! 게임 패배!");
+        
+        // 패배 UI 표시
+        if (GameResultUI.Instance != null)
+        {
+            GameResultUI.Instance.ShowDefeat();
+        }
+    }
+    
+    /// <summary>
+    /// 장수말벌집 파괴 처리 (승리)
+    /// </summary>
+    public void OnBossHiveDestroyed()
+    {
+        if (isGameOver) return;
+        
+        isGameOver = true;
+        Time.timeScale = 0f; // 게임 일시정지
+        
+        Debug.Log("[GameManager] 장수말벌집 파괴! 게임 승리!");
+        
+        // 승리 UI 표시
+        if (GameResultUI.Instance != null)
+        {
+            GameResultUI.Instance.ShowVictory();
+        }
     }
 
     void Update()
@@ -164,7 +204,7 @@ public class GameManager : MonoBehaviour
         {
             int currentClusterID = i + 1; // ? 현재 클러스터 ID (1부터 시작)
             
-            // 랜덤 중심 좌표 선택 (다른 클러스터와 1칸 이상 분리) ?
+            // 랜덤 중심 좌표 선택 (다른 클러스터와 1칼 이상 분리) ?
             int attempts = 0;
             int centerQ = 0, centerR = 0;
             bool validCenter = false;
@@ -196,7 +236,7 @@ public class GameManager : MonoBehaviour
                     continue;
                 }
                 
-                // ? 2. 주변 1칸 이내에 다른 클러스터의 자원 타일이 있는지 체크 (핵심!)
+                // ? 2. 주변 1칼 이내에 다른 클러스터의 자원 타일이 있는지 체크 (핵심!)
                 bool hasOtherClusterNearby = false;
                 foreach (var dir in HexTile.NeighborDirections)
                 {
@@ -415,6 +455,9 @@ public class GameManager : MonoBehaviour
             agent.isQueen = true; // Mark as queen bee
             agent.canMove = true;
             agent.faction = Faction.Player;
+            
+            // 여왕벌 참조 저장
+            queenBee = agent;
         }
 
         // Move camera to queen position (preserve camera z)

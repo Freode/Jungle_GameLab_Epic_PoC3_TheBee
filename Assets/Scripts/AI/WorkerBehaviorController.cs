@@ -714,6 +714,19 @@ public class WorkerBehaviorController : UnitBehaviorController
     {
         if (tile == null) return;
 
+        // ✅ 1. 모든 코루틴 중단
+        StopAllCoroutines();
+        
+        // ✅ 2. 코루틴 추적 리스트 초기화
+        activeCoroutines.Clear();
+        currentStateCoroutine = null;
+        
+        // ✅ 3. UnitController 경로 초기화
+        if (mover != null)
+        {
+            mover.ClearPath();
+        }
+
         if (agent.isFollowingQueen)
         {
             agent.hasManualOrder = true;
@@ -728,6 +741,7 @@ public class WorkerBehaviorController : UnitBehaviorController
 
         targetTile = tile;
 
+        // ✅ 4. 새로운 상태로 전환 (내부에서 새 코루틴 시작)
         if (agent.homeHive != null)
         {
             TransitionToState(WorkerState.Moving);

@@ -134,7 +134,10 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             // 하이브 자신의 UnitAgent
             var hiveAgent = GetComponent<UnitAgent>();
             
-            foreach (var unit in TileManager.Instance.GetAllUnits())
+            // ✅ GetAllUnits()를 ToList()로 복사하여 컬렉션 수정 문제 해결
+            var allUnits = new List<UnitAgent>(TileManager.Instance.GetAllUnits());
+            
+            foreach (var unit in allUnits)
             {
                 if (unit != null && unit.faction == Faction.Player && !unit.isQueen)
                 {

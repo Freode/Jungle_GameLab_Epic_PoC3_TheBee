@@ -301,6 +301,8 @@ MonoBehaviour:
   attackRange: 0
   attackCooldown: 2
   isInvincible: 0
+  hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  hitFlashDuration: 0.2
 --- !u!114 &3001048943554231537
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -318,6 +320,7 @@ MonoBehaviour:
   waspPrefab: {fileID: 122535924390814216, guid: c4a7b536485877a4eb608d199327b530, type: 3}
   spawnInterval: 3
   maxWasps: 10
+  isBossHive: 1
   visionRange: 1
   activityRange: 3
   showDebugLogs: 0

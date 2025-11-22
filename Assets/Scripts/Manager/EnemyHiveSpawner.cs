@@ -150,9 +150,12 @@ public class EnemyHiveSpawner : MonoBehaviour
         var enemyHive = eliteHive.GetComponent<EnemyHive>();
         if (enemyHive != null)
         {
+            // ✅ 장수말벌집 플래그 설정
+            enemyHive.isBossHive = true;
+            
             // EnemyHive.Initialize() 호출 (q, r 설정 및 타일 부착)
-            enemyHive.Initialize(q, r, 6250); // 장수말벌집 체력 ? 원하는 값으로 변경
-            Debug.Log($"[적 하이브 생성] 엘리트말벌집 생성: ({q}, {r})");
+            enemyHive.Initialize(q, r, 6250); // 장수말벌집 체력
+            Debug.Log($"[적 하이브 생성] 장수말벌집 생성: ({q}, {r}), isBossHive=true");
         }
         else
         {
@@ -195,7 +198,7 @@ public class EnemyHiveSpawner : MonoBehaviour
             if (enemyHive != null)
             {
                 // EnemyHive.Initialize() 호출 (q, r 설정 및 타일 부착)
-                enemyHive.Initialize(pos.x, pos.y, 750); // 일반 말벌집 체력 ? 원하는 값으로 변경
+                enemyHive.Initialize(pos.x, pos.y, 1000); // 일반 말벌집 체력 ? 원하는 값으로 변경
                 Debug.Log($"[적 하이브 생성] 일반 말벌집 생성: ({pos.x}, {pos.y})");
             }
             else

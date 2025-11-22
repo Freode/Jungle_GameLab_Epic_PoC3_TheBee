@@ -48,14 +48,31 @@ public class HiveManager : MonoBehaviour
         if (hive == null) return;
         if (!hives.Contains(hive)) hives.Add(hive);
 
-        // enable HexBoundaryHighlighter singleton when first hive is registered
+        // ✅ 첫 번째 하이브 등록 시 처리
         if (hives.Count == 1)
         {
+            // ✅ 1. HexBoundaryHighlighter 활성화 (먼저 실행)
             var bh = HexBoundaryHighlighter.Instance;
             if (bh != null)
             {
                 bh.SetEnabledForHives(true);
                 bh.debugLogs = false; // disable debug logs
+                Debug.Log("[HiveManager] HexBoundaryHighlighter 활성화 완료");
+            }
+            else
+            {
+                Debug.LogWarning("[HiveManager] HexBoundaryHighlighter.Instance가 null입니다!");
+            }
+            
+            // ✅ 2. 일반 말벌 웨이브 시작 (나중에 실행)
+            if (WaspWaveManager.Instance != null)
+            {
+                WaspWaveManager.Instance.StartNormalWaveRoutine();
+                Debug.Log("[HiveManager] 일반 말벌 웨이브 시작 요청 완료");
+            }
+            else
+            {
+                Debug.LogWarning("[HiveManager] WaspWaveManager.Instance가 null입니다! 웨이브가 시작되지 않습니다.");
             }
         }
     }
@@ -504,12 +521,12 @@ public class HiveManager : MonoBehaviour
 
     public int GetHiveMaxHealth()
     {
-        return 200 + (hiveHealthLevel * 30);
+        return 100 + (hiveHealthLevel * 30);
     }
 
     public int GetMaxWorkers()
     {
-        return 3 + (maxWorkersLevel * 3);
+        return 5 + (maxWorkersLevel * 3);
     }
 
     public int GetGatherAmount()
