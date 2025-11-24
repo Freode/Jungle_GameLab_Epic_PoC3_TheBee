@@ -7,6 +7,9 @@ public class TileManager : MonoBehaviour
 
     private Dictionary<Vector2Int, HexTile> tiles = new Dictionary<Vector2Int, HexTile>();
     private List<UnitAgent> units = new List<UnitAgent>();
+    
+    // ? lock 객체 추가
+    private readonly object unitsLock = new object();
 
     void Awake()
     {
@@ -42,16 +45,35 @@ public class TileManager : MonoBehaviour
 
     public IEnumerable<HexTile> GetAllTiles() => tiles.Values;
 
-    // unit registration to avoid FindObjectsOfType
+    // ? unit registration to avoid FindObjectsOfType (thread-safe)
     public void RegisterUnit(UnitAgent unit)
     {
-        if (!units.Contains(unit)) units.Add(unit);
+        lock (unitsLock)
+        {
+            if (!units.Contains(unit))
+            {
+                units.Add(unit);
+            }
+        }
     }
 
     public void UnregisterUnit(UnitAgent unit)
     {
-        if (units.Contains(unit)) units.Remove(unit);
+        lock (unitsLock)
+        {
+            if (units.Contains(unit))
+            {
+                units.Remove(unit);
+            }
+        }
     }
 
-    public IEnumerable<UnitAgent> GetAllUnits() => units;
+    // ? GetAllUnits도 lock으로 보호하여 복사본 반환
+    public List<UnitAgent> GetAllUnits()
+    {
+        lock (unitsLock)
+        {
+            return new List<UnitAgent>(units);
+        }
+    }
 }

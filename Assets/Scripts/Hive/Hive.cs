@@ -127,65 +127,6 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             maxWorkers = HiveManager.Instance.GetMaxWorkers();
         }
         
-        // 기존 일꾼 수 카운트 (여왕벌 제외)
-        int existingWorkerCount = 0;
-        if (TileManager.Instance != null)
-        {
-            // 하이브 자신의 UnitAgent
-            var hiveAgent = GetComponent<UnitAgent>();
-            
-            // ✅ GetAllUnits()를 ToList()로 복사하여 컬렉션 수정 문제 해결
-            var allUnits = new List<UnitAgent>(TileManager.Instance.GetAllUnits());
-            
-            foreach (var unit in allUnits)
-            {
-                if (unit != null && unit.faction == Faction.Player && !unit.isQueen)
-                {
-                    // 하이브 자신은 제외
-                    if (hiveAgent != null && unit == hiveAgent)
-                    {
-                        continue;
-                    }
-                    
-                    // Hive 컴포넌트가 있는 유닛은 제외
-                    var unitHive = unit.GetComponent<Hive>();
-                    if (unitHive != null)
-                    {
-                        continue;
-                    }
-                    
-                    existingWorkerCount++;
-                    
-                    // 기존 일꾼을 workers 리스트에 추가
-                    if (!workers.Contains(unit))
-                    {
-                        workers.Add(unit);
-                        unit.homeHive = this;
-                        
-                        // HiveManager에 등록 ✅
-                        if (HiveManager.Instance != null)
-                        {
-                            HiveManager.Instance.RegisterWorker(unit);
-                        }
-                        
-                        // 수동 명령 플래그 초기화
-                        unit.hasManualOrder = false;
-                        unit.isFollowingQueen = false;
-                        
-                        // UnitBehaviorController 초기화
-                        var behavior = unit.GetComponent<UnitBehaviorController>();
-                        if (behavior != null)
-                        {
-                            behavior.CancelCurrentTask();
-                        }
-                    }
-                }
-            }
-        }
-        
-        if (showDebugLogs)
-            Debug.Log($"[하이브 초기화] 기존 일꾼 수: {existingWorkerCount}, 최대 일꾼 수: {maxWorkers}");
-        
         // start spawning
         if (spawnRoutine != null) StopCoroutine(spawnRoutine);
         spawnRoutine = StartCoroutine(SpawnLoop());
@@ -197,6 +138,65 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         {
             HexBoundaryHighlighter.Instance.ShowBoundary(this, radius);
         }
+
+        // 기존 일꾼 수 카운트 (여왕벌 제외)
+        int existingWorkerCount = 0;
+        if (TileManager.Instance != null)
+        {
+            // 하이브 자신의 UnitAgent
+            var hiveAgent = GetComponent<UnitAgent>();
+
+            // ✅ GetAllUnits()를 ToList()로 복사하여 컬렉션 수정 문제 해결
+            var allUnits = TileManager.Instance.GetAllUnits();
+
+            foreach (var unit in allUnits)
+            {
+                if (unit != null && unit.faction == Faction.Player && !unit.isQueen)
+                {
+                    // 하이브 자신은 제외
+                    if (hiveAgent != null && unit == hiveAgent)
+                    {
+                        continue;
+                    }
+
+                    // Hive 컴포넌트가 있는 유닛은 제외
+                    var unitHive = unit.GetComponent<Hive>();
+                    if (unitHive != null)
+                    {
+                        continue;
+                    }
+
+                    existingWorkerCount++;
+
+                    // 기존 일꾼을 workers 리스트에 추가
+                    if (!workers.Contains(unit))
+                    {
+                        workers.Add(unit);
+                        unit.homeHive = this;
+
+                        // HiveManager에 등록 ✅
+                        if (HiveManager.Instance != null)
+                        {
+                            HiveManager.Instance.RegisterWorker(unit);
+                        }
+
+                        // 수동 명령 플래그 초기화
+                        unit.hasManualOrder = false;
+                        unit.isFollowingQueen = false;
+
+                        // UnitBehaviorController 초기화
+                        var behavior = unit.GetComponent<UnitBehaviorController>();
+                        if (behavior != null)
+                        {
+                            behavior.CancelCurrentTask();
+                        }
+                    }
+                }
+            }
+        }
+
+        if (showDebugLogs)
+            Debug.Log($"[하이브 초기화] 기존 일꾼 수: {existingWorkerCount}, 최대 일꾼 수: {maxWorkers}");
     }
 
     IEnumerator SpawnLoop()
@@ -239,14 +239,14 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     void SpawnWorker()
     {
         if (workerPrefab == null) return;
-        
+
         // 추가 안전장치: 최대 일꾼 수 체크 ?
-//         if (workers.Count >= maxWorkers)
-//         {
-//             Debug.LogWarning($"[하이브] 이미 최대 일꾼 수에 도달했습니다: {workers.Count}/{maxWorkers}");
-//             return;
-//         }
-        
+        if (workers.Count >= maxWorkers)
+        {
+            Debug.LogWarning($"[하이브] 이미 최대 일꾼 수에 도달했습니다: {workers.Count}/{maxWorkers}");
+            return;
+        }
+
         // 타일 내부 랜덤 위치로 생성
         Vector3 pos = TileHelper.GetRandomPositionInTile(q, r, 0.5f, 0.15f);
         

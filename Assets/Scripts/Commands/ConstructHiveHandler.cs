@@ -62,11 +62,11 @@ public class ConstructHiveHandler : MonoBehaviour
             AssignHomelessWorkersToHive(hive, q, r);
             
             // ✅ 0.5초 후 LineRenderer 생성 확인 및 재시도
-            MonoBehaviour mono = hive;
-            if (mono != null)
-            {
-                mono.StartCoroutine(VerifyHiveSetup(hive, q, r));
-            }
+            //MonoBehaviour mono = hive;
+            //if (mono != null)
+            //{
+            //    mono.StartCoroutine(VerifyHiveSetup(hive, q, r));
+            //}
         }
         
         Debug.Log($"[하이브 건설] 하이브 건설 완료: ({q}, {r})");

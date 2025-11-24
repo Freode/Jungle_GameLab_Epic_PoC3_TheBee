@@ -58,12 +58,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: roleCommands.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: 'roleCommands.Array.data[0]'
       value: 
-      objectReference: {fileID: 11400000, guid: 6087083f8ef98e7489dd1ef6a38160c3, type: 2}
+      objectReference: {fileID: 11400000, guid: 01d4518e8bdd1d741baffef49883c7fc, type: 2}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: 'roleCommands.Array.data[1]'
       value: 

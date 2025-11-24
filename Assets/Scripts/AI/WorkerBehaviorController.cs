@@ -258,6 +258,15 @@ public class WorkerBehaviorController : UnitBehaviorController
                 agent.SetCarryingResource(false);
             }
 
+            // ✅ 수동 명령이 있으면 자동 복귀 안 함
+            if (agent.hasManualOrder)
+            {
+                Debug.Log($"[Worker State] 수동 명령 있음: 자동 복귀 생략");
+                lastGatherTile = null; // 자동 복귀 정보 초기화
+                TransitionToState(WorkerState.Idle);
+                yield break;
+            }
+
             // ✅ 4. 이전 채취 타일이 있고 활동 범위 내면 복귀
             if (lastGatherTile != null)
             {
@@ -268,11 +277,7 @@ public class WorkerBehaviorController : UnitBehaviorController
 
                 if (distanceToHive <= activityRadius && lastGatherTile.resourceAmount > 0)
                 {
-                    Debug.Log($"[Worker State] 이전 채취 타일로 복귀: 하이브 ({agent.homeHive.q}, {agent.homeHive.r}) → 자원 ({lastGatherTile.q}, {lastGatherTile.r})");
-                    
-                    // ✅ 순간 이동 방지: agent.SetPosition() 호출하지 않음
-                    // UnitController가 이미 agent 위치를 업데이트했으므로
-                    // 단순히 targetTile만 설정하고 경로 재계산
+                    Debug.Log($"[Worker State] 이전 채취 타일로 자동 복귀: 하이브 ({agent.homeHive.q}, {agent.homeHive.r}) → 자원 ({lastGatherTile.q}, {lastGatherTile.r})");
                     
                     targetTile = lastGatherTile;
                     TransitionToState(WorkerState.Moving);
