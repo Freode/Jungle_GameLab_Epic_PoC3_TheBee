@@ -58,7 +58,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: roleCommands.Array.size
-      value: 4
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: 'roleCommands.Array.data[0]'
@@ -67,13 +67,17 @@ PrefabInstance:
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: 'roleCommands.Array.data[1]'
       value: 
-      objectReference: {fileID: 11400000, guid: 364c886ae454c1847b60c7180680221c, type: 2}
+      objectReference: {fileID: 11400000, guid: 3f38a028a378d0941aaa6ba59cbd156a, type: 2}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: 'roleCommands.Array.data[2]'
       value: 
-      objectReference: {fileID: 11400000, guid: af82252b83af8ab4a9c8cf5b8e7e61b0, type: 2}
+      objectReference: {fileID: 11400000, guid: 364c886ae454c1847b60c7180680221c, type: 2}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: 'roleCommands.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: af82252b83af8ab4a9c8cf5b8e7e61b0, type: 2}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: 'roleCommands.Array.data[4]'
       value: 
       objectReference: {fileID: 11400000, guid: bae3171292b553f499fba48b055344a2, type: 2}
     - target: {fileID: 6144156112367316586, guid: fbd489a349676d34997f12e8c68a8424, type: 3}

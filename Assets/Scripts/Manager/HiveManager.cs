@@ -18,6 +18,10 @@ public class HiveManager : MonoBehaviour
     
     // 일꾼 수 변경 이벤트 ✅
     public event System.Action<int, int> OnWorkerCountChanged; // (현재 일꾼 수, 최대 일꾼 수)
+    
+    // ✅ 하이브 건설/파괴 이벤트 (요구사항 2)
+    public event System.Action OnPlayerHiveConstructed; // 플레이어 하이브 건설
+    public event System.Action OnPlayerHiveDestroyed; // 플레이어 하이브 파괴
 
     [Header("Worker Management")]
     public int currentWorkers = 0; // 현재 일꾼 수 ✅
@@ -63,6 +67,14 @@ public class HiveManager : MonoBehaviour
         if (hive == null) return;
         if (!hives.Contains(hive)) hives.Add(hive);
 
+        // ✅ 플레이어 하이브 건설 이벤트 발생 (요구사항 2)
+        var hiveAgent = hive.GetComponent<UnitAgent>();
+        if (hiveAgent != null && hiveAgent.faction == Faction.Player)
+        {
+            OnPlayerHiveConstructed?.Invoke();
+            Debug.Log("[HiveManager] 플레이어 하이브 건설 이벤트 발생");
+        }
+
         // ✅ 첫 번째 하이브 등록 시 처리
         if (hives.Count == 1)
         {
@@ -96,6 +108,14 @@ public class HiveManager : MonoBehaviour
     {
         if (hive == null) return;
         if (hives.Contains(hive)) hives.Remove(hive);
+
+        // ✅ 플레이어 하이브 파괴 이벤트 발생 (요구사항 2)
+        var hiveAgent = hive.GetComponent<UnitAgent>();
+        if (hiveAgent != null && hiveAgent.faction == Faction.Player)
+        {
+            OnPlayerHiveDestroyed?.Invoke();
+            Debug.Log("[HiveManager] 플레이어 하이브 파괴 이벤트 발생");
+        }
 
         if (hives.Count == 0)
         {

@@ -1,12 +1,17 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 /// <summary>
 /// 여왕벌 전용 행동 컨트롤러
 /// - 우클릭으로 이동만 가능
 /// - 이동 중 다른 타일 클릭 시 즉시 경로 재계산
+/// - 여왕벌 전용 명령 제공 (건설, 이사, 페르몬)
 /// </summary>
-public class QueenBehaviorController : UnitBehaviorController
+public class QueenBehaviorController : UnitBehaviorController, IUnitCommandProvider
 {
+    [Header("여왕벌 명령")]
+    public SOCommand[] queenCommands; // 여왕벌 전용 명령 (Inspector에서 할당)
+    
     void Update()
     {
         // 기본 Update는 실행하지 않음 (Idle 이동, 적 감지 등 불필요)
@@ -47,5 +52,26 @@ public class QueenBehaviorController : UnitBehaviorController
     public override void IssueCommandToTile(HexTile tile)
     {
         MoveToTile(tile);
+    }
+    
+    /// <summary>
+    /// IUnitCommandProvider 구현 - 여왕벌 명령 제공
+    /// </summary>
+    public IEnumerable<ICommand> GetCommands(UnitAgent agent)
+    {
+        var commands = new List<ICommand>();
+        
+        if (queenCommands != null)
+        {
+            foreach (var cmd in queenCommands)
+            {
+                if (cmd != null)
+                {
+                    commands.Add(cmd);
+                }
+            }
+        }
+        
+        return commands;
     }
 }

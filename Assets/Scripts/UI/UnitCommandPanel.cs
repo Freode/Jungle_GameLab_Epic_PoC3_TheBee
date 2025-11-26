@@ -36,6 +36,9 @@ public class UnitCommandPanel : MonoBehaviour
         if (HiveManager.Instance != null)
         {
             HiveManager.Instance.OnResourcesChanged += RefreshButtonStates;
+            // ✅ 하이브 건설/파괴 이벤트 구독 (요구사항 2)
+            HiveManager.Instance.OnPlayerHiveConstructed += RefreshButtonStates;
+            HiveManager.Instance.OnPlayerHiveDestroyed += RefreshButtonStates;
         }
     }
     
@@ -79,11 +82,13 @@ public class UnitCommandPanel : MonoBehaviour
             }
         }
         
-        // 여왕벌을 찾았으면 명령 패널 표시
+        // 여왕벌을 찾았으면 명령 패널 표시하고 코루틴 종료
         if (queenAgent != null)
         {
             ShowQueenCommands(queenAgent);
-            Debug.Log("[명령 UI] 여왕벌 명령 패널 표시 완료!");
+            Debug.Log("[명령 UI] 여왕벌 명령 패널 표시 완료! 코루틴 종료.");
+            // ✅ 코루틴 종료 (더 이상 탐색하지 않음)
+            yield break;
         }
         else
         {
@@ -130,6 +135,9 @@ public class UnitCommandPanel : MonoBehaviour
         if (HiveManager.Instance != null)
         {
             HiveManager.Instance.OnResourcesChanged -= RefreshButtonStates;
+            // ✅ 하이브 이벤트 구독 해제 (요구사항 2)
+            HiveManager.Instance.OnPlayerHiveConstructed -= RefreshButtonStates;
+            HiveManager.Instance.OnPlayerHiveDestroyed -= RefreshButtonStates;
         }
     }
 
@@ -443,8 +451,32 @@ public class UnitCommandPanel : MonoBehaviour
             else if (txt != null) 
                 txt.text = buttonText;
 
-            // disable if not available
-            bool avail = command.IsAvailable(currentAgent);
+            // ✅ disable if not available - construct_hive, relocate_hive는 하이브로 체크
+            bool avail = false;
+            
+            if (command.Id == "construct_hive" || command.Id == "relocate_hive")
+            {
+                Hive hive = FindPlayerHive();
+                UnitAgent hiveAgent = hive != null ? hive.GetComponent<UnitAgent>() : null;
+
+                Debug.Log(hive);
+                if (hiveAgent != null)
+                {
+                   
+                    avail = command.IsAvailable(hiveAgent);
+                }
+                else
+                {
+                    // 하이브가 없으면 현재 에이전트(여왕벌)로 체크
+                    avail = command.IsAvailable(currentAgent);
+                }
+            }
+            else
+            {
+                // 일반 명령: 현재 에이전트로 체크
+                avail = command.IsAvailable(currentAgent);
+            }
+            
             if (btn != null)
             {
                 btn.interactable = avail;
@@ -454,10 +486,13 @@ public class UnitCommandPanel : MonoBehaviour
                 btn.onClick.AddListener(() => HandleCommandButtonClick(command, localBtn));
             }
         }
+        
+        Debug.Log($"[명령 UI] 버튼 {commands.Count}개 생성 완료");
     }
 
     void HandleCommandButtonClick(ICommand cmd, Button clickedButton)
     {
+        Debug.Log($"[명령 UI] 버튼 클릭됨: {cmd.DisplayName}, ID: {cmd.Id}");
         OnCommandClicked(cmd);
 
         // After command execution, refresh button states and unit info
@@ -467,25 +502,59 @@ public class UnitCommandPanel : MonoBehaviour
 
     void OnCommandClicked(ICommand cmd)
     {
-        if (currentAgent == null) return;
-        if (!cmd.IsAvailable(currentAgent)) return;
+        Debug.Log($"[명령 UI] OnCommandClicked 시작: {cmd.Id}");
 
-        // Special-case: construct_hive and relocate_hive should execute immediately at the agent's current tile
-        if (cmd.Id == "construct_hive" || cmd.Id == "relocate_hive")
+        if (currentAgent == null)
         {
-            cmd.Execute(currentAgent, CommandTarget.ForTile(currentAgent.q, currentAgent.r));
-            
-            // Hide panel if command requests it
-            if (cmd.HidePanelOnClick)
-            {
-                Hide();
-            }
+            Debug.LogError("[명령 UI] currentAgent is null!");
             return;
         }
 
+        // Determine execution agent. For relocate_hive we must use the player Hive's UnitAgent.
+        UnitAgent execAgent = currentAgent;
+        if (cmd.Id == "relocate_hive")
+        {
+            Hive hive = FindPlayerHive();
+            if (hive != null)
+            {
+                var hiveAgent = hive.GetComponent<UnitAgent>();
+                if (hiveAgent != null)
+                {
+                    execAgent = hiveAgent;
+                    Debug.Log($"[명령 UI] relocate_hive will use hive agent for availability & execution: {execAgent.name}");
+                }
+                else
+                {
+                    Debug.LogWarning("[명령 UI] relocate_hive: Hive found but no UnitAgent attached.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[명령 UI] relocate_hive: No player hive found.");
+            }
+        }
+
+        // Check availability against chosen agent
+        if (!cmd.IsAvailable(execAgent))
+        {
+            Debug.LogWarning($"[명령 UI] 명령 사용 불가: {cmd.DisplayName} (checked on: {execAgent?.name})");
+            return;
+        }
+
+        // Special-case execution: construct_hive and relocate_hive execute immediately using execAgent
+        if (cmd.Id == "construct_hive" || cmd.Id == "relocate_hive")
+        {
+            Debug.Log($"[명령 UI] 하이브 명령 처리: {cmd.Id} (execAgent={execAgent.name})");
+            cmd.Execute(execAgent, CommandTarget.ForTile(execAgent.q, execAgent.r));
+
+            if (cmd.HidePanelOnClick)
+                Hide();
+            return;
+        }
+
+        // Other commands
         if (cmd.RequiresTarget)
         {
-            // ensure PendingCommandHolder exists
             PendingCommandHolder.EnsureInstance();
             if (PendingCommandHolder.Instance == null)
             {
@@ -493,25 +562,17 @@ public class UnitCommandPanel : MonoBehaviour
                 return;
             }
 
-            // enter target selection mode
             TileClickMover.Instance?.EnterMoveMode();
             PendingCommandHolder.Instance?.SetPendingCommand(cmd, currentAgent);
-            
-            // Hide panel if command requests it
+
             if (cmd.HidePanelOnClick)
-            {
                 Hide();
-            }
         }
         else
         {
             cmd.Execute(currentAgent, new CommandTarget { type = CommandTargetType.None });
-            
-            // Hide panel if command requests it
             if (cmd.HidePanelOnClick)
-            {
                 Hide();
-            }
         }
     }
 
@@ -556,7 +617,31 @@ public class UnitCommandPanel : MonoBehaviour
                     if (cmd.Id == cmdId)
                     {
                         // ✅ 버튼 활성화 상태 업데이트
-                        btn.interactable = cmd.IsAvailable(currentAgent);
+                        bool isAvailable = false;
+                        
+                        // ✅ construct_hive, relocate_hive는 하이브로 체크
+                        if (cmd.Id == "construct_hive" || cmd.Id == "relocate_hive")
+                        {
+                            Hive hive = FindPlayerHive();
+                            UnitAgent hiveAgent = hive != null ? hive.GetComponent<UnitAgent>() : null;
+                            
+                            if (hiveAgent != null)
+                            {
+                                isAvailable = cmd.IsAvailable(hiveAgent);
+                            }
+                            else
+                            {
+                                // 하이브가 없으면 현재 에이전트(여왕벌)로 체크
+                                isAvailable = cmd.IsAvailable(currentAgent);
+                            }
+                        }
+                        else
+                        {
+                            // 일반 명령: 현재 에이전트로 체크
+                            isAvailable = cmd.IsAvailable(currentAgent);
+                        }
+                        
+                        btn.interactable = isAvailable;
                         
                         // ✅ 버튼 텍스트 업데이트 (비용 변경 반영)
                         var tmp = t.GetComponentInChildren<TextMeshProUGUI>();
@@ -600,20 +685,29 @@ public class UnitCommandPanel : MonoBehaviour
                 }
             }
         }
+        
+        Debug.Log("[명령 UI] 버튼 상태 새로고침 완료");
     }
-
-    // 외부에서 유닛 정보 강제 업데이트 (체력 변경 시 등)
-    public void ForceUpdateUnitInfo()
+    
+    /// <summary>
+    /// 플레이어 하이브 찾기 (RefreshButtonStates에서 사용)
+    /// </summary>
+    Hive FindPlayerHive()
     {
-        UpdateUnitInfo();
-    }
+        if (HiveManager.Instance == null) return null;
 
-    void Update()
-    {
-        // 매 프레임마다 체력 업데이트 (실시간 반영)
-        if (currentAgent != null && panelRoot != null && panelRoot.activeSelf)
+        foreach (var hive in HiveManager.Instance.GetAllHives())
         {
-            UpdateUnitInfo();
+            if (hive != null)
+            {
+                var hiveAgent = hive.GetComponent<UnitAgent>();
+                if (hiveAgent != null && hiveAgent.faction == Faction.Player)
+                {
+                    return hive;
+                }
+            }
         }
+
+        return null;
     }
 }

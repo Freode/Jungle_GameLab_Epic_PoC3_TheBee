@@ -40,7 +40,7 @@ public class ConstructHiveHandler : MonoBehaviour
         hiveAgent.faction = Faction.Player;
         hiveAgent.SetPosition(q, r);
         
-        // Update queen's home hive and hive's queen reference (Initialize 전에!) ?
+        // Update queen's home hive and hive's queen reference (Initialize 전에!)
         if (agent.isQueen)
         {
             agent.homeHive = hive;
@@ -49,24 +49,14 @@ public class ConstructHiveHandler : MonoBehaviour
             Debug.Log($"[하이브 건설] 여왕벌 참조 설정 완료");
         }
         
-        // Initialize hive (여왕벌 비활성화 포함) ?
+        // Initialize hive
         hive.Initialize(q, r);
         
         // Transfer workers from old hive or find homeless workers
         if (agent.isQueen)
         {
-            // Note: agent.homeHive는 이미 위에서 새 hive로 설정됨
-            // 이전 하이브에서 일꾼 이전은 필요 없음 (새 하이브이므로)
-            
             // homeHive가 없는 일꾼들을 찾아서 할당
             AssignHomelessWorkersToHive(hive, q, r);
-            
-            // ✅ 0.5초 후 LineRenderer 생성 확인 및 재시도
-            //MonoBehaviour mono = hive;
-            //if (mono != null)
-            //{
-            //    mono.StartCoroutine(VerifyHiveSetup(hive, q, r));
-            //}
         }
         
         Debug.Log($"[하이브 건설] 하이브 건설 완료: ({q}, {r})");

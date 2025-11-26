@@ -229,7 +229,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 
                 // maxWorkers 업데이트 (업그레이드 반영) ?
 //                 if (currentMaxWorkers != maxWorkers)
-//                 {
+        //                 {
 //                     if (showDebugLogs)
 //                         Debug.Log($"[하이브] maxWorkers 업데이트: {maxWorkers} → {currentMaxWorkers}");
                     
