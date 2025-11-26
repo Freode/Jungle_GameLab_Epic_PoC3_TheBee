@@ -182,11 +182,9 @@ public class HiveManager : MonoBehaviour
         var workerAgent = worker.GetComponent<UnitAgent>();
         if (workerAgent != null)
         {
-            // ✅ 부대 색상 적용 주석 처리 (요구사항 3)
-            /*
+            // ✅ 부대 색상 적용 (요구사항 2)
             Color squadColor = GetSquadColor(squad);
             ApplySquadColor(worker, squadColor);
-            */
             
             // ✅ 부대 데이터 저장 (UnitAgent에 squad 필드 추가 필요)
             // workerAgent.squad = squad; // 나중에 추가
@@ -198,7 +196,7 @@ public class HiveManager : MonoBehaviour
             squadWorkers[squad].Add(worker);
         }
         
-        Debug.Log($"[부대] {worker.name} → {squad} 배치 (인원: {squadWorkers[squad].Count})");
+        Debug.Log($"[부대] {worker.name} → {squad} 배치 (인원: {squadWorkers[squad].Count}), 색상: {GetSquadColor(squad)}");
         
         // ✅ 해당 부대의 기존 페르몬 명령이 있으면 자동으로 이동 명령 (코루틴으로 지연 실행)
         if (PheromoneManager.Instance != null)

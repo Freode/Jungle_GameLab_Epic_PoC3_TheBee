@@ -3086,7 +3086,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09b81ec61b8a508489a4dfbff3f8172b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hiveActivityRadius: 5
+  hiveActivityRadius: 3
   playerStoredResources: 0
   currentWorkers: 0
   maxWorkers: 5

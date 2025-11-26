@@ -498,6 +498,21 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             Debug.Log("[하이브 파괴] 모든 페르몬 효과 제거");
         }
         
+        // ✅ 여왕벌이 선택된 상태면 명령 UI 갱신 (요구사항 1)
+        if (queenBee != null && TileClickMover.Instance != null)
+        {
+            var selectedUnit = TileClickMover.Instance.GetSelectedUnit();
+            if (selectedUnit == queenBee)
+            {
+                // ✅ 명령 패널 새로고침 (건설 버튼 활성화)
+                if (UnitCommandPanel.Instance != null)
+                {
+                    UnitCommandPanel.Instance.Show(queenBee);
+                    Debug.Log("[하이브 파괴] 여왕벌 명령 UI 갱신 (건설 버튼 활성화)");
+                }
+            }
+        }
+        
         // ✅ 여왕벌 재활성화 주석 처리 (요구사항 2)
         /*
         // 여왕벌 재활성화 (하이브 위치에서)
