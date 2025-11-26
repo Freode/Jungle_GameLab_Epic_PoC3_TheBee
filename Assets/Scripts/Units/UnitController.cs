@@ -489,12 +489,16 @@ public class UnitController : MonoBehaviour
     {
         isMoving = true;
         currentMovingToTile = dest; // ✅ 현재 이동 중인 타일 저장
-        
+
         Vector3 startPos = transform.position;
-        
+
         // ✅ UnitAgent의 useRandomPosition 설정에 따라 위치 결정
         bool useRandom = (agent != null) ? agent.useRandomPosition : true;
         Vector3 endPos = GetPositionInTile(dest.q, dest.r, useRandom);
+
+        // Precompute tile center positions for midpoint check
+        Vector3 startTileCenter = (agent != null) ? TileHelper.HexToWorld(agent.q, agent.r, agent.hexSize) : startPos;
+        Vector3 destTileCenter = TileHelper.HexToWorld(dest.q, dest.r, (agent != null) ? agent.hexSize : 0.5f);
 
         float distance = Vector3.Distance(startPos, endPos);
         float travelTime = distance / (moveSpeed * agent.hexSize);
@@ -512,7 +516,24 @@ public class UnitController : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / travelTime);
-            transform.position = Vector3.Lerp(startPos, endPos, t);
+            Vector3 lerpedPos = Vector3.Lerp(startPos, endPos, t);
+            transform.position = lerpedPos;
+
+            // ✅ 위치가 목적지 타일 중심에 더 가까워지면 타일 좌표를 미리 업데이트
+            if (agent != null)
+            {
+                float distToDestCenter = Vector3.Distance(lerpedPos, destTileCenter);
+                float distToStartCenter = Vector3.Distance(lerpedPos, startTileCenter);
+                if (distToDestCenter < distToStartCenter)
+                {
+                    // Only set if agent isn't already set to dest
+                    if (agent.q != dest.q || agent.r != dest.r)
+                    {
+                        agent.SetPosition(dest.q, dest.r);
+                    }
+                }
+            }
+
             yield return null;
         }
 

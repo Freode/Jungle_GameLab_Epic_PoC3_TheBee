@@ -143,16 +143,16 @@ public static class QueenPheromoneCommandHandler
         int finalPheromoneQ = pheromoneQ;
         int finalPheromoneR = pheromoneR;
         
-        if (pathToPheromone.Count >= 2)
+        if (pathToPheromone.Count >= 3)
         {
             // ? 경로가 2개 이상이면 마지막 직전 타일까지 이동
-            var moveToTile = pathToPheromone[pathToPheromone.Count - 2]; // 페르몬 타일 바로 앞
+            var moveToTile = pathToPheromone[pathToPheromone.Count - 3]; // 페르몬 타일 바로 앞
             queenMoveQ = moveToTile.q;
             queenMoveR = moveToTile.r;
             
             Debug.Log($"[페르몬] 여왕벌 이동 목표: ({queenMoveQ}, {queenMoveR}) (페르몬 타일 바로 앞, 경로 {pathToPheromone.Count - 2}번째)");
         }
-        else if (pathToPheromone.Count == 1)
+        else if (pathToPheromone.Count == 1 || pathToPheromone.Count == 2)
         {
             // ? 경로가 1개 (인접 타일)면 현재 위치에서 페르몬 분사
             queenMoveQ = queenAgent.q;

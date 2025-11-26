@@ -106,20 +106,18 @@ public class TileClickMover : MonoBehaviour
         }
         
         // ✅ Q/W/E: 부대 페르몬 명령 (요구사항 5)
-        if (selectedUnitInstance != null && selectedUnitInstance.isQueen)
+        // Allow Q/W/E to work even if another unit is selected by finding the queen if needed
+        if (Input.GetKeyDown(KeyCode.Q))
         {
-            if (Input.GetKeyDown(KeyCode.Q))
-            {
-                ExecutePheromoneCommand(WorkerSquad.Squad1);
-            }
-            else if (Input.GetKeyDown(KeyCode.W))
-            {
-                ExecutePheromoneCommand(WorkerSquad.Squad2);
-            }
-            else if (Input.GetKeyDown(KeyCode.E))
-            {
-                ExecutePheromoneCommand(WorkerSquad.Squad3);
-            }
+            ExecutePheromoneCommand(WorkerSquad.Squad1);
+        }
+        else if (Input.GetKeyDown(KeyCode.W))
+        {
+            ExecutePheromoneCommand(WorkerSquad.Squad2);
+        }
+        else if (Input.GetKeyDown(KeyCode.E))
+        {
+            ExecutePheromoneCommand(WorkerSquad.Squad3);
         }
     }
     
@@ -169,25 +167,50 @@ public class TileClickMover : MonoBehaviour
     
     /// <summary>
     /// 페르몬 명령 실행 (요구사항 5)
+    /// - 선택 여부와 무관하게 동작: 선택된 유닛이 여왕벌이면 그것을 사용하고,
+    ///   아니면 씬에서 플레이어 여왕벌을 찾아 사용합니다.
     /// </summary>
     void ExecutePheromoneCommand(WorkerSquad squad)
     {
-        if (selectedUnitInstance == null || !selectedUnitInstance.isQueen)
+        UnitAgent queen = null;
+
+        // prefer currently selected unit if it's the queen
+        if (selectedUnitInstance != null && selectedUnitInstance.isQueen && selectedUnitInstance.faction == Faction.Player)
         {
-            Debug.Log("[페르몬] 여왕벌이 선택되지 않았습니다.");
+            queen = selectedUnitInstance;
+        }
+        else
+        {
+            // find queen in scene
+            if (TileManager.Instance != null)
+            {
+                foreach (var unit in TileManager.Instance.GetAllUnits())
+                {
+                    if (unit != null && unit.isQueen && unit.faction == Faction.Player)
+                    {
+                        queen = unit;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (queen == null)
+        {
+            Debug.Log("[페르몬] 여왕벌을 찾을 수 없어 페르몬 명령을 실행할 수 없습니다.");
             return;
         }
-        
+
         // 페르몬 명령 실행
         QueenPheromoneCommandHandler.ExecutePheromone(
-            selectedUnitInstance, 
-            CommandTarget.ForTile(selectedUnitInstance.q, selectedUnitInstance.r),
+            queen,
+            CommandTarget.ForTile(queen.q, queen.r),
             squad
         );
         
         string squadName = squad == WorkerSquad.Squad1 ? "1번" :
                           squad == WorkerSquad.Squad2 ? "2번" : "3번";
-        Debug.Log($"[단축키] {squadName} 부대 페르몬 명령");
+        Debug.Log($"[단축키] {squadName} 부대 페르몬 명령 (queen: {queen.name})");
     }
 
     // Check if mouse is over UI element
@@ -433,32 +456,16 @@ public class TileClickMover : MonoBehaviour
             debugText.text = $"Tile: ({tile.q}, {tile.r})";
         }
 
-        if (selectedUnitInstance == null)
-        {
-            // no unit selected to command
-            return;
-        }
-
-        // Enemy 유닛은 명령을 내릴 수 없음
-        if (selectedUnitInstance.faction == Faction.Enemy)
-        {
-            if (debugText != null)
-            {
-                debugText.text = "적 유닛은 명령을 내릴 수 없습니다.";
-            }
-            return;
-        }
-
         // if there is a pending command, execute with this tile as target
-        if (PendingCommandHolder.Instance.HasPending)
+        if (PendingCommandHolder.Instance != null && PendingCommandHolder.Instance.HasPending)
         {
             PendingCommandHolder.Instance.ExecutePending(CommandTarget.ForTile(tile.q, tile.r));
             StopMoveMode();
             return;
         }
 
-        // ✅ 여왕벌만 우클릭 이동 가능 (일벌은 페르몬 명령으로만 이동)
-        if (selectedUnitInstance.isQueen && selectedUnitInstance.canMove)
+        // If selectedUnitInstance is a player queen that can move -> command it
+        if (selectedUnitInstance != null && selectedUnitInstance.isQueen && selectedUnitInstance.canMove && selectedUnitInstance.faction == Faction.Player)
         {
             // ✅ 꿀벌집이 있으면 활동 범위 체크 (요구사항 4)
             if (selectedUnitInstance.homeHive != null)
@@ -467,13 +474,13 @@ public class TileClickMover : MonoBehaviour
                     selectedUnitInstance.homeHive.q, selectedUnitInstance.homeHive.r,
                     tile.q, tile.r
                 );
-                
+
                 int activityRadius = 5; // 기본값
                 if (HiveManager.Instance != null)
                 {
                     activityRadius = HiveManager.Instance.hiveActivityRadius;
                 }
-                
+
                 if (distanceToHive > activityRadius)
                 {
                     if (debugText != null)
@@ -484,7 +491,7 @@ public class TileClickMover : MonoBehaviour
                     return;
                 }
             }
-            
+
             // 여왕벌 전용 이동 명령
             var queenBehavior = selectedUnitInstance.GetComponent<QueenBehaviorController>();
             if (queenBehavior != null)
@@ -493,7 +500,7 @@ public class TileClickMover : MonoBehaviour
                 StopMoveMode();
                 return;
             }
-            
+
             // QueenBehaviorController가 없으면 기본 이동
             var startTile = TileManager.Instance.GetTile(selectedUnitInstance.q, selectedUnitInstance.r);
             var path = Pathfinder.FindPath(startTile, tile);
@@ -507,15 +514,72 @@ public class TileClickMover : MonoBehaviour
             StopMoveMode();
             return;
         }
-        
-        // ✅ 일벌은 우클릭 이동 불가 (페르몬 명령 사용)
-        if (!selectedUnitInstance.isQueen)
+
+        // If selected unit is null or an enemy or a non-moving unit, command the queen without changing selection
+        UnitAgent queenAgent = null;
+        if (TileManager.Instance != null)
         {
-            if (debugText != null)
+            foreach (var unit in TileManager.Instance.GetAllUnits())
             {
-                debugText.text = "일벌은 여왕벌의 페르몬 명령으로만 이동할 수 있습니다.";
+                if (unit != null && unit.isQueen && unit.faction == Faction.Player)
+                {
+                    queenAgent = unit;
+                    break;
+                }
             }
+        }
+
+        if (queenAgent != null && queenAgent.canMove)
+        {
+            // Activity radius check using queen's homeHive
+            if (queenAgent.homeHive != null)
+            {
+                int distanceToHive = Pathfinder.AxialDistance(
+                    queenAgent.homeHive.q, queenAgent.homeHive.r,
+                    tile.q, tile.r
+                );
+
+                int activityRadius = 5;
+                if (HiveManager.Instance != null) activityRadius = HiveManager.Instance.hiveActivityRadius;
+
+                if (distanceToHive > activityRadius)
+                {
+                    if (debugText != null)
+                    {
+                        debugText.text = $"꿀벌집 활동 범위를 벗어났습니다 ({distanceToHive}/{activityRadius})";
+                    }
+                    Debug.Log($"[여왕벌] 이동 불가(queen): 꿀벌집으로부터 {distanceToHive}칸 (최대 {activityRadius}칸)");
+                    return;
+                }
+            }
+
+            // Issue move to queen without changing selectedUnitInstance
+            var queenBehavior = queenAgent.GetComponent<QueenBehaviorController>();
+            if (queenBehavior != null)
+            {
+                queenBehavior.IssueCommandToTile(tile);
+                StopMoveMode();
+                return;
+            }
+
+            // Fallback to UnitController movement
+            var start = TileManager.Instance.GetTile(queenAgent.q, queenAgent.r);
+            var path2 = Pathfinder.FindPath(start, tile);
+            if (path2 != null && path2.Count > 0)
+            {
+                var ctrl = queenAgent.GetComponent<UnitController>();
+                if (ctrl == null) ctrl = queenAgent.gameObject.AddComponent<UnitController>();
+                ctrl.agent = queenAgent;
+                ctrl.SetPath(path2);
+            }
+            StopMoveMode();
             return;
+        }
+
+        // No valid mover found
+        if (debugText != null)
+        {
+            debugText.text = "이동할 수 있는 유닛이 없습니다.";
         }
     }
 

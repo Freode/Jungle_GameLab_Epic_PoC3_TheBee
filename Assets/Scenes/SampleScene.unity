@@ -152,9 +152,9 @@ MonoBehaviour:
   normalWaspHivePrefab: {fileID: 122535924390814216, guid: cb5cf443fe4df5240abd7550fc0292c4, type: 3}
   autoSpawnOnStart: 1
   spawnDelay: 1
-  normalHiveCount: 10
+  normalHiveCount: 35
   minDistanceFromElite: 4
-  maxDistanceFromElite: 8
+  maxDistanceFromElite: 15
   minDistanceBetweenHives: 4
 --- !u!4 &20992909
 Transform:
@@ -2228,7 +2228,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hexMap: 1
-  mapRadius: 14
+  mapRadius: 19
   mapWidth: 20
   mapHeight: 12
   hexSize: 0.5
@@ -2239,10 +2239,10 @@ MonoBehaviour:
   normalTerrain: {fileID: 11400000, guid: 2539f88bcd9584b4daf5583e94e02328, type: 2}
   noiseScale: 0.15
   noiseSeed: 0
-  resourceClusterCount: 40
-  minTilesPerCluster: 3
-  maxTilesPerCluster: 6
-  minClusterDistance: 3
+  resourceClusterCount: 80
+  minTilesPerCluster: 2
+  maxTilesPerCluster: 5
+  minClusterDistance: 4
   queenPrefab: {fileID: 122535924390814216, guid: d78d77cde9f93494e98ca22cb5ff45bb, type: 3}
   hivePrefab: {fileID: 122535924390814216, guid: 7afbce3869015b74f81aa1833f489649, type: 3}
   normalBeePrefab: {fileID: 122535924390814216, guid: 9b4e582aa5b040e4fba39b28bd92b7c8, type: 3}
@@ -3092,12 +3092,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09b81ec61b8a508489a4dfbff3f8172b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hiveActivityRadius: 3
+  hiveActivityRadius: 4
   playerStoredResources: 0
   currentWorkers: 0
   maxWorkers: 5
-  squad1Color: {r: 1, g: 0, b: 0, a: 1}
-  squad2Color: {r: 0.5019608, g: 0, b: 1, a: 1}
+  squad1Color: {r: 1, g: 0, b: 1, a: 1}
+  squad2Color: {r: 0.6862745, g: 1, b: 0, a: 1}
   squad3Color: {r: 0, g: 1, b: 1, a: 1}
   hiveRangeLevel: 0
   workerAttackLevel: 0

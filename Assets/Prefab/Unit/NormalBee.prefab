@@ -102,7 +102,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7071419041377049769, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: visionRange
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7071419041377049769, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: useSeqRenderLayerOrder
