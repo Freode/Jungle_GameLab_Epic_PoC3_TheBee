@@ -258,47 +258,80 @@ public class WorkerBehaviorController : UnitBehaviorController
                 agent.SetCarryingResource(false);
             }
 
-            // ✅ 수동 명령(페르몬)이 있고 lastGatherTile이 있으면 복귀 (요구사항 1)
-            if (agent.hasManualOrder && lastGatherTile != null)
+            // ✅ 수동 명령(페르몬)이 있으면 페르몬 위치로 복귀 (요구사항 1)
+            if (agent.hasManualOrder && PheromoneManager.Instance != null)
             {
-                int distanceToHive = Pathfinder.AxialDistance(
-                    agent.homeHive.q, agent.homeHive.r,
-                    lastGatherTile.q, lastGatherTile.r
-                );
-
-                // ✅ 페르몬 위치가 활동 범위 내면 복귀
-                if (distanceToHive <= activityRadius)
+                // ✅ 부대 정보 가져오기
+                WorkerSquad workerSquad = WorkerSquad.None;
+                
+                // HiveManager에서 부대 찾기
+                if (HiveManager.Instance != null)
                 {
-                    Debug.Log($"[Worker State] 페르몬 명령: 이전 채취 타일로 복귀 ({lastGatherTile.q}, {lastGatherTile.r})");
+                    foreach (WorkerSquad squad in System.Enum.GetValues(typeof(WorkerSquad)))
+                    {
+                        if (squad == WorkerSquad.None) continue;
+                        
+                        var squadWorkers = HiveManager.Instance.GetSquadWorkers(squad);
+                        if (squadWorkers.Contains(agent))
+                        {
+                            workerSquad = squad;
+                            break;
+                        }
+                    }
+                }
+                
+                // ✅ 페르몬 위치 가져오기
+                var pheromonePos = PheromoneManager.Instance.GetCurrentPheromonePosition(workerSquad);
+                
+                if (pheromonePos.HasValue)
+                {
+                    int pheroQ = pheromonePos.Value.x;
+                    int pheroR = pheromonePos.Value.y;
                     
-                    targetTile = lastGatherTile;
-                    TransitionToState(WorkerState.Moving);
-                    yield break;
+                    int distanceToHive = Pathfinder.AxialDistance(
+                        agent.homeHive.q, agent.homeHive.r,
+                        pheroQ, pheroR
+                    );
+
+                    // ✅ 페르몬 위치가 활동 범위 내면 복귀
+                    if (distanceToHive <= activityRadius)
+                    {
+                        Debug.Log($"[Worker State] 페르몬 명령: 페르몬 위치로 복귀 ({pheroQ}, {pheroR})");
+                        
+                        targetTile = TileManager.Instance.GetTile(pheroQ, pheroR);
+                        if (targetTile != null)
+                        {
+                            TransitionToState(WorkerState.Moving);
+                            yield break;
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log($"[Worker State] 페르몬 위치가 활동 범위 밖: {distanceToHive}/{activityRadius}, 수동 명령 해제");
+                        agent.hasManualOrder = false;
+                    }
                 }
                 else
                 {
-                    Debug.Log($"[Worker State] 페르몬 위치가 활동 범위 밖: {distanceToHive}/{activityRadius}, 수동 명령 해제");
+                    Debug.Log($"[Worker State] 페르몬 위치 없음: 수동 명령 해제");
                     agent.hasManualOrder = false;
-                    lastGatherTile = null;
                 }
             }
-            // ✅ 수동 명령이 없거나 lastGatherTile이 없으면 자동 복귀 로직
+            // ✅ 수동 명령이 없으면 Idle
             else if (!agent.hasManualOrder)
             {
-                Debug.Log($"[Worker State] 자동 모드: 자동 복귀 생략");
+                Debug.Log($"[Worker State] 자동 모드: Idle 상태");
                 lastGatherTile = null;
                 TransitionToState(WorkerState.Idle);
                 yield break;
             }
-            // ✅ 수동 명령이지만 lastGatherTile이 없으면 Idle
+            // ✅ 수동 명령이지만 페르몬 위치가 없으면 Idle
             else
             {
-                Debug.Log($"[Worker State] 페르몬 명령이지만 채취 타일 없음: Idle 상태");
+                Debug.Log($"[Worker State] 페르몬 명령이지만 페르몬 위치 없음: Idle 상태");
                 TransitionToState(WorkerState.Idle);
                 yield break;
             }
-
-            // ✅ 여기는 도달하지 않음 (위에서 모두 yield break)
         }
 
         // 자원 있는 타일 + 하이브 존재

@@ -29,12 +29,99 @@ public class UnitCommandPanel : MonoBehaviour
 
     void Start()
     {
-        Hide();
+        // ✅ 여왕벌을 찾을 때까지 반복 탐색 코루틴 시작
+        StartCoroutine(FindQueenAndShowCommandsRoutine());
+        
         // 자원 변경 이벤트 구독
         if (HiveManager.Instance != null)
         {
             HiveManager.Instance.OnResourcesChanged += RefreshButtonStates;
         }
+    }
+    
+    /// <summary>
+    /// 여왕벌을 찾을 때까지 반복 탐색하는 코루틴
+    /// </summary>
+    System.Collections.IEnumerator FindQueenAndShowCommandsRoutine()
+    {
+        Debug.Log("[명령 UI] 여왕벌 탐색 시작...");
+        
+        UnitAgent queenAgent = null;
+        int attemptCount = 0;
+        
+        // 여왕벌을 찾을 때까지 반복 (최대 30초)
+        while (queenAgent == null && attemptCount < 300)
+        {
+            attemptCount++;
+            
+            // TileManager가 있으면 여왕벌 찾기
+            if (TileManager.Instance != null)
+            {
+                foreach (var unit in TileManager.Instance.GetAllUnits())
+                {
+                    if (unit != null && unit.isQueen && unit.faction == Faction.Player)
+                    {
+                        queenAgent = unit;
+                        Debug.Log($"[명령 UI] 여왕벌 발견! (시도 횟수: {attemptCount})");
+                        break;
+                    }
+                }
+            }
+            
+            // 못 찾았으면 0.1초 대기 후 재시도
+            if (queenAgent == null)
+            {
+                if (attemptCount % 10 == 0) // 1초마다 로그
+                {
+                    Debug.Log($"[명령 UI] 여왕벌 탐색 중... (시도 {attemptCount}/300)");
+                }
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+        
+        // 여왕벌을 찾았으면 명령 패널 표시
+        if (queenAgent != null)
+        {
+            ShowQueenCommands(queenAgent);
+            Debug.Log("[명령 UI] 여왕벌 명령 패널 표시 완료!");
+        }
+        else
+        {
+            Debug.LogWarning("[명령 UI] 여왕벌을 찾지 못했습니다! (30초 타임아웃)");
+            // 패널은 숨김 상태 유지
+            if (panelRoot != null) panelRoot.SetActive(false);
+        }
+    }
+    
+    /// <summary>
+    /// 여왕벌 명령 패널 표시
+    /// </summary>
+    void ShowQueenCommands(UnitAgent queenAgent)
+    {
+        if (queenAgent == null)
+        {
+            Debug.LogWarning("[명령 UI] 여왕벌이 null입니다!");
+            return;
+        }
+        
+        // 이전 agent의 이벤트 구독 해제
+        if (currentAgent != null)
+        {
+            UnsubscribeFromEvents(currentAgent);
+        }
+        
+        currentAgent = queenAgent;
+        if (panelRoot != null) panelRoot.SetActive(true);
+        
+        // 이벤트 구독
+        SubscribeToEvents(currentAgent);
+        
+        // 유닛 정보 표시
+        UpdateUnitInfo();
+        
+        RebuildCommands();
+        
+        Debug.Log($"[명령 UI] 여왕벌 명령 패널 활성화: {queenAgent.name}");
     }
 
     void OnDestroy()
@@ -49,36 +136,15 @@ public class UnitCommandPanel : MonoBehaviour
     // Show the panel for the given unit
     public void Show(UnitAgent agent)
     {
-        if (agent == null) return;
-        
-        // 이전 agent의 이벤트 구독 해제
-        if (currentAgent != null)
-        {
-            UnsubscribeFromEvents(currentAgent);
-        }
-        
-        currentAgent = agent;
-        if (panelRoot != null) panelRoot.SetActive(true);
-        
-        // 이벤트 구독 ?
-        SubscribeToEvents(currentAgent);
-        
-        // 유닛 정보 표시
-        UpdateUnitInfo();
-        
-        RebuildCommands();
+        // ✅ 항상 여왕벌 명령만 표시 (요구사항 2)
+        // 다른 유닛을 선택해도 명령 패널은 여왕벌 명령 유지
+        // (아무 작업도 하지 않음)
     }
 
     public void Hide()
     {
-        // 이벤트 구독 해제
-        if (currentAgent != null)
-        {
-            UnsubscribeFromEvents(currentAgent);
-        }
-        
-        currentAgent = null;
-        if (panelRoot != null) panelRoot.SetActive(false);
+        // ✅ 명령 패널은 절대 숨기지 않음 (요구사항 2)
+        // (아무 작업도 하지 않음)
     }
 
     /// <summary>
