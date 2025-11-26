@@ -258,57 +258,47 @@ public class WorkerBehaviorController : UnitBehaviorController
                 agent.SetCarryingResource(false);
             }
 
-            // ✅ 수동 명령이 있으면 자동 복귀 안 함
-            if (agent.hasManualOrder)
-            {
-                Debug.Log($"[Worker State] 수동 명령 있음: 자동 복귀 생략");
-                lastGatherTile = null; // 자동 복귀 정보 초기화
-                TransitionToState(WorkerState.Idle);
-                yield break;
-            }
-
-            // ✅ 4. 이전 채취 타일이 있고 활동 범위 내면 복귀
-            if (lastGatherTile != null)
+            // ✅ 수동 명령(페르몬)이 있고 lastGatherTile이 있으면 복귀 (요구사항 1)
+            if (agent.hasManualOrder && lastGatherTile != null)
             {
                 int distanceToHive = Pathfinder.AxialDistance(
                     agent.homeHive.q, agent.homeHive.r,
                     lastGatherTile.q, lastGatherTile.r
                 );
 
-                if (distanceToHive <= activityRadius && lastGatherTile.resourceAmount > 0)
+                // ✅ 페르몬 위치가 활동 범위 내면 복귀
+                if (distanceToHive <= activityRadius)
                 {
-                    Debug.Log($"[Worker State] 이전 채취 타일로 자동 복귀: 하이브 ({agent.homeHive.q}, {agent.homeHive.r}) → 자원 ({lastGatherTile.q}, {lastGatherTile.r})");
+                    Debug.Log($"[Worker State] 페르몬 명령: 이전 채취 타일로 복귀 ({lastGatherTile.q}, {lastGatherTile.r})");
                     
                     targetTile = lastGatherTile;
                     TransitionToState(WorkerState.Moving);
                     yield break;
                 }
-                // ✅ 이전 채취 타일이 활동 범위 내에 있으며, 자동 탐색 모드인 경우에 유지
-                else if (isAutoSearchNearResource && distanceToHive <= activityRadius)
-                {
-                    // ✅ 주변 6방향 타일 탐색 (거리 1)
-                    HexTile nearbyResourceTile = FindNearbyResourceTile(lastGatherTile.q, lastGatherTile.r);
-                    
-                    if (nearbyResourceTile != null)
-                    {
-                        Debug.Log($"[Worker State] 주변 자원 타일 발견: ({nearbyResourceTile.q}, {nearbyResourceTile.r}), 자원량: {nearbyResourceTile.resourceAmount}");
-                        lastGatherTile = nearbyResourceTile;
-                        targetTile = nearbyResourceTile;
-                        TransitionToState(WorkerState.Moving);
-                        yield break;
-                    }
-                    else
-                    {
-                        Debug.Log($"[Worker State] 주변에 자원 타일 없음, 이전 채취 타일 초기화");
-                        lastGatherTile = null;
-                    }
-                }
                 else
                 {
-                    Debug.Log($"[Worker State] 이전 채취 타일이 활동 범위 밖: {distanceToHive}/{activityRadius}");
+                    Debug.Log($"[Worker State] 페르몬 위치가 활동 범위 밖: {distanceToHive}/{activityRadius}, 수동 명령 해제");
+                    agent.hasManualOrder = false;
                     lastGatherTile = null;
                 }
             }
+            // ✅ 수동 명령이 없거나 lastGatherTile이 없으면 자동 복귀 로직
+            else if (!agent.hasManualOrder)
+            {
+                Debug.Log($"[Worker State] 자동 모드: 자동 복귀 생략");
+                lastGatherTile = null;
+                TransitionToState(WorkerState.Idle);
+                yield break;
+            }
+            // ✅ 수동 명령이지만 lastGatherTile이 없으면 Idle
+            else
+            {
+                Debug.Log($"[Worker State] 페르몬 명령이지만 채취 타일 없음: Idle 상태");
+                TransitionToState(WorkerState.Idle);
+                yield break;
+            }
+
+            // ✅ 여기는 도달하지 않음 (위에서 모두 yield break)
         }
 
         // 자원 있는 타일 + 하이브 존재

@@ -16,5 +16,5 @@ MonoBehaviour:
   displayName: "\uBC8C\uC9D1 \uAC74\uC124 "
   icon: {fileID: 0}
   requiresTarget: 1
-  hidePanelOnClick: 1
+  hidePanelOnClick: 0
   resourceCost: 0

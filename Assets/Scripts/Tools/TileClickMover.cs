@@ -65,6 +65,9 @@ public class TileClickMover : MonoBehaviour
             }
         }
 
+        // ✅ 키보드 단축키 (요구사항 2, 3, 5)
+        HandleKeyboardShortcuts();
+
         // Cancel move mode with Escape
         if (moveMode && Input.GetKeyDown(KeyCode.Escape))
         {
@@ -83,6 +86,108 @@ public class TileClickMover : MonoBehaviour
         {
             highlighter?.HideRadius();
         }
+    }
+    
+    /// <summary>
+    /// 키보드 단축키 처리 (요구사항 2, 3, 5)
+    /// </summary>
+    void HandleKeyboardShortcuts()
+    {
+        // ✅ 1번: 여왕벌 선택 (요구사항 2)
+        if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+        {
+            SelectQueen();
+        }
+        
+        // ✅ 2번: 꿀벌집 선택 (요구사항 3)
+        if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+        {
+            SelectPlayerHive();
+        }
+        
+        // ✅ Q/W/E: 부대 페르몬 명령 (요구사항 5)
+        if (selectedUnitInstance != null && selectedUnitInstance.isQueen)
+        {
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                ExecutePheromoneCommand(WorkerSquad.Squad1);
+            }
+            else if (Input.GetKeyDown(KeyCode.W))
+            {
+                ExecutePheromoneCommand(WorkerSquad.Squad2);
+            }
+            else if (Input.GetKeyDown(KeyCode.E))
+            {
+                ExecutePheromoneCommand(WorkerSquad.Squad3);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 여왕벌 선택 (요구사항 2)
+    /// </summary>
+    void SelectQueen()
+    {
+        if (TileManager.Instance == null) return;
+        
+        foreach (var unit in TileManager.Instance.GetAllUnits())
+        {
+            if (unit != null && unit.isQueen && unit.faction == Faction.Player)
+            {
+                SelectUnit(unit);
+                Debug.Log("[단축키] 여왕벌 선택");
+                return;
+            }
+        }
+        
+        Debug.Log("[단축키] 여왕벌을 찾을 수 없습니다.");
+    }
+    
+    /// <summary>
+    /// 플레이어 꿀벌집 선택 (요구사항 3)
+    /// </summary>
+    void SelectPlayerHive()
+    {
+        if (HiveManager.Instance == null) return;
+        
+        foreach (var hive in HiveManager.Instance.GetAllHives())
+        {
+            if (hive != null)
+            {
+                var hiveAgent = hive.GetComponent<UnitAgent>();
+                if (hiveAgent != null && hiveAgent.faction == Faction.Player)
+                {
+                    SelectUnit(hiveAgent);
+                    Debug.Log("[단축키] 꿀벌집 선택");
+                    return;
+                }
+            }
+        }
+        
+        Debug.Log("[단축키] 꿀벌집을 찾을 수 없습니다.");
+    }
+    
+    /// <summary>
+    /// 페르몬 명령 실행 (요구사항 5)
+    /// </summary>
+    void ExecutePheromoneCommand(WorkerSquad squad)
+    {
+        if (selectedUnitInstance == null || !selectedUnitInstance.isQueen)
+        {
+            Debug.Log("[페르몬] 여왕벌이 선택되지 않았습니다.");
+            return;
+        }
+        
+        // 페르몬 명령 실행
+        QueenPheromoneCommandHandler.ExecutePheromone(
+            selectedUnitInstance, 
+            CommandTarget.ForTile(selectedUnitInstance.q, selectedUnitInstance.r),
+            squad
+        );
+        
+        string squadName = squad == WorkerSquad.Squad1 ? "1번" :
+                          squad == WorkerSquad.Squad2 ? "2번" : "3번";
+        Debug.Log($"[단축키] {squadName} 부대 페르몬 명령");
     }
 
     // Check if mouse is over UI element
@@ -220,6 +325,8 @@ public class TileClickMover : MonoBehaviour
 
     void HandleRightClickForMultipleUnits(List<UnitAgent> units)
     {
+        // ✅ 다중 유닛 우클릭 이동 명령 주석 처리 (요구사항 4)
+        /*
         HexTile targetTile = null;
         Vector3 wp = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         wp.z = 0f;
@@ -258,6 +365,7 @@ public class TileClickMover : MonoBehaviour
                 debugText.text = $"{units.Count}개 유닛 이동: ({targetTile.q}, {targetTile.r})";
             }
         }
+        */
     }
 
     public void SelectUnit(UnitAgent unit)
@@ -349,25 +457,44 @@ public class TileClickMover : MonoBehaviour
             return;
         }
 
-        // If unit has behavior controller, dispatch to its decision logic (priority attack/gather/idle)
-        var behavior = selectedUnitInstance.GetComponent<UnitBehaviorController>();
-        if (behavior != null && selectedUnitInstance.canMove)
+        // ✅ 여왕벌만 우클릭 이동 가능 (일벌은 페르몬 명령으로만 이동)
+        if (selectedUnitInstance.isQueen && selectedUnitInstance.canMove)
         {
-            behavior.IssueCommandToTile(tile);
-            StopMoveMode();
-            return;
-        }
-
-        // if move confirmation required, only move when in moveMode unless unit allows direct click
-        if (requireMoveConfirm && !moveMode && !selectedUnitInstance.canMove)
-        {
-            if (debugText != null) debugText.text = "Select a command in the command UI to issue";
-            return;
-        }
-
-        // otherwise perform move if allowed
-        if (moveMode || selectedUnitInstance.canMove)
-        {
+            // ✅ 꿀벌집이 있으면 활동 범위 체크 (요구사항 4)
+            if (selectedUnitInstance.homeHive != null)
+            {
+                int distanceToHive = Pathfinder.AxialDistance(
+                    selectedUnitInstance.homeHive.q, selectedUnitInstance.homeHive.r,
+                    tile.q, tile.r
+                );
+                
+                int activityRadius = 5; // 기본값
+                if (HiveManager.Instance != null)
+                {
+                    activityRadius = HiveManager.Instance.hiveActivityRadius;
+                }
+                
+                if (distanceToHive > activityRadius)
+                {
+                    if (debugText != null)
+                    {
+                        debugText.text = $"꿀벌집 활동 범위를 벗어났습니다 ({distanceToHive}/{activityRadius})";
+                    }
+                    Debug.Log($"[여왕벌] 이동 불가: 꿀벌집으로부터 {distanceToHive}칸 (최대 {activityRadius}칸)");
+                    return;
+                }
+            }
+            
+            // 여왕벌 전용 이동 명령
+            var queenBehavior = selectedUnitInstance.GetComponent<QueenBehaviorController>();
+            if (queenBehavior != null)
+            {
+                queenBehavior.IssueCommandToTile(tile);
+                StopMoveMode();
+                return;
+            }
+            
+            // QueenBehaviorController가 없으면 기본 이동
             var startTile = TileManager.Instance.GetTile(selectedUnitInstance.q, selectedUnitInstance.r);
             var path = Pathfinder.FindPath(startTile, tile);
             if (path != null && path.Count > 0)
@@ -378,6 +505,17 @@ public class TileClickMover : MonoBehaviour
                 ctrl.SetPath(path);
             }
             StopMoveMode();
+            return;
+        }
+        
+        // ✅ 일벌은 우클릭 이동 불가 (페르몬 명령 사용)
+        if (!selectedUnitInstance.isQueen)
+        {
+            if (debugText != null)
+            {
+                debugText.text = "일벌은 여왕벌의 페르몬 명령으로만 이동할 수 있습니다.";
+            }
+            return;
         }
     }
 

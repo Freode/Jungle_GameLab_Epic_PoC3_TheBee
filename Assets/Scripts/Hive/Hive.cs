@@ -86,6 +86,15 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         // Note: queenBee should be assigned externally when constructing the hive
         // The queen already exists in the scene
         
+        // ✅ 하이브 건설 시 모든 페르몬 효과 제거 (요구사항 1)
+        if (PheromoneManager.Instance != null)
+        {
+            PheromoneManager.Instance.ClearAllPheromones();
+            Debug.Log("[하이브 초기화] 모든 페르몬 효과 제거");
+        }
+        
+        // ✅ 여왕벌 비활성화 주석 처리 (요구사항 2)
+        /*
         // 여왕벌 비활성화 (하이브 안으로 들어감)
         if (queenBee != null)
         {
@@ -97,7 +106,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             //// 이동 불가능하게
             //queenBee.canMove = false;
             
-            // 여왕벌 무적 상태 활성화 ?
+            // 여왕벌 무적 상태 활성화
             var queenCombat = queenBee.GetComponent<CombatUnit>();
             if (queenCombat != null)
             {
@@ -110,6 +119,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             if (showDebugLogs)
                 Debug.Log("[하이브 초기화] 여왕벌 비활성화 (하이브 안으로 들어감) - 무적 상태 활성화");
         }
+        */
         
         // Apply upgrades: hive health (먼저 설정)
         var combat = GetComponent<CombatUnit>();
@@ -481,6 +491,15 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             HexBoundaryHighlighter.Instance.Clear();
         }
         
+        // ✅ 모든 페르몬 효과 제거 (요구사항 4)
+        if (PheromoneManager.Instance != null)
+        {
+            PheromoneManager.Instance.ClearAllPheromones();
+            Debug.Log("[하이브 파괴] 모든 페르몬 효과 제거");
+        }
+        
+        // ✅ 여왕벌 재활성화 주석 처리 (요구사항 2)
+        /*
         // 여왕벌 재활성화 (하이브 위치에서)
         if (queenBee != null)
         {
@@ -502,32 +521,6 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             //// 4. 이동 가능하게 설정
             //queenBee.canMove = true;
             
-            // 5. 여왕벌 플래그 초기화 ?
-//             queenBee.isFollowingQueen = false;
-//             queenBee.hasManualOrder = false;
-//             queenBee.homeHive = null; // 하이브 참조 제거 ?
-            
-            // 6. UnitBehaviorController 초기화 ?
-//             var queenBehavior = queenBee.GetComponent<UnitBehaviorController>();
-//             if (queenBehavior != null)
-//             {
-//                 queenBehavior.CancelCurrentTask(); // 모든 작업 취소
-//             }
-            
-            //// 7. 렌더러 재활성화 (활성화 전에!)
-//             var queenRenderer = queenBee.GetComponent<Renderer>();
-//             if (queenRenderer != null) queenRenderer.enabled = true;
-//             
-//             var queenSprite = queenBee.GetComponent<SpriteRenderer>();
-//             if (queenSprite != null) queenSprite.enabled = true;
-//             
-//             //// 8. 컬라이더 재활성화 (클릭 가능하게)
-//             var queenCollider2D = queenBee.GetComponent<Collider2D>();
-//             if (queenCollider2D != null) queenCollider2D.enabled = true;
-//             
-//             var queenCollider3D = queenBee.GetComponent<Collider>();
-//             if (queenCollider3D != null) queenCollider3D.enabled = true;
-//             
             // 9. 여왕벌 무적 상태 해제
             var queenCombat = queenBee.GetComponent<CombatUnit>();
             if (queenCombat != null)
@@ -547,15 +540,13 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             // 11. FogOfWar에 등록 (활성화 후)
             queenBee.RegisterWithFog();
             
-            //// 12. 선택 가능 상태로 리셋
-            //queenBee.SetSelected(false);
-            
             Debug.Log("[하이브 파괴] 여왕벌 완전 활성화 완료 - 이동 가능 상태, 모든 플래그 초기화");
         }
         else
         {
             Debug.LogWarning("[하이브 파괴] 여왕벌 참조가 없습니다!");
         }
+        */
         
         // 일꾼들이 여왕벌을 따라다니게 설정
         foreach (var worker in workers)

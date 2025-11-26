@@ -23,6 +23,21 @@ public class HiveManager : MonoBehaviour
     public int currentWorkers = 0; // 현재 일꾼 수 ✅
     public int maxWorkers = 10; // 최대 일꾼 수 (기본값) ✅
     private List<UnitAgent> allWorkers = new List<UnitAgent>(); // 모든 일꾼 목록 ✅
+    
+    [Header("Worker Squad System")]
+    [Tooltip("1번 부대 색상 (빨강)")]
+    public Color squad1Color = Color.red;
+    [Tooltip("2번 부대 색상 (초록)")]
+    public Color squad2Color = Color.green;
+    [Tooltip("3번 부대 색상 (파랑)")]
+    public Color squad3Color = Color.blue;
+    
+    private Dictionary<WorkerSquad, List<UnitAgent>> squadWorkers = new Dictionary<WorkerSquad, List<UnitAgent>>()
+    {
+        { WorkerSquad.Squad1, new List<UnitAgent>() },
+        { WorkerSquad.Squad2, new List<UnitAgent>() },
+        { WorkerSquad.Squad3, new List<UnitAgent>() }
+    };
 
     [Header("Upgrade Levels")]
     public int hiveRangeLevel = 0;          // 하이브 활동 범위 레벨
@@ -119,12 +134,162 @@ public class HiveManager : MonoBehaviour
         if (worker == null || allWorkers.Contains(worker)) return;
         
         allWorkers.Add(worker);
+        
+        // ✅ 3부대 자동 배치: 가장 작은 인원을 가진 부대에 배치
+        WorkerSquad assignedSquad = GetSmallestSquad();
+        AssignWorkerToSquad(worker, assignedSquad);
+        
         currentWorkers = allWorkers.Count;
         
-        Debug.Log($"[HiveManager] 일꾼 등록: {currentWorkers}/{maxWorkers}");
+        Debug.Log($"[HiveManager] 일꾼 등록: {currentWorkers}/{maxWorkers}, 부대: {assignedSquad}");
         
         // 일꾼 수 변경 이벤트 발생
         OnWorkerCountChanged?.Invoke(currentWorkers, maxWorkers);
+    }
+    
+    /// <summary>
+    /// 가장 작은 인원을 가진 부대 찾기 ✅
+    /// </summary>
+    private WorkerSquad GetSmallestSquad()
+    {
+        WorkerSquad smallest = WorkerSquad.Squad1;
+        int minCount = int.MaxValue;
+        
+        foreach (var kvp in squadWorkers)
+        {
+            // null 제거
+            kvp.Value.RemoveAll(w => w == null);
+            
+            int count = kvp.Value.Count;
+            if (count < minCount)
+            {
+                minCount = count;
+                smallest = kvp.Key;
+            }
+        }
+        
+        return smallest;
+    }
+    
+    /// <summary>
+    /// 일꾼을 특정 부대에 배치 ✅
+    /// </summary>
+    private void AssignWorkerToSquad(UnitAgent worker, WorkerSquad squad)
+    {
+        if (worker == null) return;
+        
+        // UnitAgent에 부대 정보 저장 (확장 필요)
+        var workerAgent = worker.GetComponent<UnitAgent>();
+        if (workerAgent != null)
+        {
+            // ✅ 부대 색상 적용 주석 처리 (요구사항 3)
+            /*
+            Color squadColor = GetSquadColor(squad);
+            ApplySquadColor(worker, squadColor);
+            */
+            
+            // ✅ 부대 데이터 저장 (UnitAgent에 squad 필드 추가 필요)
+            // workerAgent.squad = squad; // 나중에 추가
+        }
+        
+        // 부대 리스트에 추가
+        if (!squadWorkers[squad].Contains(worker))
+        {
+            squadWorkers[squad].Add(worker);
+        }
+        
+        Debug.Log($"[부대] {worker.name} → {squad} 배치 (인원: {squadWorkers[squad].Count})");
+        
+        // ✅ 해당 부대의 기존 페르몬 명령이 있으면 자동으로 이동 명령 (코루틴으로 지연 실행)
+        if (PheromoneManager.Instance != null)
+        {
+            var pheromonePos = PheromoneManager.Instance.GetCurrentPheromonePosition(squad);
+            if (pheromonePos.HasValue)
+            {
+                StartCoroutine(ApplyPheromoneToWorkerDelayed(worker, squad, pheromonePos.Value));
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 신규 일꾼에게 페르몬 명령 지연 적용 (다음 프레임에 실행)
+    /// </summary>
+    private System.Collections.IEnumerator ApplyPheromoneToWorkerDelayed(UnitAgent worker, WorkerSquad squad, Vector2Int pheromonePos)
+    {
+        // 한 프레임 대기 (일꾼 완전 초기화)
+        yield return null;
+        
+        if (worker == null)
+        {
+            Debug.LogWarning($"[부대] 일꾼이 null입니다. 페르몬 명령 적용 실패.");
+            yield break;
+        }
+        
+        var targetTile = TileManager.Instance?.GetTile(pheromonePos.x, pheromonePos.y);
+        if (targetTile == null)
+        {
+            Debug.LogWarning($"[부대] 타일을 찾을 수 없습니다: ({pheromonePos.x}, {pheromonePos.y})");
+            yield break;
+        }
+        
+        var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
+        if (workerBehavior != null)
+        {
+            // ✅ 기존 작업 취소 후 새 명령 실행
+            workerBehavior.CancelCurrentTask();
+            
+            // ✅ 수동 명령 플래그 설정 (자동 자원 채취 방지)
+            worker.hasManualOrder = true;
+            
+            // ✅ 페르몬 위치로 이동
+            workerBehavior.IssueCommandToTile(targetTile);
+            
+            Debug.Log($"[부대] {worker.name} → {squad} 페르몬 명령 자동 적용: ({pheromonePos.x}, {pheromonePos.y})");
+        }
+        else
+        {
+            Debug.LogWarning($"[부대] {worker.name}에 WorkerBehaviorController가 없습니다.");
+        }
+    }
+    
+    /// <summary>
+    /// 부대 색상 가져오기 ✅
+    /// </summary>
+    private Color GetSquadColor(WorkerSquad squad)
+    {
+        switch (squad)
+        {
+            case WorkerSquad.Squad1: return squad1Color;
+            case WorkerSquad.Squad2: return squad2Color;
+            case WorkerSquad.Squad3: return squad3Color;
+            default: return Color.white;
+        }
+    }
+    
+    /// <summary>
+    /// 일꾼에게 부대 색상 적용 ✅
+    /// </summary>
+    private void ApplySquadColor(UnitAgent worker, Color color)
+    {
+        if (worker == null) return;
+        
+        // SpriteRenderer 색상 적용
+        var sprite = worker.GetComponent<SpriteRenderer>();
+        if (sprite != null)
+        {
+            sprite.color = color;
+        }
+        
+        // Renderer 색상 적용 (MaterialPropertyBlock 사용)
+        var renderer = worker.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+            renderer.GetPropertyBlock(mpb);
+            mpb.SetColor("_Color", color);
+            mpb.SetColor("_BaseColor", color);
+            renderer.SetPropertyBlock(mpb);
+        }
     }
 
     /// <summary>
@@ -135,6 +300,13 @@ public class HiveManager : MonoBehaviour
         if (worker == null || !allWorkers.Contains(worker)) return;
         
         allWorkers.Remove(worker);
+        
+        // ✅ 모든 부대에서 제거
+        foreach (var squad in squadWorkers.Values)
+        {
+            squad.Remove(worker);
+        }
+        
         currentWorkers = allWorkers.Count;
         
         Debug.Log($"[HiveManager] 일꾼 해제: {currentWorkers}/{maxWorkers}");
@@ -163,6 +335,35 @@ public class HiveManager : MonoBehaviour
         allWorkers.RemoveAll(w => w == null);
         currentWorkers = allWorkers.Count;
         return currentWorkers;
+    }
+    
+    /// <summary>
+    /// 특정 부대의 일꾼 목록 가져오기 ✅
+    /// </summary>
+    public List<UnitAgent> GetSquadWorkers(WorkerSquad squad)
+    {
+        if (!squadWorkers.ContainsKey(squad))
+        {
+            return new List<UnitAgent>();
+        }
+        
+        // null 제거
+        squadWorkers[squad].RemoveAll(w => w == null);
+        return new List<UnitAgent>(squadWorkers[squad]);
+    }
+    
+    /// <summary>
+    /// 부대별 인원 수 가져오기 ✅
+    /// </summary>
+    public int GetSquadCount(WorkerSquad squad)
+    {
+        if (!squadWorkers.ContainsKey(squad))
+        {
+            return 0;
+        }
+        
+        squadWorkers[squad].RemoveAll(w => w == null);
+        return squadWorkers[squad].Count;
     }
 
     // Add resources to player's storage

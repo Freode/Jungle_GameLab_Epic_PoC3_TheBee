@@ -46,6 +46,32 @@ public class SOCommand : ScriptableObject, ICommand
     {
         if (agent == null) return false;
 
+        // ✅ 꿀벌집 건설 명령: 꿀벌집이 이미 존재하면 비활성화 (요구사항 1)
+        if (id == "construct_hive")
+        {
+            if (HiveManager.Instance != null)
+            {
+                // 플레이어 하이브가 1개 이상 존재하면 건설 불가
+                int playerHiveCount = 0;
+                foreach (var hive in HiveManager.Instance.GetAllHives())
+                {
+                    if (hive != null)
+                    {
+                        var hiveAgent = hive.GetComponent<UnitAgent>();
+                        if (hiveAgent != null && hiveAgent.faction == Faction.Player)
+                        {
+                            playerHiveCount++;
+                        }
+                    }
+                }
+                
+                if (playerHiveCount > 0)
+                {
+                    return false; // 꿀벌집이 이미 존재하므로 건설 불가
+                }
+            }
+        }
+
         // Check if command requires a hive
         if (RequiresHive())
         {
@@ -90,6 +116,17 @@ public class SOCommand : ScriptableObject, ICommand
             case "hive_gather":
             case "hive_attack":
                 HiveCommandHandler.ExecuteHiveCommand(agent, id, target);
+                break;
+            
+            // ✅ 페르몬 명령 (요구사항 1)
+            case "pheromone_squad1":
+                QueenPheromoneCommandHandler.ExecutePheromone(agent, target, WorkerSquad.Squad1);
+                break;
+            case "pheromone_squad2":
+                QueenPheromoneCommandHandler.ExecutePheromone(agent, target, WorkerSquad.Squad2);
+                break;
+            case "pheromone_squad3":
+                QueenPheromoneCommandHandler.ExecutePheromone(agent, target, WorkerSquad.Squad3);
                 break;
             
             // Upgrade commands
