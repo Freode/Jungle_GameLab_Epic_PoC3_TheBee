@@ -265,20 +265,24 @@ public class HiveManager : MonoBehaviour
     }
     
     /// <summary>
-    /// 일꾼에게 부대 색상 적용 ✅
+    /// 일벌에게 부대 색상 적용 ✅
     /// </summary>
     private void ApplySquadColor(UnitAgent worker, Color color)
     {
         if (worker == null) return;
         
-        // SpriteRenderer 색상 적용
+        // ✅ 1. UnitAgent의 originalColor 업데이트 (기본 색상 변경)
+        worker.SetOriginalColor(color);
+        Debug.Log($"[부대 색상] {worker.name} 기본 색상 업데이트: {color}");
+        
+        // ✅ 2. SpriteRenderer 색상 적용
         var sprite = worker.GetComponent<SpriteRenderer>();
         if (sprite != null)
         {
             sprite.color = color;
         }
         
-        // Renderer 색상 적용 (MaterialPropertyBlock 사용)
+        // ✅ 3. Renderer 색상 적용 (MaterialPropertyBlock 사용)
         var renderer = worker.GetComponent<Renderer>();
         if (renderer != null)
         {

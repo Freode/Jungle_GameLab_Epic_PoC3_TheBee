@@ -210,6 +210,20 @@ public class UnitAgent : MonoBehaviour
             cachedRenderer.SetPropertyBlock(mpb);
         }
     }
+    
+    /// <summary>
+    /// 기본 색상 설정 (부대 색상 등) ✅
+    /// </summary>
+    public void SetOriginalColor(Color color)
+    {
+        originalColor = color;
+        
+        // 선택되지 않고 자원을 들고 있지 않으면 즉시 적용
+        if (!isSelected && !isCarryingResource)
+        {
+            UpdateColor();
+        }
+    }
 
     // Check if worker can move to a tile based on hive presence
     public bool CanMoveToTile(int targetQ, int targetR)

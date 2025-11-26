@@ -439,12 +439,6 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         
         NotificationToast.Instance.ShowMessage("이사 준비! 5초 후 벌집이 파괴됩니다.");
         Debug.Log($"[하이브 이사] 카운트다운 시작: {countdown}초");
-        
-        // UI 텍스트 활성화 ?
-//         if (relocateTimerText != null)
-//         {
-//             relocateTimerText.gameObject.SetActive(true);
-//         }
 
         while (countdown > 0f)
         {
@@ -457,13 +451,6 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 combat.health = Mathf.Max(1, combat.health - Mathf.CeilToInt(drainAmount));
             }
             
-            // UI 텍스트 업데이트 ?
-//             if (relocateTimerText != null)
-//             {
-//                 int remainingSeconds = Mathf.CeilToInt(countdown);
-//                 relocateTimerText.text = $"이사 준비 중...\n{remainingSeconds}초";
-//             }
-            
             // 1초마다 로그 출력 (디버그용)
             if (showDebugLogs && Mathf.FloorToInt(countdown) != Mathf.FloorToInt(countdown + Time.deltaTime))
             {
@@ -474,12 +461,6 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         }
 
         Debug.Log("[하이브 이사] 카운트다운 완료! 하이브 파괴 시작");
-        
-        // UI 텍스트 비활성화 ?
-//         if (relocateTimerText != null)
-//         {
-//             relocateTimerText.gameObject.SetActive(false);
-//         }
         
         // Countdown finished 후 destroy this hive
         DestroyHive();
@@ -495,81 +476,27 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             HexBoundaryHighlighter.Instance.Clear();
         }
         
-        // ✅ 하이브 파괴 시 페르몬 코루틴 취소 (요구사항)
+        // ✅ 하이브 파괴 시 페르몬 코루틴 취소
         QueenPheromoneCommandHandler.CancelCurrentPheromoneCommand();
         Debug.Log("[하이브 파괴] 페르몬 명령 취소");
         
-        // ✅ 모든 페르몬 효과 제거 (요구사항 4)
+        // ✅ 모든 페르몬 효과 제거
         if (PheromoneManager.Instance != null)
         {
             PheromoneManager.Instance.ClearAllPheromones();
             Debug.Log("[하이브 파괴] 모든 페르몬 효과 제거");
         }
         
-        // ✅ 여왕벌이 선택된 상태면 명령 UI 갱신 (요구사항 1)
+        // ✅ 여왕벌이 선택된 상태면 명령 UI 갱신 (코루틴으로 지연 실행)
         if (queenBee != null && TileClickMover.Instance != null)
         {
             var selectedUnit = TileClickMover.Instance.GetSelectedUnit();
             if (selectedUnit == queenBee)
             {
-                // ✅ 명령 패널 새로고침 (건설 버튼 활성화)
-                if (UnitCommandPanel.Instance != null)
-                {
-                    UnitCommandPanel.Instance.Show(queenBee);
-                    Debug.Log("[하이브 파괴] 여왕벌 명령 UI 갱신 (건설 버튼 활성화)");
-                }
+                // ✅ 다음 프레임에 UI 갱신 (homeHive null 설정 후)
+                StartCoroutine(RefreshQueenUIDelayed(queenBee));
             }
         }
-        
-        // ✅ 여왕벌 재활성화 주석 처리 (요구사항 2)
-        /*
-        // 여왕벌 재활성화 (하이브 위치에서)
-        if (queenBee != null)
-        {
-            if (showDebugLogs)
-                Debug.Log($"[하이브 파괴] 여왕벌 위치 초기화 시작: 하이브 위치 ({q}, {r})");
-            
-            // 1. 여왕벌 위치를 하이브 타일로 설정 (활성화 전에 먼저!)
-            queenBee.SetPosition(q, r);
-            
-            // 2. 월드 위치 계산
-            Vector3 hivePos = TileHelper.HexToWorld(q, r, queenBee.hexSize);
-            
-            // 3. Transform 위치 설정 (활성화 전에!)
-            queenBee.transform.position = hivePos;
-            
-            if (showDebugLogs)
-                Debug.Log($"[하이브 파괴] 여왕벌 Transform 위치: {queenBee.transform.position}, 타일 좌표: ({queenBee.q}, {queenBee.r})");
-            
-            //// 4. 이동 가능하게 설정
-            //queenBee.canMove = true;
-            
-            // 9. 여왕벌 무적 상태 해제
-            var queenCombat = queenBee.GetComponent<CombatUnit>();
-            if (queenCombat != null)
-            {
-                queenCombat.SetInvincible(false);
-            }
-            
-            if (showDebugLogs)
-                Debug.Log("[하이브 파괴] 여왕벌 렌더러 및 컬라이더 재활성화 완료 - 무적 상태 해제");
-            
-            // 10. GameObject 재활성화 (마지막에!)
-            queenBee.gameObject.SetActive(true);
-            
-            if (showDebugLogs)
-                Debug.Log($"[하이브 파괴] 여왕벌 활성화 완료 - 위치: ({queenBee.q}, {queenBee.r}), World: {queenBee.transform.position}");
-            
-            // 11. FogOfWar에 등록 (활성화 후)
-            queenBee.RegisterWithFog();
-            
-            Debug.Log("[하이브 파괴] 여왕벌 완전 활성화 완료 - 이동 가능 상태, 모든 플래그 초기화");
-        }
-        else
-        {
-            Debug.LogWarning("[하이브 파괴] 여왕벌 참조가 없습니다!");
-        }
-        */
         
         // 일꾼들이 여왕벌을 따라다니게 설정
         foreach (var worker in workers)
@@ -578,9 +505,9 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             {
                 worker.isFollowingQueen = true;
                 worker.hasManualOrder = false;
-                worker.homeHive = null; // 하이브 참조 제거 ?
+                worker.homeHive = null; // 하이브 참조 제거
                 
-                // WorkerBehaviorController가 있으면 StartFollowingQueen 호출 ?
+                // WorkerBehaviorController가 있으면 StartFollowingQueen 호출
                 var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
                 if (workerBehavior != null)
                 {
@@ -610,6 +537,38 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         
         // GameObject 파괴
         Destroy(gameObject);
+    }
+    
+    /// <summary>
+    /// 여왕벌 UI 갱신 (지연 실행) ✅
+    /// </summary>
+    private System.Collections.IEnumerator RefreshQueenUIDelayed(UnitAgent queen)
+    {
+        // 한 프레임 대기 (homeHive null 설정 완료)
+        yield return null;
+        
+        if (queen == null)
+        {
+            Debug.LogWarning("[하이브 파괴] 여왕벌이 null입니다!");
+            yield break;
+        }
+        
+        // ✅ homeHive가 null로 설정되었는지 확인
+        if (queen.homeHive == null)
+        {
+            Debug.Log("[하이브 파괴] 여왕벌 homeHive 제거 확인");
+        }
+        
+        // ✅ 명령 패널 새로고침 (건설 버튼 활성화)
+        if (UnitCommandPanel.Instance != null)
+        {
+            UnitCommandPanel.Instance.Show(queen);
+            Debug.Log("[하이브 파괴] 여왕벌 명령 UI 갱신 완료 (건설 버튼 활성화)");
+        }
+        else
+        {
+            Debug.LogWarning("[하이브 파괴] UnitCommandPanel.Instance가 null입니다!");
+        }
     }
 
     // Called when a new hive is constructed to reclaim all homeless workers
