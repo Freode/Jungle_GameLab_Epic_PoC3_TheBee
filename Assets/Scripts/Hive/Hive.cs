@@ -86,6 +86,10 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         // Note: queenBee should be assigned externally when constructing the hive
         // The queen already exists in the scene
         
+        // ✅ 하이브 건설 시 페르몬 코루틴 취소 (요구사항)
+        QueenPheromoneCommandHandler.CancelCurrentPheromoneCommand();
+        Debug.Log("[하이브 초기화] 페르몬 명령 취소");
+        
         // ✅ 하이브 건설 시 모든 페르몬 효과 제거 (요구사항 1)
         if (PheromoneManager.Instance != null)
         {
@@ -490,6 +494,10 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         {
             HexBoundaryHighlighter.Instance.Clear();
         }
+        
+        // ✅ 하이브 파괴 시 페르몬 코루틴 취소 (요구사항)
+        QueenPheromoneCommandHandler.CancelCurrentPheromoneCommand();
+        Debug.Log("[하이브 파괴] 페르몬 명령 취소");
         
         // ✅ 모든 페르몬 효과 제거 (요구사항 4)
         if (PheromoneManager.Instance != null)
