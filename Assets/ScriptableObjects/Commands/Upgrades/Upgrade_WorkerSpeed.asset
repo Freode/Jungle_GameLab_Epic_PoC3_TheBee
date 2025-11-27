@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Upgrade_WorkerSpeed
   m_EditorClassIdentifier: 
   id: upgrade_worker_speed
-  displayName: "\uC77C\uAFBC \uC774\uC18D + 0.2"
+  displayName: "\uC77C\uBC8C \uC774\uC18D\\n+0.2"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0

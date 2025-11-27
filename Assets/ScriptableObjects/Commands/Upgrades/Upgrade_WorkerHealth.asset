@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Upgrade_WorkerHealth
   m_EditorClassIdentifier: 
   id: upgrade_worker_health
-  displayName: "\uC77C\uAFBC \uCCB4\uB825 + 2"
+  displayName: "\uC77C\uBC8C \uCCB4\uB825\\n+2"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0

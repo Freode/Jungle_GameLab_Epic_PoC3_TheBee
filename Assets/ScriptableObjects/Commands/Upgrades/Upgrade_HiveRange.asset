@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Upgrade_HiveRange
   m_EditorClassIdentifier: 
   id: upgrade_hive_range
-  displayName: "\uD65C\uB3D9 \uBC94\uC704 + 1"
+  displayName: "\uD65C\uB3D9 \uBC94\uC704\\n+1"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0

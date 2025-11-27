@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Upgrade_WorkerAttack
   m_EditorClassIdentifier: 
   id: upgrade_worker_attack
-  displayName: "\uC77C\uAFBC \uACF5\uACA9\uB825 + 1"
+  displayName: "\uC77C\uBC8C \uACF5\uACA9\uB825\\n+1"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0

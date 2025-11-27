@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Upgrade_HiveHealth
   m_EditorClassIdentifier: 
   id: upgrade_hive_health
-  displayName: "\uBC8C\uC9D1 \uCCB4\uB825 + 30"
+  displayName: "\uBC8C\uC9D1 \uCCB4\uB825\\n+30"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0

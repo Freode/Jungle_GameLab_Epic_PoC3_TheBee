@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Upgrade_GatherAmount
   m_EditorClassIdentifier: 
   id: upgrade_gather_amount
-  displayName: "\uC77C\uAFBC \uCC44\uC9D1 + 1"
+  displayName: "\uC77C\uBC8C \uCC44\uCDE8\\n+ 1"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0

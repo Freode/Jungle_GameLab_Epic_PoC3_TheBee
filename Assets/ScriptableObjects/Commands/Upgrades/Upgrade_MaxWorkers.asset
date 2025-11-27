@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Upgrade_MaxWorkers
   m_EditorClassIdentifier: 
   id: upgrade_max_workers
-  displayName: "\uCD5C\uB300 \uC77C\uAFBC \uC218 + 3"
+  displayName: "\uCD5C\uB300 \uC77C\uBC8C \uC218 +3"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0

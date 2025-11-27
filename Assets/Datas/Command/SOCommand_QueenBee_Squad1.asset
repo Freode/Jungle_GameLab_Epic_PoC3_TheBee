@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SOCommand_QueenBee_Squad1
   m_EditorClassIdentifier: 
   id: pheromone_squad1
-  displayName: "1\uBC88 \uBD80\uB300 \uD398\uB974\uBAAC(Q)"
+  displayName: "<color=#FF00FF>1\uBC88 \uBD80\uB300 \uD398\uB974\uBAAC\\n(Q)</color>"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0
