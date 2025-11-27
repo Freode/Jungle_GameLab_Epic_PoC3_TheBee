@@ -428,7 +428,7 @@ public class HiveManager : MonoBehaviour
         if (!TrySpendResources(cost)) return false;
 
         hiveRangeLevel++;
-        hiveActivityRadius = 2 + hiveRangeLevel;
+        hiveActivityRadius = 4 + hiveRangeLevel;
 
         // 모든 하이브의 경계선 업데이트
         foreach (var hive in hives)

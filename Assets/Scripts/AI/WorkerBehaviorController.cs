@@ -473,9 +473,35 @@ public class WorkerBehaviorController : UnitBehaviorController
                 activeCoroutines.Add(evadeCoroutine);
                 yield return evadeCoroutine;
 
-                if (currentState == WorkerState.Attacking && targetUnit != null)
+                // After attack cooldown, re-evaluate nearby enemies and prefer unit targets (e.g., wasps) over structures
+                if (currentState == WorkerState.Attacking)
                 {
-                    continue;
+                    var higherPriority = FindNearbyEnemy(1);
+                    if (higherPriority != null && higherPriority != targetUnit)
+                    {
+                        var higherCombat = higherPriority.GetComponent<CombatUnit>();
+                        if (higherCombat != null && higherCombat.health > 0)
+                        {
+                            Debug.Log($"[Worker State] 더 우선순위 적 발견: {higherPriority.name} (교체)");
+                            targetUnit = higherPriority;
+                            enemyCombat = higherCombat; // update reference to new target's CombatUnit
+                            // continue to next loop iteration and attack new target
+                            continue;
+                        }
+                    }
+
+                    // If no higher priority found, continue attacking current target if still valid
+                    if (targetUnit != null)
+                    {
+                        // refresh enemyCombat in case it changed externally
+                        enemyCombat = targetUnit.GetComponent<CombatUnit>();
+                        if (enemyCombat == null || enemyCombat.health <= 0)
+                        {
+                            break;
+                        }
+
+                        continue;
+                    }
                 }
             }
             else
