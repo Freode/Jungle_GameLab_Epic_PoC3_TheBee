@@ -1,23 +1,23 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// ¿©¿Õ¹ú Æä¸£¸ó È¿°ú °ü¸®ÀÚ
-/// - Æä¸£¸óÀÌ »Ñ·ÁÁø Å¸ÀÏ ÃßÀû
-/// - Å¸ÀÏº° °­Á¶ È¿°ú Ç¥½Ã
+/// ì—¬ì™•ë²Œ í˜ë¥´ëª¬ íš¨ê³¼ ê´€ë¦¬ì
+/// - í˜ë¥´ëª¬ì´ ë¿Œë ¤ì§„ íƒ€ì¼ ì¶”ì 
+/// - íƒ€ì¼ë³„ ê°•ì¡° íš¨ê³¼ í‘œì‹œ
 /// </summary>
 public class PheromoneManager : MonoBehaviour
 {
     public static PheromoneManager Instance { get; private set; }
     
-    [Header("Æä¸£¸ó °­Á¶ ¼³Á¤")]
-    [Tooltip("Æä¸£¸ó °­Á¶¼± Å©±â (±âº»º¸´Ù ÀÛ°Ô)")]
+    [Header("í˜ë¥´ëª¬ ê°•ì¡° ì„¤ì •")]
+    [Tooltip("í˜ë¥´ëª¬ ê°•ì¡°ì„  í¬ê¸° (ê¸°ë³¸ë³´ë‹¤ ì‘ê²Œ)")]
     public float pheromoneHighlightScale = 0.85f;
     
-    [Tooltip("Æä¸£¸ó °­Á¶¼± µÎ²²")]
+    [Tooltip("í˜ë¥´ëª¬ ê°•ì¡°ì„  ë‘ê»˜")]
     public float pheromoneLineWidth = 0.04f;
     
-    // ºÎ´ëº° Æä¸£¸ó Å¸ÀÏ (q, r ÁÂÇ¥)
+    // ë¶€ëŒ€ë³„ í˜ë¥´ëª¬ íƒ€ì¼ (q, r ì¢Œí‘œ)
     private Dictionary<WorkerSquad, HashSet<Vector2Int>> pheromoneTiles = new Dictionary<WorkerSquad, HashSet<Vector2Int>>()
     {
         { WorkerSquad.Squad1, new HashSet<Vector2Int>() },
@@ -25,13 +25,13 @@ public class PheromoneManager : MonoBehaviour
         { WorkerSquad.Squad3, new HashSet<Vector2Int>() }
     };
     
-    // ? ºÎ´ëº° Æä¸£¸ó »ö»ó (HiveManager¿¡¼­ °¡Á®¿È) (¿ä±¸»çÇ× 2)
-    // private Dictionary´Â Á¦°ÅÇÏ°í GetPheromoneColor ¸Ş¼­µå·Î ´ëÃ¼
+    // ? ë¶€ëŒ€ë³„ í˜ë¥´ëª¬ ìƒ‰ìƒ (HiveManagerì—ì„œ ê°€ì ¸ì˜´) (ìš”êµ¬ì‚¬í•­ 2)
+    // private DictionaryëŠ” ì œê±°í•˜ê³  GetPheromoneColor ë©”ì„œë“œë¡œ ëŒ€ì²´
     
-    // ? Å¸ÀÏº° ºÎ´ë ¸®½ºÆ® (°ãÄ§ ÃßÀû) (¿ä±¸»çÇ× 4)
+    // ? íƒ€ì¼ë³„ ë¶€ëŒ€ ë¦¬ìŠ¤íŠ¸ (ê²¹ì¹¨ ì¶”ì ) (ìš”êµ¬ì‚¬í•­ 4)
     private Dictionary<Vector2Int, List<WorkerSquad>> tileSquads = new Dictionary<Vector2Int, List<WorkerSquad>>();
     
-    // Å¸ÀÏº° LineRenderer Ä³½Ã (ºÎ´ëº°·Î ºĞ¸®)
+    // íƒ€ì¼ë³„ LineRenderer ìºì‹œ (ë¶€ëŒ€ë³„ë¡œ ë¶„ë¦¬)
     private Dictionary<string, GameObject> pheromoneRenderers = new Dictionary<string, GameObject>(); // Key: "q_r_squad"
     
     void Awake()
@@ -45,13 +45,13 @@ public class PheromoneManager : MonoBehaviour
     }
     
     /// <summary>
-    /// ºÎ´ëº° Æä¸£¸ó »ö»ó °¡Á®¿À±â (HiveManager¿¡¼­ ÂüÁ¶) (¿ä±¸»çÇ× 2)
+    /// ë¶€ëŒ€ë³„ í˜ë¥´ëª¬ ìƒ‰ìƒ ê°€ì ¸ì˜¤ê¸° (HiveManagerì—ì„œ ì°¸ì¡°) (ìš”êµ¬ì‚¬í•­ 2)
     /// </summary>
     private Color GetPheromoneColor(WorkerSquad squad)
     {
         if (HiveManager.Instance == null)
         {
-            // HiveManager°¡ ¾øÀ¸¸é ±âº» »ö»ó
+            // HiveManagerê°€ ì—†ìœ¼ë©´ ê¸°ë³¸ ìƒ‰ìƒ
             switch (squad)
             {
                 case WorkerSquad.Squad1: return Color.red;
@@ -61,7 +61,7 @@ public class PheromoneManager : MonoBehaviour
             }
         }
         
-        // ? HiveManagerÀÇ »ö»ó ÂüÁ¶
+        // ? HiveManagerì˜ ìƒ‰ìƒ ì°¸ì¡°
         switch (squad)
         {
             case WorkerSquad.Squad1: return HiveManager.Instance.squad1Color;
@@ -72,22 +72,22 @@ public class PheromoneManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Æä¸£¸ó »Ñ¸®±â (Å¸ÀÏ °­Á¶ È¿°ú Ãß°¡)
+    /// í˜ë¥´ëª¬ ë¿Œë¦¬ê¸° (íƒ€ì¼ ê°•ì¡° íš¨ê³¼ ì¶”ê°€)
     /// </summary>
     public void AddPheromone(int q, int r, WorkerSquad squad)
     {
         Vector2Int coord = new Vector2Int(q, r);
         
-        // ? °°Àº ºÎ´ëÀÇ ÀÌÀü Æä¸£¸ó Á¦°Å (¿ä±¸»çÇ× 3)
+        // ? ê°™ì€ ë¶€ëŒ€ì˜ ì´ì „ í˜ë¥´ëª¬ ì œê±° (ìš”êµ¬ì‚¬í•­ 3)
         ClearPheromone(squad);
         
-        // Æä¸£¸ó Å¸ÀÏ ÃßÀû
+        // í˜ë¥´ëª¬ íƒ€ì¼ ì¶”ì 
         if (!pheromoneTiles[squad].Contains(coord))
         {
             pheromoneTiles[squad].Add(coord);
         }
         
-        // ? Å¸ÀÏº° ºÎ´ë ÃßÀû (¿ä±¸»çÇ× 4)
+        // ? íƒ€ì¼ë³„ ë¶€ëŒ€ ì¶”ì  (ìš”êµ¬ì‚¬í•­ 4)
         if (!tileSquads.ContainsKey(coord))
         {
             tileSquads[coord] = new List<WorkerSquad>();
@@ -98,30 +98,30 @@ public class PheromoneManager : MonoBehaviour
             tileSquads[coord].Add(squad);
         }
         
-        // ? ÇØ´ç Å¸ÀÏÀÇ ¸ğµç ºÎ´ë Æä¸£¸ó Àç»ı¼º (°ãÄ§ °í·Á)
+        // ? í•´ë‹¹ íƒ€ì¼ì˜ ëª¨ë“  ë¶€ëŒ€ í˜ë¥´ëª¬ ì¬ìƒì„± (ê²¹ì¹¨ ê³ ë ¤)
         RefreshPheromoneHighlightsForTile(coord);
         
-        Debug.Log($"[Æä¸£¸ó] {squad} Æä¸£¸ó Ãß°¡: ({q}, {r}), °ãÄ§ ¼ö: {tileSquads[coord].Count}");
+        Debug.Log($"[í˜ë¥´ëª¬] {squad} í˜ë¥´ëª¬ ì¶”ê°€: ({q}, {r}), ê²¹ì¹¨ ìˆ˜: {tileSquads[coord].Count}");
     }
     
     /// <summary>
-    /// Æ¯Á¤ ºÎ´ëÀÇ ¸ğµç Æä¸£¸ó Á¦°Å
+    /// íŠ¹ì • ë¶€ëŒ€ì˜ ëª¨ë“  í˜ë¥´ëª¬ ì œê±°
     /// </summary>
     public void ClearPheromone(WorkerSquad squad)
     {
         if (!pheromoneTiles.ContainsKey(squad)) return;
         
-        // ÇØ´ç ºÎ´ëÀÇ ¸ğµç Æä¸£¸ó Å¸ÀÏ °­Á¶ Á¦°Å
+        // í•´ë‹¹ ë¶€ëŒ€ì˜ ëª¨ë“  í˜ë¥´ëª¬ íƒ€ì¼ ê°•ì¡° ì œê±°
         foreach (var coord in pheromoneTiles[squad])
         {
             RemovePheromoneHighlight(coord, squad);
             
-            // ? Å¸ÀÏº° ºÎ´ë ¸®½ºÆ®¿¡¼­ Á¦°Å
+            // ? íƒ€ì¼ë³„ ë¶€ëŒ€ ë¦¬ìŠ¤íŠ¸ì—ì„œ ì œê±°
             if (tileSquads.ContainsKey(coord))
             {
                 tileSquads[coord].Remove(squad);
                 
-                // ? ÇØ´ç Å¸ÀÏÀÇ ³²Àº ºÎ´ëµé Æä¸£¸ó Àç»ı¼º
+                // ? í•´ë‹¹ íƒ€ì¼ì˜ ë‚¨ì€ ë¶€ëŒ€ë“¤ í˜ë¥´ëª¬ ì¬ìƒì„±
                 if (tileSquads[coord].Count > 0)
                 {
                     RefreshPheromoneHighlightsForTile(coord);
@@ -134,11 +134,11 @@ public class PheromoneManager : MonoBehaviour
         }
         
         pheromoneTiles[squad].Clear();
-        Debug.Log($"[Æä¸£¸ó] {squad} Æä¸£¸ó ¸ğµÎ Á¦°Å");
+        Debug.Log($"[í˜ë¥´ëª¬] {squad} í˜ë¥´ëª¬ ëª¨ë‘ ì œê±°");
     }
     
     /// <summary>
-    /// ¸ğµç Æä¸£¸ó Á¦°Å (²Ü¹úÁı ÆÄ±« ½Ã)
+    /// ëª¨ë“  í˜ë¥´ëª¬ ì œê±° (ê¿€ë²Œì§‘ íŒŒê´´ ì‹œ)
     /// </summary>
     public void ClearAllPheromones()
     {
@@ -149,11 +149,11 @@ public class PheromoneManager : MonoBehaviour
         
         tileSquads.Clear();
         
-        Debug.Log("[Æä¸£¸ó] ¸ğµç Æä¸£¸ó Á¦°Å");
+        Debug.Log("[í˜ë¥´ëª¬] ëª¨ë“  í˜ë¥´ëª¬ ì œê±°");
     }
     
     /// <summary>
-    /// Æ¯Á¤ Å¸ÀÏÀÇ ¸ğµç Æä¸£¸ó °­Á¶ Àç»ı¼º (°ãÄ§ °í·Á) (¿ä±¸»çÇ× 4)
+    /// íŠ¹ì • íƒ€ì¼ì˜ ëª¨ë“  í˜ë¥´ëª¬ ê°•ì¡° ì¬ìƒì„± (ê²¹ì¹¨ ê³ ë ¤) (ìš”êµ¬ì‚¬í•­ 4)
     /// </summary>
     private void RefreshPheromoneHighlightsForTile(Vector2Int coord)
     {
@@ -162,7 +162,7 @@ public class PheromoneManager : MonoBehaviour
         var squads = tileSquads[coord];
         int squadCount = squads.Count;
         
-        // ? ±âÁ¸ °­Á¶ ¸ğµÎ Á¦°Å
+        // ? ê¸°ì¡´ ê°•ì¡° ëª¨ë‘ ì œê±°
         foreach (var squad in squads)
         {
             string key = $"{coord.x}_{coord.y}_{squad}";
@@ -173,8 +173,8 @@ public class PheromoneManager : MonoBehaviour
             }
         }
         
-        // ? °ãÄ§ ¼ö¿¡ µû¶ó Å©±â Ãà¼Ò (¿ä±¸»çÇ× 4)
-        float scaleStep = 0.1f; // °¢ °ãÄ§¸¶´Ù 10% Ãà¼Ò
+        // ? ê²¹ì¹¨ ìˆ˜ì— ë”°ë¼ í¬ê¸° ì¶•ì†Œ (ìš”êµ¬ì‚¬í•­ 4)
+        float scaleStep = 0.1f; // ê° ê²¹ì¹¨ë§ˆë‹¤ 10% ì¶•ì†Œ
         
         for (int i = 0; i < squads.Count; i++)
         {
@@ -186,31 +186,31 @@ public class PheromoneManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Æä¸£¸ó Å¸ÀÏ °­Á¶ È¿°ú Ç¥½Ã (TileHighlighter ¹æ½Ä »ç¿ë)
+    /// í˜ë¥´ëª¬ íƒ€ì¼ ê°•ì¡° íš¨ê³¼ í‘œì‹œ (TileHighlighter ë°©ì‹ ì‚¬ìš©)
     /// </summary>
     private void ShowPheromoneHighlight(int q, int r, WorkerSquad squad, float scaleOffset = 0f)
     {
         Vector2Int coord = new Vector2Int(q, r);
         string key = $"{q}_{r}_{squad}";
         
-        // ÀÌ¹Ì °­Á¶ ÁßÀÌ¸é Á¦°Å ÈÄ Àç»ı¼º
+        // ì´ë¯¸ ê°•ì¡° ì¤‘ì´ë©´ ì œê±° í›„ ì¬ìƒì„±
         if (pheromoneRenderers.ContainsKey(key))
         {
             Destroy(pheromoneRenderers[key]);
             pheromoneRenderers.Remove(key);
         }
         
-        // TileBoundaryHighlighterÃ³·³ À°°¢Çü Å×µÎ¸® »ı¼º
+        // TileBoundaryHighlighterì²˜ëŸ¼ ìœ¡ê°í˜• í…Œë‘ë¦¬ ìƒì„±
         GameObject highlightObj = new GameObject($"Pheromone_{squad}_{q}_{r}");
         highlightObj.transform.SetParent(transform);
         
         LineRenderer lr = highlightObj.AddComponent<LineRenderer>();
         
-        // ? HiveManager¿¡¼­ »ö»ó °¡Á®¿À±â (¿ä±¸»çÇ× 2)
+        // ? HiveManagerì—ì„œ ìƒ‰ìƒ ê°€ì ¸ì˜¤ê¸° (ìš”êµ¬ì‚¬í•­ 2)
         Color squadColor = GetPheromoneColor(squad);
         
-        // ? TileHighlighter ¹æ½Ä: sortingOrder Á¦°Å, z-position¸¸ »ç¿ë
-        lr.positionCount = 7; // À°°¢Çü + ´İÈû
+        // ? TileHighlighter ë°©ì‹: sortingOrder ì œê±°, z-positionë§Œ ì‚¬ìš©
+        lr.positionCount = 7; // ìœ¡ê°í˜• + ë‹«í˜
         lr.loop = true;
         lr.useWorldSpace = true;
         lr.startWidth = pheromoneLineWidth;
@@ -218,20 +218,20 @@ public class PheromoneManager : MonoBehaviour
         lr.startColor = squadColor;
         lr.endColor = squadColor;
         
-        // Material ¼³Á¤
+        // Material ì„¤ì •
         Material mat = new Material(Shader.Find("Sprites/Default"));
         lr.material = mat;
         lr.material.color = squadColor;
         
-        // À°°¢Çü ²ÀÁşÁ¡ °è»ê (Å©±â Ãà¼Ò + °ãÄ§ ¿ÀÇÁ¼Â)
+        // ìœ¡ê°í˜• ê¼­ì§“ì  ê³„ì‚° (í¬ê¸° ì¶•ì†Œ + ê²¹ì¹¨ ì˜¤í”„ì…‹)
         float hexSize = 0.5f;
         if (GameManager.Instance != null) hexSize = GameManager.Instance.hexSize;
         
-        // ? °ãÄ§ ¼ö¿¡ µû¶ó Å©±â Ãà¼Ò (¿ä±¸»çÇ× 4)
+        // ? ê²¹ì¹¨ ìˆ˜ì— ë”°ë¼ í¬ê¸° ì¶•ì†Œ (ìš”êµ¬ì‚¬í•­ 4)
         float scaledSize = hexSize * (pheromoneHighlightScale - scaleOffset);
         Vector3 center = TileHelper.HexToWorld(q, r, hexSize);
         
-        // ? z ÁÂÇ¥¸¦ -1.0À¸·Î ¼³Á¤ÇÏ¿© Å¸ÀÏº¸´Ù ÈÎ¾À ¾Õ¿¡ Ç¥½Ã (TileHighlighterÃ³·³)
+        // ? z ì¢Œí‘œë¥¼ -1.0ìœ¼ë¡œ ì„¤ì •í•˜ì—¬ íƒ€ì¼ë³´ë‹¤ í›¨ì”¬ ì•ì— í‘œì‹œ (TileHighlighterì²˜ëŸ¼)
         center.z = -1.0f;
         
         Vector3[] corners = new Vector3[7];
@@ -242,21 +242,21 @@ public class PheromoneManager : MonoBehaviour
             corners[i] = center + new Vector3(
                 scaledSize * Mathf.Cos(angleRad),
                 scaledSize * Mathf.Sin(angleRad),
-                -1.0f // ? °¢ ²ÀÁşÁ¡µµ z = -1.0
+                -1.0f // ? ê° ê¼­ì§“ì ë„ z = -1.0
             );
         }
-        corners[6] = corners[0]; // ´İÈû
+        corners[6] = corners[0]; // ë‹«í˜
         
         lr.SetPositions(corners);
         
-        // Ä³½Ã¿¡ Ãß°¡
+        // ìºì‹œì— ì¶”ê°€
         pheromoneRenderers[key] = highlightObj;
         
-        Debug.Log($"[Æä¸£¸ó] °­Á¶ È¿°ú »ı¼º: ({q}, {r}), ºÎ´ë: {squad}, »ö»ó: {squadColor}, Å©±â ¿ÀÇÁ¼Â: {scaleOffset}");
+        Debug.Log($"[í˜ë¥´ëª¬] ê°•ì¡° íš¨ê³¼ ìƒì„±: ({q}, {r}), ë¶€ëŒ€: {squad}, ìƒ‰ìƒ: {squadColor}, í¬ê¸° ì˜¤í”„ì…‹: {scaleOffset}");
     }
     
     /// <summary>
-    /// Æä¸£¸ó Å¸ÀÏ °­Á¶ Á¦°Å
+    /// í˜ë¥´ëª¬ íƒ€ì¼ ê°•ì¡° ì œê±°
     /// </summary>
     private void RemovePheromoneHighlight(Vector2Int coord, WorkerSquad squad)
     {
@@ -270,7 +270,7 @@ public class PheromoneManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Æ¯Á¤ ºÎ´ëÀÇ Æä¸£¸ó Å¸ÀÏ ¸ñ·Ï °¡Á®¿À±â
+    /// íŠ¹ì • ë¶€ëŒ€ì˜ í˜ë¥´ëª¬ íƒ€ì¼ ëª©ë¡ ê°€ì ¸ì˜¤ê¸°
     /// </summary>
     public HashSet<Vector2Int> GetPheromoneTiles(WorkerSquad squad)
     {
@@ -278,7 +278,7 @@ public class PheromoneManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Æ¯Á¤ ºÎ´ëÀÇ ÇöÀç Æä¸£¸ó À§Ä¡ °¡Á®¿À±â (1°³¸¸ ÀÖÀ½) (¿ä±¸»çÇ× 4)
+    /// íŠ¹ì • ë¶€ëŒ€ì˜ í˜„ì¬ í˜ë¥´ëª¬ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸° (1ê°œë§Œ ìˆìŒ) (ìš”êµ¬ì‚¬í•­ 4)
     /// </summary>
     public Vector2Int? GetCurrentPheromonePosition(WorkerSquad squad)
     {
@@ -287,10 +287,10 @@ public class PheromoneManager : MonoBehaviour
         var tiles = pheromoneTiles[squad];
         if (tiles.Count == 0) return null;
         
-        // °¡Àå ÃÖ±Ù Æä¸£¸ó À§Ä¡ (¸¶Áö¸· ¿ä¼Ò)
+        // ê°€ì¥ ìµœê·¼ í˜ë¥´ëª¬ ìœ„ì¹˜ (ë§ˆì§€ë§‰ ìš”ì†Œ)
         foreach (var tile in tiles)
         {
-            return tile; // Ã¹ ¹øÂ° (À¯ÀÏÇÑ) Å¸ÀÏ ¹İÈ¯
+            return tile; // ì²« ë²ˆì§¸ (ìœ ì¼í•œ) íƒ€ì¼ ë°˜í™˜
         }
         
         return null;
