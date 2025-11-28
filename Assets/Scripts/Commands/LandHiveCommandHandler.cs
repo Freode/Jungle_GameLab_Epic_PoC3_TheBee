@@ -17,7 +17,7 @@ public static class LandHiveCommandHandler
 
 
         // 2. 착륙 실행
-        queenAgent.carriedHive.LandHive(targetQ, targetR);
+        queenAgent.carriedHive.StartLandSequence(targetQ, targetR);
     }
 
     private static bool IsValidLandingSpot(int q, int r, UnitAgent queen)
