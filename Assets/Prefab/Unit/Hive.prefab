@@ -302,9 +302,14 @@ MonoBehaviour:
   maxWorkers: 5
   isRelocating: 0
   queenBee: {fileID: 0}
+  carrySpeedMultiplier: 0.5
   hiveCommands: []
   showDebugLogs: 0
   relocateTimerText: {fileID: 0}
+  isFloating: 0
+  castTime: 3
+  hiveVisual: {fileID: 720862236735752768}
+  carriedColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
 --- !u!114 &3967588261141244112
 MonoBehaviour:
   m_ObjectHideFlags: 0

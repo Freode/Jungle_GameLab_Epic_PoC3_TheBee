@@ -924,4 +924,74 @@ public class HiveManager : MonoBehaviour
             yield return new WaitForSeconds(0.05f);
         }
     }
+    public bool HasPlayerHive()
+    {
+        foreach (var hive in GetAllHives())
+        {
+            // 하이브의 UnitAgent를 가져와서 팩션 확인
+            var agent = hive.GetComponent<UnitAgent>();
+            if (agent != null && agent.faction == Faction.Player)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    private Coroutine constructionRoutine;
+
+    public void StartConstructionCasting(UnitAgent builder, float duration, System.Action onComplete)
+    {
+        if (constructionRoutine != null)
+        {
+            if (NotificationToast.Instance != null) NotificationToast.Instance.ShowMessage("이미 건설 작업 중입니다.", 1.5f);
+            return;
+        }
+
+        constructionRoutine = StartCoroutine(ConstructionCasting(builder, duration, onComplete));
+    }
+
+    private System.Collections.IEnumerator ConstructionCasting(UnitAgent builder, float duration, System.Action onComplete)
+    {
+        float timer = duration;
+        Vector3 startPos = builder.transform.position; // 건설자(여왕벌)의 시작 위치
+
+        // 시작 알림
+        if (NotificationToast.Instance != null)
+            NotificationToast.Instance.ShowMessage($"{duration}초 뒤 건설합니다. 움직이면 취소됩니다.", 2f);
+        
+        Debug.Log($"[HiveManager] 건설 준비... ({duration}초)");
+
+        while (timer > 0)
+        {
+            // 1. 건설자 사망 체크
+            if (builder == null)
+            {
+                constructionRoutine = null;
+                yield break;
+            }
+
+            // 2. 움직임 체크 (0.1f 이상 이동 시 취소)
+            if (Vector3.Distance(builder.transform.position, startPos) > 0.1f)
+            {
+                if (NotificationToast.Instance != null)
+                    NotificationToast.Instance.ShowMessage("이동하여 건설이 취소되었습니다.", 1.5f);
+                
+                Debug.Log("[HiveManager] 건설자가 움직여서 취소됨.");
+                constructionRoutine = null;
+                yield break;
+            }
+
+            timer -= Time.deltaTime;
+            yield return null;
+        }
+
+        // 완료
+        if (NotificationToast.Instance != null)
+            NotificationToast.Instance.ShowMessage("건설 완료!", 1.5f);
+
+        constructionRoutine = null;
+        
+        // 실제 건설 로직 실행
+        onComplete?.Invoke();
+    }
 }

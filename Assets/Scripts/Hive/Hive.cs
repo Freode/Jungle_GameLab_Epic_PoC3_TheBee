@@ -42,6 +42,13 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     public float castTime = 3.0f; // 3초 카운트다운
     private Coroutine castingRoutine; // 현재 진행 중인 카운트다운 코루틴
 
+    [Header("Visual Settings")]
+    public SpriteRenderer hiveVisual; // ✅ 에디터에서 하이브의 SpriteRenderer를 여기다 드래그해서 넣으세요
+    public Color carriedColor = new Color(0.5f, 0.5f, 0.5f, 1f); // 들어올렸을 때 색상 (회색)
+    private Color savedColor = Color.white;
+
+    public bool IsCasting => castingRoutine != null;
+
     void OnEnable()
     {
         if (TileManager.Instance != null)
@@ -428,7 +435,12 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         // 3. 시각적 처리 (여왕벌 위로)
         transform.SetParent(queenBee.transform);
         //transform.localPosition = new Vector3(0, 1.5f, 0); 
-        
+
+        if (hiveVisual != null) 
+        {
+            savedColor = hiveVisual.color; // 현재 색 기억!
+            hiveVisual.color = carriedColor;
+        }
         // 4. 속도 감소
         var queenController = queenBee.GetComponent<UnitController>();
         if (queenController != null)
@@ -472,6 +484,11 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         // 2. 시각적 처리 (분리 및 배치)
         transform.SetParent(null);
         transform.localScale = Vector3.one; 
+
+        if (hiveVisual != null) 
+        {
+            hiveVisual.color = savedColor;
+        }
         
         // 3. 좌표 이동
         q = newQ; r = newR;
@@ -533,6 +550,7 @@ public void StartLiftSequence()
 
         // 이륙 카운트다운 시작
         castingRoutine = StartCoroutine(CastingRoutine(true, 0, 0));
+        StartCoroutine(RefreshQueenUI());
     }
 public void StartLandSequence(int targetQ, int targetR)
     {
@@ -541,6 +559,7 @@ public void StartLandSequence(int targetQ, int targetR)
 
         // 착륙 카운트다운 시작
         castingRoutine = StartCoroutine(CastingRoutine(false, targetQ, targetR));
+        StartCoroutine(RefreshQueenUI());
     }
 private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
     {
@@ -548,6 +567,10 @@ private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
         Vector3 startPos = queenBee.transform.position; // 시작 위치 저장
         string actionName = isLifting ? "이륙" : "착륙";
 
+        if (NotificationToast.Instance != null)
+        {
+            NotificationToast.Instance.ShowMessage($"{castTime}초 뒤 {actionName}을 시작합니다. 움직이면 취소됩니다.", 2f);
+        }
         // UI 표시
         if (relocateTimerText != null)
         {
@@ -570,7 +593,8 @@ private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
             if (Vector3.Distance(queenBee.transform.position, startPos) > 0.1f)
             {
                 Debug.Log($"[Hive] 여왕벌이 움직여서 {actionName}이(가) 취소되었습니다.");
-                if (NotificationToast.Instance != null) NotificationToast.Instance.ShowMessage("이동하여 작업이 취소되었습니다.", 1.5f);
+                if (NotificationToast.Instance != null) 
+                    NotificationToast.Instance.ShowMessage("이동하여 작업이 취소되었습니다.", 1.5f);
                 
                 // UI에 취소 표시
                 if (relocateTimerText != null)
@@ -598,6 +622,11 @@ private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
         if (relocateTimerText != null) relocateTimerText.gameObject.SetActive(false);
         castingRoutine = null;
 
+        if (NotificationToast.Instance != null)
+        {
+            NotificationToast.Instance.ShowMessage($"{actionName} 완료!", 1.5f);
+        }
+
         if (isLifting) LiftHive();         // 실제 이륙
         else LandHive(targetQ, targetR);   // 실제 착륙
     }
@@ -614,6 +643,23 @@ private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
     void DestroyHive()
     {
         Debug.Log("[하이브 파괴] 하이브가 파괴됩니다.");
+
+        if (isFloating && queenBee != null)
+        {
+            // 1. 여왕벌 속도 복구
+            var queenController = queenBee.GetComponent<UnitController>();
+            if (queenController != null && savedQueenSpeed > 0)
+            {
+                queenController.moveSpeed = savedQueenSpeed;
+                Debug.Log($"[하이브 파괴] 여왕벌 속도 복구됨: {savedQueenSpeed}");
+            }
+
+            // 2. 여왕벌이 들고 있는 하이브 정보 초기화
+            queenBee.carriedHive = null;
+            
+            // 3. (혹시 모르니) UI 갱신
+            StartCoroutine(RefreshQueenUI());
+        }
         
         if (HiveManager.Instance != null)
         {
