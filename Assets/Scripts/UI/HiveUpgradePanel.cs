@@ -20,9 +20,22 @@ public class HiveUpgradePanel : MonoBehaviour
     public Button toggleButton; // ? 토글 버튼 (Inspector에서 할당)
 
     [Header("Commands")]
-    public RectTransform buttonContainer; // 버튼들이 들어갈 컨테이너
+    // New: separate horizontal rows (set these in inspector). If null, fallback to buttonContainer.
+    public RectTransform attackerRow;
+    public RectTransform tankRow;
+    public RectTransform gathererRow;
+    public RectTransform queenRow;
+    public RectTransform hiveRow;
+
+    // NOTE: buttonContainer removed. Assign all row RectTransforms in the Inspector.
+
     public GameObject commandButtonPrefab; // 버튼 프리팹
-    public SOCommand[] hiveCommands; // 하이브 명령들 (Inspector에서 할당)
+    // Per-row command arrays (assign SOs per category in Inspector)
+    public SOCommand[] attackerCommands;
+    public SOCommand[] tankCommands;
+    public SOCommand[] gathererCommands;
+    public SOCommand[] queenCommands;
+    public SOCommand[] hiveCommands; // hive-related commands (flags, range, relocate, etc.)
 
     private bool isOpen = false; // 패널 열림 상태
     private float hiddenXPosition; // 화면 밖 X 위치
@@ -31,6 +44,9 @@ public class HiveUpgradePanel : MonoBehaviour
 
     // time control
     private float previousTimeScale = 1f; // 패널 열기 전 저장된 타임스케일
+
+    // map button GameObject name -> SOCommand for reliable lookup (handles duplicate command.Id)
+    private Dictionary<string, SOCommand> buttonCommandMap = new Dictionary<string, SOCommand>();
 
     void Awake()
     {
@@ -211,83 +227,101 @@ public class HiveUpgradePanel : MonoBehaviour
     /// </summary>
     void RebuildCommands()
     {
-        // 기존 버튼 제거
-        foreach (Transform t in buttonContainer)
+        // 기존 버튼 제거 (모든 row containers)
+        foreach (var row in GetAllRowContainers())
         {
-            Destroy(t.gameObject);
+            if (row == null) continue;
+            foreach (Transform t in row)
+            {
+                Destroy(t.gameObject);
+            }
         }
 
-        if (hiveCommands == null || hiveCommands.Length == 0)
-        {
-            Debug.LogWarning("[업그레이드 패널] hiveCommands가 비어있습니다!");
-            return;
-        }
+        // clear mapping
+        buttonCommandMap.Clear();
+        
+        int created = 0;
 
-        // 하이브 찾기 (명령 실행 시 필요)
+        // find hive and hiveAgent for availability checks
         Hive hive = FindPlayerHive();
         UnitAgent hiveAgent = hive != null ? hive.GetComponent<UnitAgent>() : null;
 
         // 명령 버튼 생성
-        foreach (var cmd in hiveCommands)
+        // iterate per-row arrays and instantiate into correct row
+        void InstantiateCommandsIntoRow(SOCommand[] cmds, RectTransform row)
         {
-            if (cmd == null) continue;
-
-            var command = cmd; // 클로저 캡처 방지
-            var btnObj = Instantiate(commandButtonPrefab, buttonContainer);
-            btnObj.name = "cmd_" + command.Id;
-
-            var btn = btnObj.GetComponentInChildren<Button>();
-            var img = btnObj.GetComponentInChildren<Image>();
-            var tmp = btnObj.GetComponentInChildren<TextMeshProUGUI>();
-            var txt = btnObj.GetComponentInChildren<Text>();
-
-            // 아이콘 설정
-            if (img != null) img.sprite = command.Icon;
-
-            // 텍스트 설정
-            string buttonText = command.DisplayName;
-
-            // SOUpgradeCommand인 경우 레벨/비용 표시
-            if (cmd is SOUpgradeCommand upgradeCmd)
+            if (cmds == null || row == null) return;
+            foreach (var cmd in cmds)
             {
-                int currentCost = upgradeCmd.GetCurrentCost();
-                int currentLevel = upgradeCmd.GetCurrentLevel();
-                int maxLv = upgradeCmd.maxLevel;
+                if (cmd == null) continue;
+                var command = cmd;
+                var btnObj = Instantiate(commandButtonPrefab, row);
+                // ensure unique button name even if multiple commands share the same Id
+                string uniqueName = "cmd_" + command.Id + "_" + System.Guid.NewGuid().ToString("N");
+                btnObj.name = uniqueName;
+                // register mapping
+                buttonCommandMap[uniqueName] = command;
 
-                string levelText = maxLv > 0
-                    ? $" (Lv.<color=#00FF00>{currentLevel}</color>/{maxLv})"
-                    : $" (Lv.<color=#00FF00>{currentLevel}</color>)";
+                var btn = btnObj.GetComponentInChildren<Button>();
+                var img = btnObj.GetComponentInChildren<Image>();
+                var tmp = btnObj.GetComponentInChildren<TextMeshProUGUI>();
+                var txt = btnObj.GetComponentInChildren<Text>();
 
-                if (currentCost > 0)
+                if (img != null) img.sprite = command.Icon;
+
+                string buttonText = command.DisplayName;
+                if (command is SOUpgradeCommand upgradeCmd)
                 {
-                    buttonText += $"\n꿀: <color=#FFFF00>{currentCost}</color>{levelText}";
+                    int currentCost = upgradeCmd.GetCurrentCost();
+                    int currentLevel = upgradeCmd.GetCurrentLevel();
+                    int maxLv = upgradeCmd.maxLevel;
+                    string levelText = maxLv > 0
+                        ? $" (Lv.<color=#00FF00>{currentLevel}</color>/{maxLv})"
+                        : $" (Lv.<color=#00FF00>{currentLevel}</color>)";
+                    if (currentCost > 0)
+                        buttonText += $"\n꿀: <color=#FFFF00>{currentCost}</color>{levelText}";
+                    else
+                        buttonText += $"\n최대 레벨{levelText}";
                 }
-                else
+                else if (!string.IsNullOrEmpty(command.CostText))
                 {
-                    buttonText += $"\n최대 레벨{levelText}";
+                    buttonText += $"\n{command.CostText}";
                 }
-            }
-            else if (!string.IsNullOrEmpty(cmd.CostText))
-            {
-                buttonText += $"\n{cmd.CostText}";
-            }
 
-            if (tmp != null)
-                tmp.text = buttonText;
-            else if (txt != null)
-                txt.text = buttonText;
+                if (tmp != null) tmp.text = buttonText;
+                else if (txt != null) txt.text = buttonText;
 
-            // 버튼 활성화 상태
-            bool avail = hiveAgent != null && command.IsAvailable(hiveAgent);
-            if (btn != null)
-            {
-                btn.interactable = avail;
-                btn.onClick.RemoveAllListeners();
-                btn.onClick.AddListener(() => HandleCommandButtonClick(command));
+                bool avail = hiveAgent != null && command.IsAvailable(hiveAgent);
+                if (btn != null)
+                {
+                    btn.interactable = avail;
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener(() => HandleCommandButtonClick(command));
+                }
+                created++;
             }
         }
 
-        Debug.Log($"[업그레이드 패널] 명령 버튼 {hiveCommands.Length}개 생성 완료");
+        // instantiate into each configured row (no legacy fallback - rows must be assigned)
+        if (attackerRow != null) InstantiateCommandsIntoRow(attackerCommands, attackerRow); else Debug.LogWarning("[업그레이드 패널] attackerRow가 할당되지 않았습니다.");
+        if (tankRow != null) InstantiateCommandsIntoRow(tankCommands, tankRow); else Debug.LogWarning("[업그레이드 패널] tankRow가 할당되지 않았습니다.");
+        if (gathererRow != null) InstantiateCommandsIntoRow(gathererCommands, gathererRow); else Debug.LogWarning("[업그레이드 패널] gathererRow가 할당되지 않았습니다.");
+        if (queenRow != null) InstantiateCommandsIntoRow(queenCommands, queenRow); else Debug.LogWarning("[업그레이드 패널] queenRow가 할당되지 않았습니다.");
+        if (hiveRow != null) InstantiateCommandsIntoRow(hiveCommands, hiveRow); else Debug.LogWarning("[업그레이드 패널] hiveRow가 할당되지 않았습니다.");
+
+        Debug.Log($"[업그레이드 패널] 명령 버튼 {created}개 생성 완료");
+    }
+
+    // Return all configured row containers (fallback to single container if provided)
+    RectTransform[] GetAllRowContainers()
+    {
+        var list = new List<RectTransform>();
+        if (attackerRow != null) list.Add(attackerRow);
+        if (tankRow != null) list.Add(tankRow);
+        if (gathererRow != null) list.Add(gathererRow);
+        if (queenRow != null) list.Add(queenRow);
+        if (hiveRow != null) list.Add(hiveRow);
+        return list.ToArray();
     }
 
     /// <summary>
@@ -354,76 +388,76 @@ public class HiveUpgradePanel : MonoBehaviour
             Debug.LogWarning("[업그레이드 패널] 하이브를 찾을 수 없어 버튼 상태를 새로고침할 수 없습니다.");
             
             // 하이브가 없어도 버튼 비활성화는 해야 함
-            foreach (Transform t in buttonContainer)
+            foreach (var row in GetAllRowContainers())
             {
-                var btn = t.GetComponentInChildren<Button>();
-                if (btn != null)
+                if (row == null) continue;
+                foreach (Transform t in row)
                 {
-                    btn.interactable = false;
+                    var btn = t.GetComponentInChildren<Button>();
+                    if (btn != null)
+                    {
+                        btn.interactable = false;
+                    }
                 }
             }
             return;
         }
 
         // 모든 버튼 상태 업데이트
-        foreach (Transform t in buttonContainer)
+        foreach (var row in GetAllRowContainers())
         {
-            var btn = t.GetComponentInChildren<Button>();
-            if (btn == null) continue;
-
-            // 명령 찾기
-            string btnName = t.name;
-            if (btnName.StartsWith("cmd_"))
+            if (row == null) continue;
+            foreach (Transform t in row)
             {
-                string cmdId = btnName.Substring(4);
-                foreach (var cmd in hiveCommands)
+                var btn = t.GetComponentInChildren<Button>();
+                if (btn == null) continue;
+
+                // 명령 찾기
+                string btnName = t.name;
+                if (!btnName.StartsWith("cmd_")) continue;
+                // lookup mapped command for this specific button
+                if (!buttonCommandMap.TryGetValue(btnName, out SOCommand mappedCmd)) continue;
+
+                // 활성화 상태 업데이트
+                btn.interactable = mappedCmd.IsAvailable(hiveAgent);
+
+                // 텍스트 업데이트
+                var tmp = t.GetComponentInChildren<TextMeshProUGUI>();
+                var txt = t.GetComponentInChildren<Text>();
+
+                string buttonText = mappedCmd.DisplayName;
+
+                if (mappedCmd is SOUpgradeCommand upgradeCmd)
                 {
-                    if (cmd != null && cmd.Id == cmdId)
+                    int currentCost = upgradeCmd.GetCurrentCost();
+                    int currentLevel = upgradeCmd.GetCurrentLevel();
+                    int maxLv = upgradeCmd.maxLevel;
+
+                    string levelText = maxLv > 0
+                        ? $" (Lv.<color=#00FF00>{currentLevel}</color>/{maxLv})"
+                        : $" (Lv.<color=#00FF00>{currentLevel}</color>)";
+
+                    if (currentCost > 0)
                     {
-                        // 활성화 상태 업데이트
-                        btn.interactable = cmd.IsAvailable(hiveAgent);
-
-                        // 텍스트 업데이트
-                        var tmp = t.GetComponentInChildren<TextMeshProUGUI>();
-                        var txt = t.GetComponentInChildren<Text>();
-
-                        string buttonText = cmd.DisplayName;
-
-                        if (cmd is SOUpgradeCommand upgradeCmd)
-                        {
-                            int currentCost = upgradeCmd.GetCurrentCost();
-                            int currentLevel = upgradeCmd.GetCurrentLevel();
-                            int maxLv = upgradeCmd.maxLevel;
-
-                            string levelText = maxLv > 0
-                                ? $" (Lv.<color=#00FF00>{currentLevel}</color>/{maxLv})"
-                                : $" (Lv.<color=#00FF00>{currentLevel}</color>)";
-
-                            if (currentCost > 0)
-                            {
-                                buttonText += $"\n꿀: <color=#FFFF00>{currentCost}</color>{levelText}";
-                            }
-                            else
-                            {
-                                buttonText += $"\n최대 레벨{levelText}";
-                            }
-                        }
-                        else if (!string.IsNullOrEmpty(cmd.CostText))
-                        {
-                            buttonText += $"\n{cmd.CostText}";
-                        }
-
-                        if (tmp != null)
-                            tmp.text = buttonText;
-                        else if (txt != null)
-                            txt.text = buttonText;
-
-                        break;
+                        buttonText += $"\n꿀: <color=#FFFF00>{currentCost}</color>{levelText}";
+                    }
+                    else
+                    {
+                        buttonText += $"\n최대 레벨{levelText}";
                     }
                 }
+                else if (!string.IsNullOrEmpty(mappedCmd.CostText))
+                {
+                    buttonText += $"\n{mappedCmd.CostText}";
+                }
+
+                if (tmp != null)
+                    tmp.text = buttonText;
+                else if (txt != null)
+                    txt.text = buttonText;
             }
         }
-        
+
         Debug.Log("[업그레이드 패널] 버튼 상태 새로고침 완료");
     }
 
@@ -448,4 +482,15 @@ public class HiveUpgradePanel : MonoBehaviour
 
         return null;
     }
+    // Return all commands defined across the per-row arrays
+    SOCommand[] GetAllCommandsFromRows()
+    {
+        var list = new List<SOCommand>();
+        if (attackerCommands != null) list.AddRange(attackerCommands);
+        if (tankCommands != null) list.AddRange(tankCommands);
+        if (gathererCommands != null) list.AddRange(gathererCommands);
+        if (queenCommands != null) list.AddRange(queenCommands);
+        if (hiveCommands != null) list.AddRange(hiveCommands);
+         return list.ToArray();
+     }
 }

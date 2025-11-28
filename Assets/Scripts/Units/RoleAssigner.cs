@@ -12,7 +12,7 @@ public enum UnitRole
     Normal,
 }
 
-public enum RoleType { Attacker, Gatherer, Tank }
+// RoleType enum moved to Assets/Scripts/Units/RoleType.cs to be shared with ScriptableObjects
 
 [System.Serializable]
 public class RoleStats
@@ -236,7 +236,14 @@ public class RoleAssigner : MonoBehaviour, IUnitCommandProvider
         // apply movement speed multiplier if UnitController exists
         if (controller != null)
         {
-            controller.moveSpeed = baseMoveSpeed * stats.moveSpeedMultiplier;
+            // Apply role multiplier to the unit's baseMoveSpeed and include HiveManager per-role speed bonuses
+            float roleBonus = 0f;
+            if (HiveManager.Instance != null)
+            {
+                roleBonus = HiveManager.Instance.GetWorkerSpeedBonusForRole(r);
+            }
+
+            controller.moveSpeed = (baseMoveSpeed + roleBonus) * stats.moveSpeedMultiplier;
         }
 
         Debug.Log($"[RoleAssigner] {gameObject.name} role applied: {r}");
