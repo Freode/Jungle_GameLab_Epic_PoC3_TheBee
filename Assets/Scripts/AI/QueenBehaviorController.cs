@@ -12,9 +12,18 @@ public class QueenBehaviorController : UnitBehaviorController, IUnitCommandProvi
     [Header("여왕벌 명령")]
     public SOCommand[] queenCommands; // 여왕벌 전용 명령 (Inspector에서 할당)
     
+    [Header("여왕벌 하이브 위 회복")]
+    [Tooltip("여왕이 하이브 위에 있을 때 회복 주기(초)")]
+    public float queenHealInterval = 1.0f;
+    [Tooltip("여왕이 하이브 위에 있을 때 주기당 회복량")]
+    public int queenHealAmount = 1;
+
+    private float healTimer = 0f;
+    
     void Update()
     {
         // 기본 Update는 실행하지 않음 (Idle 이동, 적 감지 등 불필요)
+        HandleHealingOnHive();
     }
 
     /// <summary>
@@ -73,5 +82,33 @@ public class QueenBehaviorController : UnitBehaviorController, IUnitCommandProvi
         }
         
         return commands;
+    }
+
+    /// <summary>
+    /// 여왕이 하이브 위에 있을 때 주기적으로 체력 회복
+    /// </summary>
+    private void HandleHealingOnHive()
+    {
+        if (agent == null || agent.homeHive == null) return;
+
+        // 같은 타일에 있는지 체크
+        if (agent.q == agent.homeHive.q && agent.r == agent.homeHive.r)
+        {
+            healTimer += Time.deltaTime;
+            if (healTimer >= queenHealInterval)
+            {
+                var combat = agent.GetComponent<CombatUnit>();
+                if (combat != null)
+                {
+                    combat.SetHealth(combat.health + queenHealAmount);
+                    Debug.Log($"[여왕 회복] 하이브 위 회복: +{queenHealAmount} (현재 {combat.health}/{combat.maxHealth})");
+                }
+                healTimer = 0f;
+            }
+        }
+        else
+        {
+            healTimer = 0f;
+        }
     }
 }
