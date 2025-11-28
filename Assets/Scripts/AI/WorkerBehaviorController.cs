@@ -157,9 +157,18 @@ public class WorkerBehaviorController : UnitBehaviorController
 
             if (agent != null)
             {
-                Vector3 randomPos = TileHelper.GetRandomPositionInTile(agent.q, agent.r, agent.hexSize, 0.3f);
-                var moveCoroutine = StartCoroutine(MoveToPositionSmooth(randomPos, 0.5f));
-                activeCoroutines.Add(moveCoroutine);
+                // Use UnitController's intra-tile movement to keep movement speed consistent with role-based moveSpeed
+                if (mover != null)
+                {
+                    var c = StartCoroutine(PerformMoverWithinCurrentTile());
+                    activeCoroutines.Add(c);
+                }
+                else
+                {
+                    Vector3 randomPos = TileHelper.GetRandomPositionInTile(agent.q, agent.r, agent.hexSize, 0.3f);
+                    var moveCoroutine = StartCoroutine(MoveToPositionSmooth(randomPos, 0.5f));
+                    activeCoroutines.Add(moveCoroutine);
+                }
             }
 
             yield return new WaitForSeconds(0.5f);
@@ -358,6 +367,36 @@ public class WorkerBehaviorController : UnitBehaviorController
 
         Debug.Log($"[Worker State] 자원 채취 시작: ({targetTile.q}, {targetTile.r})");
 
+        // Ensure UnitController finished arriving to avoid visual teleport
+        // Wait one frame then wait until mover reports not moving
+        yield return null;
+        if (mover != null)
+        {
+            int safety = 0;
+            while (mover.IsMoving() && safety < 60)
+            {
+                // wait up to ~1s (60 frames)
+                yield return null;
+                safety++;
+            }
+
+            // stop any small local coroutines we started to avoid conflicting transforms
+            foreach (var c in activeCoroutines)
+            {
+                if (c != null) StopCoroutine(c);
+            }
+            activeCoroutines.Clear();
+
+            // clear mover path so controller won't start new tile moves
+            mover.ClearPath();
+
+            // Ensure logical tile coords are set (some systems rely on agent.q/r)
+            agent.SetPosition(targetTile.q, targetTile.r);
+
+            // short settle pause to let other systems finish without moving the transform
+            yield return new WaitForSeconds(0.05f);
+        }
+
         float elapsed = 0f;
         while (elapsed < gatheringDuration)
         {
@@ -371,9 +410,17 @@ public class WorkerBehaviorController : UnitBehaviorController
 
             if (elapsed % 0.5f < 0.1f)
             {
-                Vector3 randomPos = TileHelper.GetRandomPositionInTile(targetTile.q, targetTile.r, agent.hexSize, 0.2f);
-                var moveCoroutine = StartCoroutine(MoveToPositionSmooth(randomPos, 0.3f));
-                activeCoroutines.Add(moveCoroutine);
+                if (mover != null)
+                {
+                    var c = StartCoroutine(PerformMoverWithinCurrentTile());
+                    activeCoroutines.Add(c);
+                }
+                else
+                {
+                    Vector3 randomPos = TileHelper.GetRandomPositionInTile(targetTile.q, targetTile.r, agent.hexSize, 0.2f);
+                    var moveCoroutine = StartCoroutine(MoveToPositionSmooth(randomPos, 0.3f));
+                    activeCoroutines.Add(moveCoroutine);
+                }
             }
 
             elapsed += Time.deltaTime;
@@ -385,31 +432,124 @@ public class WorkerBehaviorController : UnitBehaviorController
         if (gathered > 0)
         {
             isCarryingResource = true;
-            
+
             // ✅ UnitAgent에 자원 보유 상태 전달 (색상 변경)
             if (agent != null)
             {
                 agent.SetCarryingResource(true);
             }
-            
+
             Debug.Log($"[Worker State] 자원 채취 완료: {gathered}");
         }
         else
         {
-            // ✅ 5. 자원 채취 실패 (자원량 0) - 하이브로 복귀
-            Debug.Log($"[Worker State] 자원 채취 실패 (자원 없음), 하이브로 복귀");
+            // ✅ 5. 자원 채취 실패 (자원량 0) - 우선 페르몬 위치로 이동, 없으면 하이브로 복귀
+            Debug.Log($"[Worker State] 자원 채취 실패 (자원 없음), 페르몬 또는 하이브로 복귀 시도");
             lastGatherTile = null; // 타일 정보 초기화
-            
-            if (agent.homeHive != null)
+
+            bool movedToPheromone = false;
+            if (!agent.hasManualOrder && PheromoneManager.Instance != null)
             {
-                targetTile = TileManager.Instance.GetTile(agent.homeHive.q, agent.homeHive.r);
-                TransitionToState(WorkerState.Moving);
+                WorkerSquad workerSquad = WorkerSquad.None;
+                if (HiveManager.Instance != null)
+                {
+                    foreach (WorkerSquad squad in System.Enum.GetValues(typeof(WorkerSquad)))
+                    {
+                        if (squad == WorkerSquad.None) continue;
+                        var squadWorkers = HiveManager.Instance.GetSquadWorkers(squad);
+                        if (squadWorkers.Contains(agent))
+                        {
+                            workerSquad = squad;
+                            break;
+                        }
+                    }
+                }
+
+                var pheromonePos = PheromoneManager.Instance.GetCurrentPheromonePosition(workerSquad);
+                if (pheromonePos.HasValue)
+                {
+                    int pheroQ = pheromonePos.Value.x;
+                    int pheroR = pheromonePos.Value.y;
+
+                    if (agent.homeHive != null)
+                    {
+                        int distanceToHive = Pathfinder.AxialDistance(agent.homeHive.q, agent.homeHive.r, pheroQ, pheroR);
+                        if (distanceToHive <= activityRadius)
+                        {
+                            Debug.Log($"[Worker State] 채취 실패 후 페르몬 위치로 이동 ({pheroQ}, {pheroR})");
+                            targetTile = TileManager.Instance.GetTile(pheroQ, pheroR);
+                            TransitionToState(WorkerState.Moving);
+                            movedToPheromone = true;
+                        }
+                    }
+                    else
+                    {
+                        // no home hive, allow moving to pheromone regardless
+                        Debug.Log($"[Worker State] 채취 실패 후 페르몬 위치로 이동 (무주택): ({pheroQ}, {pheroR})");
+                        targetTile = TileManager.Instance.GetTile(pheroQ, pheroR);
+                        TransitionToState(WorkerState.Moving);
+                        movedToPheromone = true;
+                    }
+                }
             }
-            else
+
+            if (!movedToPheromone)
             {
-                TransitionToState(WorkerState.Idle);
+                if (agent.homeHive != null)
+                {
+                    targetTile = TileManager.Instance.GetTile(agent.homeHive.q, agent.homeHive.r);
+                    TransitionToState(WorkerState.Moving);
+                }
+                else
+                {
+                    TransitionToState(WorkerState.Idle);
+                }
             }
             yield break;
+        }
+
+        // After gathering, if the gathered tile is now empty, prefer assigned pheromone location (if any and in range)
+        if (targetTile != null && targetTile.resourceAmount <= 0 && !agent.hasManualOrder && PheromoneManager.Instance != null)
+        {
+            WorkerSquad workerSquad = WorkerSquad.None;
+            if (HiveManager.Instance != null)
+            {
+                foreach (WorkerSquad squad in System.Enum.GetValues(typeof(WorkerSquad)))
+                {
+                    if (squad == WorkerSquad.None) continue;
+                    var squadWorkers = HiveManager.Instance.GetSquadWorkers(squad);
+                    if (squadWorkers.Contains(agent))
+                    {
+                        workerSquad = squad;
+                        break;
+                    }
+                }
+            }
+
+            var pheromonePos = PheromoneManager.Instance.GetCurrentPheromonePosition(workerSquad);
+            if (pheromonePos.HasValue)
+            {
+                int pheroQ = pheromonePos.Value.x;
+                int pheroR = pheromonePos.Value.y;
+
+                if (agent.homeHive != null)
+                {
+                    int distanceToHive = Pathfinder.AxialDistance(agent.homeHive.q, agent.homeHive.r, pheroQ, pheroR);
+                    if (distanceToHive <= activityRadius)
+                    {
+                        Debug.Log($"[Worker State] 자원 고갈: 페르몬 위치로 이동 ({pheroQ}, {pheroR})");
+                        targetTile = TileManager.Instance.GetTile(pheroQ, pheroR);
+                        TransitionToState(WorkerState.Moving);
+                        yield break;
+                    }
+                }
+                else
+                {
+                    targetTile = TileManager.Instance.GetTile(pheroQ, pheroR);
+                    TransitionToState(WorkerState.Moving);
+                    yield break;
+                }
+            }
         }
 
         if (agent.homeHive != null)
@@ -527,9 +667,17 @@ public class WorkerBehaviorController : UnitBehaviorController
         {
             if (elapsed % 0.3f < 0.1f)
             {
-                Vector3 evadePos = TileHelper.GetRandomPositionInTile(agent.q, agent.r, agent.hexSize, 0.4f);
-                var moveCoroutine = StartCoroutine(MoveToPositionSmooth(evadePos, 0.2f));
-                activeCoroutines.Add(moveCoroutine);
+                if (mover != null)
+                {
+                    var c = StartCoroutine(PerformMoverWithinCurrentTile());
+                    activeCoroutines.Add(c);
+                }
+                else
+                {
+                    Vector3 evadePos = TileHelper.GetRandomPositionInTile(agent.q, agent.r, agent.hexSize, 0.4f);
+                    var moveCoroutine = StartCoroutine(MoveToPositionSmooth(evadePos, 0.2f));
+                    activeCoroutines.Add(moveCoroutine);
+                }
             }
 
             elapsed += Time.deltaTime;
@@ -682,8 +830,16 @@ public class WorkerBehaviorController : UnitBehaviorController
         }
 
         Vector3 randomPos = TileHelper.GetRandomPositionInTile(agent.q, agent.r, agent.hexSize, 0.3f);
-        var moveCoroutine = StartCoroutine(MoveToPositionSmooth(randomPos, 0.5f));
-        activeCoroutines.Add(moveCoroutine);
+        if (mover != null)
+        {
+            var c = StartCoroutine(PerformMoverWithinCurrentTile());
+            activeCoroutines.Add(c);
+        }
+        else
+        {
+            var moveCoroutine = StartCoroutine(MoveToPositionSmooth(randomPos, 0.5f));
+            activeCoroutines.Add(moveCoroutine);
+        }
 
         yield return new WaitForSeconds(0.5f);
 
@@ -699,13 +855,15 @@ public class WorkerBehaviorController : UnitBehaviorController
 
     IEnumerator MoveToPositionSmooth(Vector3 targetPos, float duration)
     {
+        // simple fixed-duration smoothing (do not sync to mover.moveSpeed) to preserve previous visual behavior
         Vector3 startPos = transform.position;
         float elapsed = 0f;
+        float travelTime = Mathf.Max(0.0001f, duration);
 
-        while (elapsed < duration)
+        while (elapsed < travelTime)
         {
             elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / duration);
+            float t = Mathf.Clamp01(elapsed / travelTime);
             transform.position = Vector3.Lerp(startPos, targetPos, t);
             yield return null;
         }
@@ -853,4 +1011,18 @@ public class WorkerBehaviorController : UnitBehaviorController
     }
 
     #endregion
+
+    // helper that asks UnitController to perform an intra-tile move and waits until it's done
+    IEnumerator PerformMoverWithinCurrentTile()
+    {
+        if (mover == null) yield break;
+
+        mover.MoveWithinCurrentTile();
+        int safety = 0;
+        while (mover.IsMoving() && safety < 120)
+        {
+            yield return null;
+            safety++;
+        }
+    }
 }
