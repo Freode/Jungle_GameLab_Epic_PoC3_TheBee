@@ -167,24 +167,24 @@ public class HexTile : MonoBehaviour
         if (resourceAmount > 0)
         {
             // 400 이상: 매우 높음 (진한 노란색)
-            if (resourceAmount >= 1000)
+            if (resourceAmount >= 500)
             {
                 return resourceVeryHighColor;
             }
             // 300~399: 높음 (밝은 노란색)
-            else if (resourceAmount >= 500)
+            else if (resourceAmount >= 300)
             {
                 float t = (resourceAmount - 300) / 100f;
                 return Color.Lerp(resourceHighColor, resourceVeryHighColor, t);
             }
             // 200~299: 중간 (연한 노란색)
-            else if (resourceAmount >= 300)
+            else if (resourceAmount >= 200)
             {
                 float t = (resourceAmount - 200) / 100f;
                 return Color.Lerp(resourceMediumColor, resourceHighColor, t);
             }
             // 100~199: 낮음 (주황색)
-            else if (resourceAmount >= 150)
+            else if (resourceAmount >= 100)
             {
                 float t = (resourceAmount - 100) / 100f;
                 return Color.Lerp(resourceLowColor, resourceMediumColor, t);
@@ -192,7 +192,7 @@ public class HexTile : MonoBehaviour
             // 1~99: 매우 낮음 (진한 주황색)
             else
             {
-                float t = resourceAmount / 100f;
+                float t = resourceAmount / 50f;
                 return Color.Lerp(resourceVeryLowColor, resourceLowColor, t);
             }
         }

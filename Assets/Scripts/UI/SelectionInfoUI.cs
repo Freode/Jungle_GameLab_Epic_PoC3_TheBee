@@ -634,14 +634,32 @@ public class SelectionInfoUI : MonoBehaviour
     /// </summary>
     string GetUnitDisplayName(UnitAgent unit)
     {
-        // 1. UnitAgent의 unitName이 있으면 사용
+        // 1. UnitAgent의 unitName이 설정되어 있는 경우
         if (!string.IsNullOrEmpty(unit.unitName))
         {
             string name = "";
+
+            // Determine role suffix for player workers if applicable
+            string roleSuffix = "";
+            if (unit.faction == Faction.Player && !unit.isQueen)
+            {
+                var roleAssigner = unit.GetComponent<RoleAssigner>();
+                if (roleAssigner != null)
+                {
+                    switch (roleAssigner.role)
+                    {
+                        case RoleType.Gatherer: roleSuffix = "(채취형)"; break;
+                        case RoleType.Attacker: roleSuffix = "(공격형)"; break;
+                        case RoleType.Tank: roleSuffix = "(방어형)"; break;
+                        default: roleSuffix = ""; break;
+                    }
+                }
+            }
+
             switch(unit.faction)
             {
                 case Faction.Player:
-                    name = $"<color=#00FF00>{unit.unitName}</color>";
+                    name = $"<color=#00FF00>{unit.unitName}{roleSuffix}</color>";
                     break;
                 case Faction.Enemy:
                     name = $"<color=#FF0000>{unit.unitName}</color>";
@@ -657,7 +675,7 @@ public class SelectionInfoUI : MonoBehaviour
             return name;
         }
 
-        // 2. 기본 타입 이름 생성
+        // 2. 기본 유형 이름 반환
         return GetUnitTypeString(unit);
     }
 
@@ -701,6 +719,23 @@ public class SelectionInfoUI : MonoBehaviour
         // ? 진영별 구분
         if (unit.faction == Faction.Player)
         {
+            // If player worker, include role if available
+            var roleAssigner = unit.GetComponent<RoleAssigner>();
+            if (roleAssigner != null)
+            {
+                switch (roleAssigner.role)
+                {
+                    case RoleType.Gatherer:
+                        return "일꾼 꿀벌(채취형)";
+                    case RoleType.Attacker:
+                        return "일꾼 꿀벌(공격형)";
+                    case RoleType.Tank:
+                        return "일꾼 꿀벌(탱커형)";
+                    default:
+                        return "일꾼 꿀벌";
+                }
+            }
+
             return "일꾼 꿀벌";
         }
         else if (unit.faction == Faction.Enemy)

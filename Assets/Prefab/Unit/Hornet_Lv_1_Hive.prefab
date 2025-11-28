@@ -295,12 +295,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a08076ae41a3aea44bb6530b084b50cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 1250
+  maxHealth: 700
   health: 0
   attack: 0
   attackRange: 0
   attackCooldown: 2
   isInvincible: 0
+  hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  hitFlashDuration: 0.2
 --- !u!114 &2327991700131278507
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -318,6 +320,7 @@ MonoBehaviour:
   waspPrefab: {fileID: 122535924390814216, guid: 89b4dc02468f5354a910195144280032, type: 3}
   spawnInterval: 7
   maxWasps: 5
+  isBossHive: 0
   visionRange: 1
   activityRange: 3
   showDebugLogs: 0

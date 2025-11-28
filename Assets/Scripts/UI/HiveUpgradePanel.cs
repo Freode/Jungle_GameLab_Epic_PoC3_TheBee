@@ -29,6 +29,9 @@ public class HiveUpgradePanel : MonoBehaviour
     private float visibleXPosition; // 화면 안 X 위치
     private float targetXPosition; // 목표 X 위치
 
+    // time control
+    private float previousTimeScale = 1f; // 패널 열기 전 저장된 타임스케일
+
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -70,6 +73,9 @@ public class HiveUpgradePanel : MonoBehaviour
             Debug.LogWarning("[업그레이드 패널] toggleButton이 null입니다!");
         }
 
+        // 초기 타이머 텍스트 설정
+        // Timer is handled by separate GameTimer component
+
         Debug.Log($"[업그레이드 패널] 초기화 완료 - 숨김 위치: {hiddenXPosition}, 보임 위치: {visibleXPosition}");
     }
 
@@ -79,6 +85,12 @@ public class HiveUpgradePanel : MonoBehaviour
         if (HiveManager.Instance != null)
         {
             HiveManager.Instance.OnResourcesChanged -= RefreshButtonStates;
+        }
+
+        // restore timescale if this panel was destroyed while paused
+        if (Time.timeScale == 0f)
+        {
+            Time.timeScale = previousTimeScale > 0f ? previousTimeScale : 1f;
         }
     }
 
@@ -94,13 +106,15 @@ public class HiveUpgradePanel : MonoBehaviour
         float currentX = panelRect.anchoredPosition.x;
         if (Mathf.Abs(currentX - targetXPosition) > 0.1f)
         {
-            float newX = Mathf.Lerp(currentX, targetXPosition, Time.deltaTime * slideSpeed);
+            float newX = Mathf.Lerp(currentX, targetXPosition, Time.unscaledDeltaTime * slideSpeed);
             SetPanelPosition(newX);
         }
         else
         {
             SetPanelPosition(targetXPosition);
         }
+
+        // Timer updating moved to GameTimer component
     }
 
     /// <summary>
@@ -145,6 +159,8 @@ public class HiveUpgradePanel : MonoBehaviour
         isOpen = !isOpen;
         targetXPosition = isOpen ? visibleXPosition : hiddenXPosition;
         Debug.Log($"[업그레이드 패널] {(isOpen ? "열림" : "닫힘")}");
+
+        ApplyPauseState();
     }
 
     /// <summary>
@@ -155,6 +171,7 @@ public class HiveUpgradePanel : MonoBehaviour
         isOpen = true;
         targetXPosition = visibleXPosition;
         Debug.Log("[업그레이드 패널] 열림");
+        ApplyPauseState();
     }
 
     /// <summary>
@@ -165,6 +182,28 @@ public class HiveUpgradePanel : MonoBehaviour
         isOpen = false;
         targetXPosition = hiddenXPosition;
         Debug.Log("[업그레이드 패널] 닫힘");
+        ApplyPauseState();
+    }
+
+    /// <summary>
+    /// 패널 열림 상태에 따라 게임 일시정지/재개 적용
+    /// </summary>
+    void ApplyPauseState()
+    {
+        if (isOpen)
+        {
+            // save previous timescale and pause
+            previousTimeScale = Time.timeScale > 0f ? Time.timeScale : 1f;
+            Time.timeScale = 0f;
+            // ensure UI animations use unscaled time (we used unscaledDeltaTime for sliding)
+            Debug.Log("[업그레이드 패널] 게임 일시정지");
+        }
+        else
+        {
+            // restore previous timescale
+            Time.timeScale = previousTimeScale > 0f ? previousTimeScale : 1f;
+            Debug.Log("[업그레이드 패널] 게임 재개");
+        }
     }
 
     /// <summary>

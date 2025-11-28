@@ -2,37 +2,27 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// 적 유닛(말벌)의 AI 행동 제어
-/// - 시야 범위 내 플레이어 유닛 자동 추적 및 공격
-/// - 하이브 활동 범위 제한
-/// - 타겟 없을 시 하이브 1칸 내에서 순찰
+/// 적 유닛(말벌) AI 총괄
 /// </summary>
 public class EnemyAI : MonoBehaviour
 {
     [Header("AI 설정")]
     [Tooltip("시야 범위 (타일 수)")]
     public int visionRange = 3;
-    
     [Tooltip("하이브 활동 범위 (타일 수)")]
     public int activityRange = 5;
-    
-    [Tooltip("타겟 탐색 주기 (초)")]
+    [Tooltip("스캔 간격 (초)")]
     public float scanInterval = 1f;
-    
-    [Tooltip("공격 범위 (타일 수) - 0이면 같은 타일에서만 공격")]
-    public int attackRange = 0; // 근접 전투
-    
-    [Tooltip("순찰 주기 (초) - 하이브 근처 이동")]
+    [Tooltip("공격 범위 (타일 거리) - 0이면 같은 타일에서만 공격")]
+    public int attackRange = 0;
+    [Tooltip("순찰 간격 (초)")]
     public float patrolInterval = 3f;
 
     [Header("디버그")]
     public bool showDebugLogs = false;
-    
-    // ? 웨이브 공격 말벌 플래그 (활동 거리 무제한)
+
     [HideInInspector]
     public bool isWaveWasp = false;
-    
-    // ? 타겟 하이브 (웨이브 공격용)
     [HideInInspector]
     public Hive targetHive = null;
 
@@ -40,13 +30,13 @@ public class EnemyAI : MonoBehaviour
     private UnitController controller;
     private CombatUnit combat;
     private EnemyHive homeHive;
-    
+
     private UnitAgent currentTarget;
     private float lastScanTime;
     private float lastPatrolTime;
     private bool isChasing = false;
     private bool isPatrolling = false;
-    private bool isMovingToTargetHive = false; // ? 타겟 하이브로 이동 중인지 여부
+    private bool isMovingToTargetHive = false;
 
     void Awake()
     {
@@ -57,75 +47,24 @@ public class EnemyAI : MonoBehaviour
 
     void Start()
     {
-        // 홈 하이브 찾기 (가장 가까운 EnemyHive)
         if (agent != null && agent.faction == Faction.Enemy)
         {
             homeHive = FindNearestEnemyHive();
-            
-            if (showDebugLogs)
-            {
-                if (homeHive != null)
-                    Debug.Log($"[Enemy AI] {agent.name} 홈 하이브 설정: ({homeHive.q}, {homeHive.r})");
-                else
-                    Debug.LogWarning($"[Enemy AI] {agent.name} 홈 하이브를 찾을 수 없습니다!");
-            }
         }
-
         lastScanTime = Time.time;
         lastPatrolTime = Time.time;
     }
 
-    /// <summary>
-    /// 가장 가까운 EnemyHive 찾기
-    /// </summary>
-    EnemyHive FindNearestEnemyHive()
-    {
-        var allHives = FindObjectsOfType<EnemyHive>();
-        EnemyHive nearest = null;
-        int minDistance = int.MaxValue;
-
-        int myQ = agent.q;
-        int myR = agent.r;
-
-        if (showDebugLogs)
-            Debug.Log($"[Enemy AI] {agent.name} 홈 하이브 검색 시작: 현재 위치 ({myQ}, {myR})");
-
-        foreach (var hive in allHives)
-        {
-            if (hive == null) continue;
-
-            int distance = Pathfinder.AxialDistance(myQ, myR, hive.q, hive.r);
-
-            if (showDebugLogs)
-                Debug.Log($"[Enemy AI] 하이브 거리 체크: ({hive.q}, {hive.r}) → 거리: {distance}");
-
-            if (distance < minDistance)
-            {
-                minDistance = distance;
-                nearest = hive;
-            }
-        }
-
-        if (showDebugLogs && nearest != null)
-            Debug.Log($"[Enemy AI] 가장 가까운 하이브: ({nearest.q}, {nearest.r}), 거리: {minDistance}");
-
-        return nearest;
-    }
-
     void Update()
     {
-        // Enemy가 아니면 작동하지 않음
-        if (agent == null || agent.faction != Faction.Enemy)
-            return;
+        if (agent == null || agent.faction != Faction.Enemy) return;
 
-        // 주기적으로 타겟 스캔
         if (Time.time - lastScanTime >= scanInterval)
         {
             lastScanTime = Time.time;
             UpdateBehavior();
         }
 
-        // ? 타겟 없을 때 주기적으로 순찰 (웨이브 말벌 제외)
         if (!isWaveWasp && currentTarget == null && !isChasing && Time.time - lastPatrolTime >= patrolInterval)
         {
             lastPatrolTime = Time.time;
@@ -214,6 +153,15 @@ public class EnemyAI : MonoBehaviour
                 bool canAttack = combat != null && combat.CanAttack();
                 if (canAttack)
                 {
+                    // Re-evaluate priority: prefer tank-role workers on the tile before attacking
+                    var prioritized = FindTankOnTile(currentTarget.q, currentTarget.r);
+                    if (prioritized != null && prioritized != currentTarget)
+                    {
+                        if (showDebugLogs) Debug.Log($"[Enemy AI] 탱크 유닛 발견. 공격 대상 변경: {prioritized.name}");
+                        currentTarget = prioritized;
+                        isChasing = true;
+                    }
+
                     Attack(currentTarget);
                     if (showDebugLogs)
                         Debug.Log($"[Enemy AI] 하이브 공격! 거리: {distanceToTarget}");
@@ -233,6 +181,14 @@ public class EnemyAI : MonoBehaviour
 
             if (distanceToTarget <= attackRange)
             {
+                // Re-evaluate priority on the tile before attacking
+                var prioritized = FindTankOnTile(currentTarget.q, currentTarget.r);
+                if (prioritized != null && prioritized != currentTarget)
+                {
+                    if (showDebugLogs) Debug.Log($"[Enemy AI] 탱크 유닛 발견. 공격 대상 변경: {prioritized.name}");
+                    currentTarget = prioritized;
+                }
+
                 if (canAttack2)
                 {
                     Attack(currentTarget);
@@ -289,10 +245,16 @@ public class EnemyAI : MonoBehaviour
                         
                         // ? 즉시 공격 시도
                         bool canAttack = combat != null && combat.CanAttack();
-                        if (canAttack)
+                        
+                        // prefer tank on tile if present
+                        var prioritized = FindTankOnTile(currentTarget.q, currentTarget.r);
+                        if (prioritized != null && prioritized != currentTarget)
                         {
-                            Attack(currentTarget);
+                            if (showDebugLogs) Debug.Log($"[Enemy AI] 탱크 유닛 발견. 공격 대상 변경: {prioritized.name}");
+                            currentTarget = prioritized;
                         }
+
+                        if (canAttack) Attack(currentTarget);
                         
                         // ? return 제거 - 다음 프레임에 "적 타겟이 있는 경우" 로직으로 계속 공격
                         return;
@@ -333,6 +295,33 @@ public class EnemyAI : MonoBehaviour
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// 현재 타일에 탱커형 일꾼이 있는지 검사하고 반환
+    /// </summary>
+    UnitAgent FindTankOnTile(int q, int r)
+    {
+        if (TileManager.Instance == null) return null;
+
+        foreach (var unit in TileManager.Instance.GetAllUnits())
+        {
+            if (unit == null) continue;
+            if (unit.faction != Faction.Player) continue;
+            if (unit.q != q || unit.r != r) continue;
+
+            var roleAssigner = unit.GetComponent<RoleAssigner>();
+            if (roleAssigner != null && roleAssigner.role == RoleType.Tank)
+            {
+                var combatUnit = unit.GetComponent<CombatUnit>();
+                if (combatUnit != null && !combatUnit.isInvincible && combatUnit.health > 0)
+                {
+                    return unit;
+                }
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -653,6 +642,15 @@ public class EnemyAI : MonoBehaviour
     {
         if (target == null || combat == null) return;
 
+        // Before each attack attempt, re-evaluate the best target on the same tile
+        var prioritized = FindTankOnTile(target.q, target.r);
+        if (prioritized != null && prioritized != target)
+        {
+            if (showDebugLogs) Debug.Log($"[Enemy AI] 우선순위 재탐색: 탱커 발견, 공격 대상 변경 -> {prioritized.name}");
+            currentTarget = prioritized;
+            target = prioritized;
+        }
+
         var targetCombat = target.GetComponent<CombatUnit>();
         if (targetCombat == null) return;
 
@@ -667,15 +665,13 @@ public class EnemyAI : MonoBehaviour
             // 타겟이 죽었으면 추격 중단
             if (targetCombat.health <= 0)
             {
-                if (showDebugLogs)
-                    Debug.Log($"[Enemy AI] 타겟 처치!");
+                if (showDebugLogs) Debug.Log($"[Enemy AI] 타겟 처치!");
                 StopChasing();
             }
         }
         else
         {
-            if (showDebugLogs)
-                Debug.Log($"[Enemy AI] 공격 쿨타임 중...");
+            if (showDebugLogs) Debug.Log($"[Enemy AI] 공격 쿨타임 중...");
         }
     }
 
@@ -827,5 +823,33 @@ public class EnemyAI : MonoBehaviour
             Vector3 targetPos = TileHelper.HexToWorld(currentTarget.q, currentTarget.r, 0.5f);
             Gizmos.DrawLine(pos, targetPos);
         }
+    }
+
+    /// <summary>
+    /// 가장 가까운 EnemyHive 찾기
+    /// </summary>
+    EnemyHive FindNearestEnemyHive()
+    {
+        var allHives = FindObjectsOfType<EnemyHive>();
+        EnemyHive nearest = null;
+        int minDistance = int.MaxValue;
+
+        if (TileManager.Instance == null || agent == null) return null;
+
+        int myQ = agent.q;
+        int myR = agent.r;
+
+        foreach (var hive in allHives)
+        {
+            if (hive == null) continue;
+            int d = Pathfinder.AxialDistance(myQ, myR, hive.q, hive.r);
+            if (d < minDistance)
+            {
+                minDistance = d;
+                nearest = hive;
+            }
+        }
+
+        return nearest;
     }
 }
