@@ -15,8 +15,17 @@ public class TileClickMover : MonoBehaviour
     public TextMeshProUGUI debugText; // UI text to show coordinates
 
     // 페르몬 입력 홀드 감지
-    private Dictionary<KeyCode, float> pheromoneKeyDownTimes = new Dictionary<KeyCode, float>();
-    private const float pheromoneHoldThreshold = 0.6f;
+    [Tooltip("페르몬 홀드로 삭제되는 시간(초)")]
+    public float pheromoneHoldThreshold = 1.0f;
+
+    private class PheromoneKeyState
+    {
+        public float downTime;
+        public bool holdTriggered;
+        public bool isDown;
+    }
+
+    private Dictionary<KeyCode, PheromoneKeyState> pheromoneKeyStates = new Dictionary<KeyCode, PheromoneKeyState>();
 
     // If true, moving requires pressing Move in UI first, then clicking a target tile
     public bool requireMoveConfirm = true;
@@ -214,21 +223,35 @@ public class TileClickMover : MonoBehaviour
     {
         if (Input.GetKeyDown(key))
         {
-            pheromoneKeyDownTimes[key] = Time.time;
+            pheromoneKeyStates[key] = new PheromoneKeyState
+            {
+                downTime = Time.time,
+                holdTriggered = false,
+                isDown = true
+            };
+        }
+
+        // 홀드 체크: 누르고 있는 동안 임계시간 경과 시 바로 처리
+        if (Input.GetKey(key))
+        {
+            if (pheromoneKeyStates.TryGetValue(key, out var state) && state.isDown && !state.holdTriggered)
+            {
+                if (Time.time - state.downTime >= pheromoneHoldThreshold)
+                {
+                    state.holdTriggered = true;
+                    pheromoneKeyStates[key] = state;
+                    HandlePheromoneHold(squad);
+                }
+            }
         }
         else if (Input.GetKeyUp(key))
         {
-            if (!pheromoneKeyDownTimes.ContainsKey(key))
+            if (!pheromoneKeyStates.TryGetValue(key, out var state))
                 return;
 
-            float heldTime = Time.time - pheromoneKeyDownTimes[key];
-            pheromoneKeyDownTimes.Remove(key);
+            pheromoneKeyStates.Remove(key);
 
-            if (heldTime >= pheromoneHoldThreshold)
-            {
-                HandlePheromoneHold(squad);
-            }
-            else
+            if (!state.holdTriggered)
             {
                 ExecutePheromoneCommand(squad);
             }

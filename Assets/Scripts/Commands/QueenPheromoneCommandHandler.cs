@@ -400,7 +400,7 @@ public static class QueenPheromoneCommandHandler
             return;
         }
 
-        // 현재 부대 페르몬 목록(추가 순서) 확보
+        // 현재 부대 페르몬 목록(추가 순서) 확보 - FIFO(가장 먼저 뿌린 순서)
         List<Vector2Int> pheromonePositions = new List<Vector2Int>();
         if (PheromoneManager.Instance != null)
         {
@@ -432,6 +432,7 @@ public static class QueenPheromoneCommandHandler
         int baseShare = squadWorkers.Count / pheromonePositions.Count;
         int remainder = squadWorkers.Count % pheromonePositions.Count;
 
+        // FIFO: 가장 먼저 뿌린 페르몬부터 배정
         for (int i = 0; i < pheromonePositions.Count; i++)
         {
             int assignCount = baseShare + (i < remainder ? 1 : 0);
@@ -452,7 +453,7 @@ public static class QueenPheromoneCommandHandler
                 if (workerBehavior != null)
                 {
                     workerBehavior.IssueCommandToTile(targetTile);
-                    Debug.Log($"[페르몬] {worker.name} → ({coord.x}, {coord.y}) 배정");
+                    Debug.Log($"[페르몬] {worker.name} → ({coord.x}, {coord.y}) 배정 (index {i}, base {baseShare}, rem {remainder})");
                 }
             }
         }
