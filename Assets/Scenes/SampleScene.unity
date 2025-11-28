@@ -1335,7 +1335,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -13, y: -68}
-  m_SizeDelta: {x: 300, y: 50}
+  m_SizeDelta: {x: 400, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &975061279
 MonoBehaviour:
@@ -2597,7 +2597,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5514647112281209087, guid: ce4253c5304ed4041a150b9f78347900, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -402
+      value: -403
       objectReference: {fileID: 0}
     - target: {fileID: 6781649431595906806, guid: ce4253c5304ed4041a150b9f78347900, type: 3}
       propertyPath: m_fontAsset
