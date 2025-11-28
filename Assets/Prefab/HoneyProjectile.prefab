@@ -100,3 +100,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb11f2ed28365a849b7290ae55516b20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  minDuration: 3
+  maxDuration: 4
+  arcHeight: 2
+  useShrinkEffect: 1
