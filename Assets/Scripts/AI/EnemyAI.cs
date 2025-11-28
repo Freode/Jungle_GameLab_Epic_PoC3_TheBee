@@ -37,6 +37,7 @@ public class EnemyAI : MonoBehaviour
     private bool isChasing = false;
     private bool isPatrolling = false;
     private bool isMovingToTargetHive = false;
+    private Coroutine rescanAfterCooldownRoutine = null;
 
     void Awake()
     {
@@ -172,6 +173,9 @@ public class EnemyAI : MonoBehaviour
                     EvadeInCurrentTile();
                     if (showDebugLogs)
                         Debug.Log($"[Enemy AI] 공격 쿨타임. 회피 행동.");
+
+                    // schedule re-evaluation when cooldown ends
+                    StartRescanAfterCooldown();
                 }
                 return;
             }
@@ -199,6 +203,8 @@ public class EnemyAI : MonoBehaviour
                     
                     if (showDebugLogs)
                         Debug.Log($"[Enemy AI] 공격 쿨타임. 회피 행동.");
+
+                    StartRescanAfterCooldown();
                 }
                 return;
             }
@@ -255,6 +261,7 @@ public class EnemyAI : MonoBehaviour
                         }
 
                         if (canAttack) Attack(currentTarget);
+                        else StartRescanAfterCooldown();
                         
                         // ? return 제거 - 다음 프레임에 "적 타겟이 있는 경우" 로직으로 계속 공격
                         return;
@@ -414,6 +421,7 @@ public class EnemyAI : MonoBehaviour
 
         List<UnitAgent> workers = new List<UnitAgent>();
         List<UnitAgent> hives = new List<UnitAgent>();
+        List<UnitAgent> tankCandidates = new List<UnitAgent>();
 
         foreach (var unit in TileManager.Instance.GetAllUnits())
         {
@@ -446,11 +454,24 @@ public class EnemyAI : MonoBehaviour
                 else
                 {
                     // 일반 유닛 (꿀벌) - 1순위
+                    // Prefer tank-role candidates first
+                    var ra = unit.GetComponent<RoleAssigner>();
+                    if (ra != null && ra.role == RoleType.Tank)
+                    {
+                        tankCandidates.Add(unit);
+                    }
                     workers.Add(unit);
                 }
             }
         }
 
+        // If any tank-role workers found in vision, prefer closest tank
+        if (tankCandidates.Count > 0)
+        {
+            UnitAgent closestTank = GetClosestPlayerUnit(tankCandidates, "탱커형 일벌");
+            if (closestTank != null) return closestTank;
+        }
+        
         // ? 1순위: 가장 가까운 일반 유닛(꿀벌)
         UnitAgent target = GetClosestPlayerUnit(workers, "일반 유닛");
         
@@ -878,5 +899,29 @@ public class EnemyAI : MonoBehaviour
         }
 
         return nearest;
+    }
+
+    // Schedule re-evaluation after attack cooldown ends
+    void StartRescanAfterCooldown()
+    {
+        if (combat == null) return;
+        float remaining = combat.GetAttackCooldownRemaining();
+        if (remaining <= 0f) return;
+
+        if (rescanAfterCooldownRoutine != null)
+        {
+            StopCoroutine(rescanAfterCooldownRoutine);
+            rescanAfterCooldownRoutine = null;
+        }
+        rescanAfterCooldownRoutine = StartCoroutine(RescanAfterCooldownRoutine(remaining));
+    }
+
+    System.Collections.IEnumerator RescanAfterCooldownRoutine(float wait)
+    {
+        yield return new WaitForSeconds(wait + 0.01f);
+        rescanAfterCooldownRoutine = null;
+
+        // Force immediate behavior update to re-evaluate priorities
+        UpdateBehavior();
     }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// 웨이브 말벌 전용 AI (일반 EnemyAI와 완전 분리)
@@ -24,6 +25,7 @@ public class WaveWaspAI : MonoBehaviour
     private UnitAgent currentTarget; // 현재 공격 대상
     private UnitAgent queenBee; // 여왕벌 (목표)
     private float lastScanTime;
+    private Coroutine rescanAfterCooldownRoutine = null;
     
     void Awake()
     {
@@ -177,6 +179,8 @@ public class WaveWaspAI : MonoBehaviour
             {
                 // 쿨타임 → 회피
                 Evade();
+                // 예약된 재탐색 시작
+                StartRescanAfterCooldown();
             }
         }
         else
@@ -313,6 +317,7 @@ public class WaveWaspAI : MonoBehaviour
         UnitAgent closestHive = null;
         int minWorkerDist = int.MaxValue;
         int minHiveDist = int.MaxValue;
+        List<UnitAgent> tankCandidates = new List<UnitAgent>();
         
         foreach (var unit in TileManager.Instance.GetAllUnits())
         {
@@ -344,12 +349,41 @@ public class WaveWaspAI : MonoBehaviour
                 else
                 {
                     // 일벌
+                    // 우선 탱커 후보 수집
+                    var ra = unit.GetComponent<RoleAssigner>();
+                    if (ra != null && ra.role == RoleType.Tank)
+                    {
+                        tankCandidates.Add(unit);
+                    }
+
                     if (distance < minWorkerDist)
                     {
                         minWorkerDist = distance;
                         closestWorker = unit;
                     }
                 }
+            }
+        }
+
+        // 탱커가 보이면 탱커 우선 (가장 가까운 탱커)
+        if (tankCandidates.Count > 0)
+        {
+            UnitAgent closestTank = null;
+            int minTankDist = int.MaxValue;
+            foreach (var t in tankCandidates)
+            {
+                int d = GetDistance(agent.q, agent.r, t.q, t.r);
+                if (d < minTankDist)
+                {
+                    minTankDist = d;
+                    closestTank = t;
+                }
+            }
+            if (closestTank != null)
+            {
+                if (showDebugLogs)
+                    Debug.Log($"[Wave Wasp] 탱커형 일벌 발견: {closestTank.name}, 거리: {minTankDist}");
+                return closestTank;
             }
         }
         
@@ -427,5 +461,36 @@ public class WaveWaspAI : MonoBehaviour
     int GetDistance(int q1, int r1, int q2, int r2)
     {
         return Pathfinder.AxialDistance(q1, r1, q2, r2);
+    }
+
+    // Schedule a rescan when attack cooldown ends so we can re-evaluate tanks
+    void StartRescanAfterCooldown()
+    {
+        if (combat == null) return;
+        float remaining = combat.GetAttackCooldownRemaining();
+        if (remaining <= 0f) return;
+
+        if (rescanAfterCooldownRoutine != null)
+        {
+            StopCoroutine(rescanAfterCooldownRoutine);
+            rescanAfterCooldownRoutine = null;
+        }
+        rescanAfterCooldownRoutine = StartCoroutine(RescanAfterCooldownRoutine(remaining));
+    }
+
+    System.Collections.IEnumerator RescanAfterCooldownRoutine(float wait)
+    {
+        yield return new WaitForSeconds(wait + 0.01f);
+        rescanAfterCooldownRoutine = null;
+
+        // immediate re-evaluation: find nearest enemy and set as currentTarget
+        var found = FindNearestEnemy();
+        if (found != null)
+        {
+            currentTarget = found;
+            if (showDebugLogs) Debug.Log($"[Wave Wasp] 쿨다운 후 재탐색: 새로운 타겟 {currentTarget.name}");
+            // if in range and can attack, attempt attack immediately
+            AttackTarget();
+        }
     }
 }
