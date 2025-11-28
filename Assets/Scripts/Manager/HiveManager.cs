@@ -35,6 +35,8 @@ public class HiveManager : MonoBehaviour
     public Color squad2Color = Color.green;
     [Tooltip("3번 부대 색상 (파랑)")]
     public Color squad3Color = Color.blue;
+    [Header("Visual Effects")]
+    public GameObject honeyProjectilePrefab; // 꿀 투사체 프리팹
     
     private Dictionary<WorkerSquad, List<UnitAgent>> squadWorkers = new Dictionary<WorkerSquad, List<UnitAgent>>()
     {
@@ -799,5 +801,43 @@ public class HiveManager : MonoBehaviour
         if (worker == null) yield break;
         worker.transform.localScale = Vector3.one * targetScale;
         Debug.Log($"[부대] {worker.name} 스케일 강제 적용: {targetScale}");
+    }
+    /// <summary>
+    /// 자원 강탈 연출 (하이브가 파괴될 때 호출)
+    /// </summary>
+    public void PlayResourceStealEffect(Vector3 fromPos, Vector3 toPos, int amount)
+    {
+        if (honeyProjectilePrefab == null) return;
+
+        // 코루틴 시작 (HiveManager가 살아있는 한 계속 실행됨)
+        StartCoroutine(StealEffectRoutine(fromPos, toPos, amount));
+    }
+
+    System.Collections.IEnumerator StealEffectRoutine(Vector3 fromPos, Vector3 toPos, int amount)
+    {
+        // 1. 생성할 꿀 개수 계산 (10꿀당 1개)
+        int projectileCount = amount / 10;
+        
+        // 너무 적으면 최소 1개, 너무 많으면 최대 30개로 제한 (성능/연출 밸런스)
+        projectileCount = Mathf.Clamp(projectileCount, 1, 30);
+
+        // 2. 순차적으로 생성
+        for (int i = 0; i < projectileCount; i++)
+        {
+            // 시작 위치에 약간의 랜덤성 부여 (겹치지 않게)
+            Vector3 randomOffset = UnityEngine.Random.insideUnitSphere * 0.5f;
+            randomOffset.y = 0; // 높이는 고정
+
+            GameObject honeyObj = Instantiate(honeyProjectilePrefab, fromPos + randomOffset, Quaternion.identity);
+            
+            var projectile = honeyObj.GetComponent<HoneyProjectile>();
+            if (projectile != null)
+            {
+                projectile.Initialize(fromPos + randomOffset, toPos);
+            }
+
+            // 다음 발사까지 아주 짧은 대기 (다다다닥 날아가는 느낌)
+            yield return new WaitForSeconds(0.05f);
+        }
     }
 }

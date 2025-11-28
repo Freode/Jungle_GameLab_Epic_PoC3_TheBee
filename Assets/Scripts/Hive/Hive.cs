@@ -515,6 +515,13 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 {
                     nearestEnemy.stolenResources += stealAmount;
                     Debug.Log($"[하이브 파괴] 꿀 {stealAmount} (50%)가 적 하이브({nearestEnemy.name})로 넘어갔습니다.");
+                    // 내 위치(World 좌표)에서 적 위치(World 좌표)로 꿀 발사
+                    Vector3 myPos = transform.position;
+                    // 적 위치 계산 (Hex 좌표 -> World 좌표)
+                    Vector3 enemyPos = TileHelper.HexToWorld(nearestEnemy.q, nearestEnemy.r, 0.5f); // 0.5f는 hexSize(GameManager확인필요)
+
+                    // HiveManager에게 연출 위임
+                    HiveManager.Instance.PlayResourceStealEffect(myPos, enemyPos, stealAmount);
                 }
                 else
                 {
