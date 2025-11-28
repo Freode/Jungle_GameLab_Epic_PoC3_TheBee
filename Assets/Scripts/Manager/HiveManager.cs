@@ -279,8 +279,13 @@ public class HiveManager : MonoBehaviour
         // apply pheromone command if exists
         if (PheromoneManager.Instance != null)
         {
-            var pher = PheromoneManager.Instance.GetCurrentPheromonePosition(squad);
-            if (pher.HasValue) StartCoroutine(ApplyPheromoneToWorkerDelayed(worker, squad, pher.Value));
+            var pherList = PheromoneManager.Instance.GetPheromonePositionsOrdered(squad);
+            if (pherList != null && pherList.Count > 0)
+            {
+                // 균등 분배를 위한 타겟 선택
+                Vector2Int target = ChooseBalancedPheromoneTarget(squad, pherList);
+                StartCoroutine(ApplyPheromoneToWorkerDelayed(worker, squad, target));
+            }
         }
     }
 
@@ -298,6 +303,55 @@ public class HiveManager : MonoBehaviour
             worker.hasManualTarget = true;
             worker.manualTargetCoord = pheromonePos;
             behavior.IssueCommandToTile(targetTile);
+        }
+    }
+
+    /// <summary>
+    /// 페로몬 목록 중 가장 균등한 타겟 좌표 선택 (현재 부대 배치 기반)
+    /// </summary>
+    private Vector2Int ChooseBalancedPheromoneTarget(WorkerSquad squad, List<Vector2Int> pheromonePositions)
+    {
+        if (pheromonePositions == null || pheromonePositions.Count == 0)
+        {
+            return pheromonePosFallback();
+        }
+
+        Dictionary<Vector2Int, int> counts = new Dictionary<Vector2Int, int>();
+        foreach (var pos in pheromonePositions)
+        {
+            if (!counts.ContainsKey(pos)) counts[pos] = 0;
+        }
+
+        // 기존 부대원의 목표 카운트
+        var squadWorkers = GetSquadWorkers(squad);
+        foreach (var w in squadWorkers)
+        {
+            if (w == null) continue;
+            if (w.hasManualTarget && counts.ContainsKey(w.manualTargetCoord))
+            {
+                counts[w.manualTargetCoord]++;
+            }
+        }
+
+        int minCount = int.MaxValue;
+        foreach (var val in counts.Values)
+        {
+            if (val < minCount) minCount = val;
+        }
+
+        foreach (var pos in pheromonePositions)
+        {
+            if (counts[pos] == minCount)
+            {
+                return pos;
+            }
+        }
+
+        return pheromonePosFallback();
+
+        Vector2Int pheromonePosFallback()
+        {
+            return pheromonePositions != null && pheromonePositions.Count > 0 ? pheromonePositions[0] : Vector2Int.zero;
         }
     }
 
