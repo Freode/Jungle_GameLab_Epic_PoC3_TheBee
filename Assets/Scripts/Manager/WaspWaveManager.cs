@@ -143,7 +143,7 @@ public class WaspWaveManager : MonoBehaviour
     /// <summary>
     /// 플레이어 하이브에서 가장 가까운 적 하이브 찾기 (일반 말벌집만)
     /// </summary>
-    EnemyHive FindNearestEnemyHive(Hive playerHive)
+    public EnemyHive FindNearestEnemyHive(Hive playerHive)
     {
         if (playerHive == null || enemyHives.Count == 0) return null;
 
