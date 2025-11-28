@@ -424,6 +424,16 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
 
         Debug.Log("[Hive] 카운트다운 완료! 하이브 이륙.");
 
+        // Clear all placed pheromones when lifting
+        if (PheromoneManager.Instance != null)
+        {
+            PheromoneManager.Instance.ClearAllPheromones();
+            Debug.Log("[Hive] 이륙: 모든 페르몬 제거");
+        }
+        
+        // Also cancel any current pheromone command
+        QueenPheromoneCommandHandler.CancelCurrentPheromoneCommand();
+
         // 1. 상태 변경
         isFloating = true;
         if (spawnRoutine != null) StopCoroutine(spawnRoutine);
@@ -478,6 +488,13 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
 
         Debug.Log($"[Hive] 카운트다운 완료! 하이브 착륙: ({newQ}, {newR})");
 
+        // Clear any pheromones when landing as well
+        if (PheromoneManager.Instance != null)
+        {
+            PheromoneManager.Instance.ClearAllPheromones();
+            Debug.Log("[Hive] 착륙: 모든 페르몬 제거");
+        }
+        
         // 1. 상태 변경
         isFloating = false;
 
