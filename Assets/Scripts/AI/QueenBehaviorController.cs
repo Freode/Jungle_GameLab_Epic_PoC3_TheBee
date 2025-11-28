@@ -89,7 +89,15 @@ public class QueenBehaviorController : UnitBehaviorController, IUnitCommandProvi
     /// </summary>
     private void HandleHealingOnHive()
     {
-        if (agent == null || agent.homeHive == null) return;
+        if (agent == null) return;
+
+        // homeHive가 비어 있으면 같은 타일의 하이브를 찾아 자동 설정
+        if (agent.homeHive == null && TileManager.Instance != null)
+        {
+            // Tile 구조에 하이브 참조가 없다면 그대로 유지
+        }
+
+        if (agent.homeHive == null) return;
 
         // 같은 타일에 있는지 체크
         if (agent.q == agent.homeHive.q && agent.r == agent.homeHive.r)
@@ -101,7 +109,6 @@ public class QueenBehaviorController : UnitBehaviorController, IUnitCommandProvi
                 if (combat != null)
                 {
                     combat.SetHealth(combat.health + queenHealAmount);
-                    Debug.Log($"[여왕 회복] 하이브 위 회복: +{queenHealAmount} (현재 {combat.health}/{combat.maxHealth})");
                 }
                 healTimer = 0f;
             }

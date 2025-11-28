@@ -24,6 +24,12 @@ public class CombatUnit : MonoBehaviour
     [Tooltip("플래시 지속 시간")]
     public float hitFlashDuration = 0.2f;
 
+    [Header("여왕 하이브 회복")]
+    [Tooltip("여왕이 하이브 위에 있을 때 회복 주기(초)")]
+    public float queenHealInterval = 1.0f;
+    [Tooltip("여왕이 하이브 위에 있을 때 주기당 회복량")]
+    public int queenHealAmount = 1;
+
     private float lastAttackTime = -999f; // 마지막 공격 시간
     private UnitAgent agent;
     private SpriteRenderer spriteRenderer;
@@ -31,6 +37,7 @@ public class CombatUnit : MonoBehaviour
     private Color originalColor;
     private MaterialPropertyBlock mpb;
     private Coroutine hitFlashCoroutine;
+    private float queenHealTimer = 0f;
 
     // 체력/공격력 변경 이벤트
     public event System.Action OnStatsChanged;
@@ -80,6 +87,11 @@ public class CombatUnit : MonoBehaviour
                 }
             }
         }
+    }
+
+    void Update()
+    {
+        HandleQueenHealOnHive();
     }
 
     /// <summary>
@@ -298,6 +310,27 @@ public class CombatUnit : MonoBehaviour
         attackCooldownMultiplier = Mathf.Max(0.0001f, multiplier);
         attackCooldown = baseAttackCooldown * attackCooldownMultiplier;
         OnStatsChanged?.Invoke();
+    }
+
+    private void HandleQueenHealOnHive()
+    {
+        if (agent == null || !agent.isQueen) return;
+        if (agent.homeHive == null) return;
+
+        // 같은 타일에 있을 때만 회복
+        if (agent.q == agent.homeHive.q && agent.r == agent.homeHive.r)
+        {
+            queenHealTimer += Time.deltaTime;
+            if (queenHealTimer >= queenHealInterval)
+            {
+                SetHealth(health + queenHealAmount);
+                queenHealTimer = 0f;
+            }
+        }
+        else
+        {
+            queenHealTimer = 0f;
+        }
     }
 
     void Die()
