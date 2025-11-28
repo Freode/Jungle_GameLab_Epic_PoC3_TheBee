@@ -441,6 +441,12 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             savedColor = hiveVisual.color; // 현재 색 기억!
             hiveVisual.color = carriedColor;
         }
+        if (HexBoundaryHighlighter.Instance != null)
+        {
+            HexBoundaryHighlighter.Instance.Clear();
+        }
+        queenBee.homeHive = null;
+
         // 4. 속도 감소
         var queenController = queenBee.GetComponent<UnitController>();
         if (queenController != null)
@@ -499,6 +505,23 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             transform.position = TileHelper.HexToWorld(newQ, newR, agent.hexSize);
             TileManager.Instance?.RegisterUnit(agent);
             agent.RegisterWithFog();
+        }
+
+        if (HexBoundaryHighlighter.Instance != null)
+        {
+            int radius = 5;
+            if (HiveManager.Instance != null) radius = HiveManager.Instance.hiveActivityRadius;
+            
+            // HexBoundaryHighlighter가 꺼져있을 수 있으므로 켜줌
+            if (!HexBoundaryHighlighter.Instance.enabledForHives) 
+                HexBoundaryHighlighter.Instance.SetEnabledForHives(true);
+
+            HexBoundaryHighlighter.Instance.ShowBoundary(this, radius);
+        }
+        if (queenBee != null)
+        {
+            queenBee.homeHive = this; // 집 등록!
+            queenBee.carriedHive = null; // 손 비우기
         }
 
         // 4. 속도 복구
