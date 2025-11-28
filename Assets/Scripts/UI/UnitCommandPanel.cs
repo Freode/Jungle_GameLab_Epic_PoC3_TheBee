@@ -22,6 +22,8 @@ public class UnitCommandPanel : MonoBehaviour
     // a list of default SOCommands, assign in inspector
     public SOCommand[] defaultCommands;
 
+    private System.Action<bool> hiveConstructionCallback;
+
     void Awake()
     {
         Instance = this;
@@ -39,6 +41,13 @@ public class UnitCommandPanel : MonoBehaviour
             // ✅ 하이브 건설/파괴 이벤트 구독 (요구사항 2)
             HiveManager.Instance.OnPlayerHiveConstructed += RefreshButtonStates;
             HiveManager.Instance.OnPlayerHiveDestroyed += RefreshButtonStates;
+            // 하이브 건설 상태 변경 구독: 건설 시작/취소 시 버튼 상태 갱신
+            hiveConstructionCallback = (isConstructing) =>
+            {
+                RefreshButtonStates();
+                RebuildCommands();
+            };
+            HiveManager.Instance.OnHiveConstructionStateChanged += hiveConstructionCallback;
         }
     }
     
@@ -138,6 +147,8 @@ public class UnitCommandPanel : MonoBehaviour
             // ✅ 하이브 이벤트 구독 해제 (요구사항 2)
             HiveManager.Instance.OnPlayerHiveConstructed -= RefreshButtonStates;
             HiveManager.Instance.OnPlayerHiveDestroyed -= RefreshButtonStates;
+            if (hiveConstructionCallback != null)
+                HiveManager.Instance.OnHiveConstructionStateChanged -= hiveConstructionCallback;
         }
     }
 
@@ -523,6 +534,13 @@ public class UnitCommandPanel : MonoBehaviour
         }
         
         Debug.Log($"[명령 UI] 버튼 {commands.Count}개 생성 완료");
+    }
+
+    // Public helper to force UI to rebuild and refresh button states
+    public void RefreshAllCommands()
+    {
+        RebuildCommands();
+        RefreshButtonStates();
     }
 
     void HandleCommandButtonClick(ICommand cmd, Button clickedButton)

@@ -64,10 +64,16 @@ public class SOCommand : ScriptableObject, ICommand
                         }
                     }
                 }
-                
+
                 if (playerHiveCount > 0)
                 {
                     return false; // 꿀벌집이 이미 존재하므로 건설 불가
+                }
+
+                // If a player-initiated construction is already in progress, disable construct command immediately
+                if (HiveManager.Instance.isConstructingHive)
+                {
+                    return false;
                 }
             }
         }
