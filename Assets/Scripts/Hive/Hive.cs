@@ -317,24 +317,21 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         // Apply upgrades to newly spawned worker (Player만)
         if (agent.faction == Faction.Player && HiveManager.Instance != null)
         {
-            var combat = go.GetComponent<CombatUnit>();
-            if (combat != null)
+            // Ensure RoleAssigner exists and ask it to reapply role+global stats
+            var roleAssigner = go.GetComponent<RoleAssigner>();
+            if (roleAssigner == null)
             {
-                combat.attack = HiveManager.Instance.GetWorkerAttack();
-                combat.maxHealth = HiveManager.Instance.GetWorkerMaxHealth();
-                combat.health = combat.maxHealth;
+                roleAssigner = go.AddComponent<RoleAssigner>();
             }
-            
+
+            // Refresh role so RoleAssigner applies role bonuses combined with current global upgrades
+            roleAssigner.RefreshRole();
+
+            // Apply global-only stats that are not role-dependent
             var controller = go.GetComponent<UnitController>();
             if (controller != null)
             {
                 controller.moveSpeed = HiveManager.Instance.GetWorkerSpeed();
-            }
-            
-            var behavior = go.GetComponent<UnitBehaviorController>();
-            if (behavior != null)
-            {
-                behavior.gatherAmount = HiveManager.Instance.GetGatherAmount();
             }
         }
         
@@ -489,6 +486,52 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     void DestroyHive()
     {
         Debug.Log("[하이브 파괴] 하이브가 파괴됩니다.");
+        
+        if (HiveManager.Instance != null)
+        {
+            int totalResources = HiveManager.Instance.playerStoredResources;
+
+            // 자원이 있을 때만 분산 로직 수행
+            if (totalResources > 0)
+            {
+                // 1. 플레이어 창고 즉시 비우기
+                HiveManager.Instance.TrySpendResources(totalResources);
+
+                // 2. 50% 분할 계산
+                int stealAmount = Mathf.FloorToInt(totalResources * 0.5f);
+                int dropAmount = totalResources - stealAmount;
+
+                // 3. 적 하이브 탐색
+                EnemyHive nearestEnemy = null;
+                if (WaspWaveManager.Instance != null)
+                {
+                    nearestEnemy = WaspWaveManager.Instance.FindNearestEnemyHive(this);
+                }
+
+                // 4. 강탈 처리
+                if (nearestEnemy != null)
+                {
+                    nearestEnemy.stolenResources += stealAmount;
+                    Debug.Log($"[하이브 파괴] 꿀 {stealAmount} (50%)가 적 하이브({nearestEnemy.name})로 넘어갔습니다.");
+                    // 내 위치(World 좌표)에서 적 위치(World 좌표)로 꿀 발사
+                    Vector3 myPos = transform.position;
+                    // 적 위치 계산 (Hex 좌표 -> World 좌표)
+                    Vector3 enemyPos = TileHelper.HexToWorld(nearestEnemy.q, nearestEnemy.r, 0.5f); // 0.5f는 hexSize(GameManager확인필요)
+
+                    // HiveManager에게 연출 위임
+                    HiveManager.Instance.PlayResourceStealEffect(myPos, enemyPos, stealAmount);
+                }
+                else
+                {
+                    // 적이 없으면 강탈분을 드랍분에 합쳐서 전량 바닥에 뿌림
+                    dropAmount += stealAmount;
+                    Debug.Log("[하이브 파괴] 적 하이브가 없습니다. 모든 꿀을 바닥에 뿌립니다.");
+                }
+
+                // 5. 바닥 뿌리기 함수 호출
+                ScatterResources(dropAmount);
+            }
+        }
         
         // 경계선 제거
         if (HexBoundaryHighlighter.Instance != null)
@@ -684,5 +727,87 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                     goto case "hive_explore";
             }
         }
+    }
+    /// <summary>
+    /// 자원 흩뿌리기 (기존 자원 보존 + 지형 변경 시 뻥튀기 방지)
+    /// </summary>
+    private void ScatterResources(int amount)
+    {
+        if (amount <= 0 || TileManager.Instance == null) return;
+
+        // 1. 타일 수집 (본진 + 주변 6방향)
+        List<HexTile> targetTiles = new List<HexTile>();
+        var centerTile = TileManager.Instance.GetTile(q, r);
+        if (centerTile != null) targetTiles.Add(centerTile);
+        
+        var neighbors = TileManager.Instance.GetNeighbors(q, r);
+        if (neighbors != null) targetTiles.AddRange(neighbors);
+
+        if (targetTiles.Count == 0) return;
+
+        // 2. 자원 지형 정보 가져오기
+        TerrainType resourceTerrain = null;
+        if (GameManager.Instance != null && GameManager.Instance.terrainTypes != null)
+        {
+            foreach (var terrain in GameManager.Instance.terrainTypes)
+            {
+                if (terrain != null && terrain.resourceYield > 0)
+                {
+                    resourceTerrain = terrain;
+                    break;
+                }
+            }
+        }
+
+        // 3. 랜덤 가중치 부여
+        float totalWeight = 0f;
+        float[] weights = new float[targetTiles.Count];
+        for (int i = 0; i < targetTiles.Count; i++)
+        {
+            weights[i] = UnityEngine.Random.Range(0.1f, 1.0f);
+            totalWeight += weights[i];
+        }
+
+        // 4. 자원 분배 및 타일 적용
+        int distributedTotal = 0;
+        for (int i = 0; i < targetTiles.Count; i++)
+        {
+            float ratio = weights[i] / totalWeight;
+            int tileAddAmount = Mathf.FloorToInt(amount * ratio);
+            
+            // 마지막 타일 잔여량 보정
+            if (i == targetTiles.Count - 1)
+            {
+                tileAddAmount = amount - distributedTotal;
+            }
+            distributedTotal += tileAddAmount;
+
+            HexTile tile = targetTiles[i];
+            
+            // 1) 현재 타일에 있는 자원량을 미리 백업 (없으면 0)
+            int existingAmount = tile.resourceAmount;
+
+            // 2) 지형 변경이 필요한 경우 (풀 -> 꽃)
+            bool needTerrainChange = (resourceTerrain != null && tile.terrain != resourceTerrain);
+
+            if (needTerrainChange)
+            {
+                // 지형 변경 (이 순간 HexTile 내부 로직으로 자원이 500 등으로 초기화됨)
+                tile.SetTerrain(resourceTerrain);
+
+                // 3) 백업해둔 기존 자원량으로 강제 복구 (뻥튀기된 500을 지움)
+                // 만약 빈 땅이었다면 existingAmount는 0이므로, 0으로 깔끔하게 초기화됨.
+                tile.SetResourceAmount(existingAmount);
+            }
+
+            // 4) 최종적으로 (기존 자원 + 이번에 뿌릴 자원)을 더함
+            tile.SetResourceAmount(tile.resourceAmount + tileAddAmount);
+            
+            // 디버그 로그 (확인용)
+            // Debug.Log($"[타일 처리] ({tile.q},{tile.r}) 기존:{existingAmount} + 추가:{tileAddAmount} = 최종:{tile.resourceAmount}");
+            // ========================================================
+        }
+        
+        Debug.Log($"[하이브 파괴] 자원 {amount}개를 {targetTiles.Count}개 타일에 안전하게 흩뿌렸습니다.");
     }
 }

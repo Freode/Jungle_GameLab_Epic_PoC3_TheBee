@@ -47,7 +47,7 @@ public class GameTimer : MonoBehaviour
         int totalSeconds = Mathf.FloorToInt(elapsedTime);
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
-        timerText.text = string.Format("시간 : {0:00}:{1:00}", minutes, seconds);
+        timerText.text = string.Format("시간 : <color=#00FF00>{0:00}:{1:00}</color>", minutes, seconds);
     }
 
     public void ResetTimer()

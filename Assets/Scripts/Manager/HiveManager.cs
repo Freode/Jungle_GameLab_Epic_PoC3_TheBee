@@ -35,6 +35,8 @@ public class HiveManager : MonoBehaviour
     public Color squad2Color = Color.green;
     [Tooltip("3번 부대 색상 (파랑)")]
     public Color squad3Color = Color.blue;
+    [Header("Visual Effects")]
+    public GameObject honeyProjectilePrefab; // 꿀 투사체 프리팹
     
     private Dictionary<WorkerSquad, List<UnitAgent>> squadWorkers = new Dictionary<WorkerSquad, List<UnitAgent>>()
     {
@@ -395,7 +397,7 @@ public class HiveManager : MonoBehaviour
         currentWorkers = allWorkers.Count;
         return currentWorkers;
     }
-    
+
     /// <summary>
     /// 특정 부대의 일꾼 목록 가져오기 ✅
     /// </summary>
@@ -410,7 +412,7 @@ public class HiveManager : MonoBehaviour
         squadWorkers[squad].RemoveAll(w => w == null);
         return new List<UnitAgent>(squadWorkers[squad]);
     }
-    
+
     /// <summary>
     /// 부대별 인원 수 가져오기 ✅
     /// </summary>
@@ -497,7 +499,8 @@ public class HiveManager : MonoBehaviour
         if (!TrySpendResources(cost)) return false;
 
         workerAttackLevel++;
-        UpdateAllWorkerCombat();
+        // Apply attack upgrade only to attacker-role workers
+        UpdateWorkersAttackByRole(RoleType.Attacker);
 
         Debug.Log($"[업그레이드] 일꾼 공격력 +1! 현재: {GetWorkerAttack()}");
         
@@ -520,7 +523,8 @@ public class HiveManager : MonoBehaviour
         if (!TrySpendResources(cost)) return false;
 
         workerHealthLevel++;
-        UpdateAllWorkerCombat();
+        // Apply health upgrade only to tank-role workers
+        UpdateWorkersHealthByRole(RoleType.Tank);
 
         Debug.Log($"[업그레이드] 일꾼 체력 +2! 현재: {GetWorkerMaxHealth()}");
         
@@ -612,7 +616,7 @@ public class HiveManager : MonoBehaviour
         if (!TrySpendResources(cost)) return false;
 
         gatherAmountLevel++;
-        UpdateAllWorkerGatherAmount();
+        UpdateWorkersGatherAmountByRole(RoleType.Gatherer); // 채취형 역할에 대해서만 업데이트
 
         Debug.Log($"[업그레이드] 자원 채취량 +1! 현재: {GetGatherAmount()}");
         
@@ -801,5 +805,81 @@ public class HiveManager : MonoBehaviour
         if (worker == null) yield break;
         worker.transform.localScale = Vector3.one * targetScale;
         Debug.Log($"[부대] {worker.name} 스케일 강제 적용: {targetScale}");
+    }
+
+    // 역할에 따른 일꾼 공격력 업데이트
+    void UpdateWorkersAttackByRole(RoleType role)
+    {
+        // Reapply role stats via RoleAssigner so global upgrades and role bonuses combine correctly
+        RefreshRoleFor(role);
+    }
+
+    // 역할에 따른 일꾼 체력 업데이트
+    void UpdateWorkersHealthByRole(RoleType role)
+    {
+        // Reapply role stats via RoleAssigner so global upgrades and role bonuses combine correctly
+        RefreshRoleFor(role);
+    }
+
+    // 역할에 따른 일꾼 자원 채취량 업데이트
+    void UpdateWorkersGatherAmountByRole(RoleType role)
+    {
+        // Reapply role stats via RoleAssigner so global upgrades and role bonuses combine correctly
+        RefreshRoleFor(role);
+    }
+
+    // 지정된 RoleType을 가진 모든 유닛의 RoleAssigner.RefreshRole() 호출
+    void RefreshRoleFor(RoleType role)
+    {
+        if (TileManager.Instance == null) return;
+
+        foreach (var unit in TileManager.Instance.GetAllUnits())
+        {
+            if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
+
+            var roleAssigner = unit.GetComponent<RoleAssigner>();
+            if (roleAssigner != null && roleAssigner.role == role)
+            {
+                roleAssigner.RefreshRole();
+            }
+        }
+    }
+    /// <summary>
+    /// 자원 강탈 연출 (하이브가 파괴될 때 호출)
+    /// </summary>
+    public void PlayResourceStealEffect(Vector3 fromPos, Vector3 toPos, int amount)
+    {
+        if (honeyProjectilePrefab == null) return;
+
+        // 코루틴 시작 (HiveManager가 살아있는 한 계속 실행됨)
+        StartCoroutine(StealEffectRoutine(fromPos, toPos, amount));
+    }
+
+    System.Collections.IEnumerator StealEffectRoutine(Vector3 fromPos, Vector3 toPos, int amount)
+    {
+        // 1. 생성할 꿀 개수 계산 (10꿀당 1개)
+        int projectileCount = amount / 10;
+        
+        // 너무 적으면 최소 1개, 너무 많으면 최대 30개로 제한 (성능/연출 밸런스)
+        projectileCount = Mathf.Clamp(projectileCount, 1, 30);
+
+        // 2. 순차적으로 생성
+        for (int i = 0; i < projectileCount; i++)
+        {
+            // 시작 위치에 약간의 랜덤성 부여 (겹치지 않게)
+            Vector3 randomOffset = UnityEngine.Random.insideUnitSphere * 0.5f;
+            randomOffset.y = 0; // 높이는 고정
+
+            GameObject honeyObj = Instantiate(honeyProjectilePrefab, fromPos + randomOffset, Quaternion.identity);
+            
+            var projectile = honeyObj.GetComponent<HoneyProjectile>();
+            if (projectile != null)
+            {
+                projectile.Initialize(fromPos + randomOffset, toPos);
+            }
+
+            // 다음 발사까지 아주 짧은 대기 (다다다닥 날아가는 느낌)
+            yield return new WaitForSeconds(0.05f);
+        }
     }
 }

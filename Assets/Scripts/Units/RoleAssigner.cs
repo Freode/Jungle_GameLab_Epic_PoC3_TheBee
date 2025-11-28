@@ -42,10 +42,12 @@ public class RoleAssigner : MonoBehaviour, IUnitCommandProvider
     public RoleStats gathererStats = new RoleStats { bonusMaxHealth = 0, bonusAttack = 0, attackCooldownMultiplier = 1f, gatherAmountBonus = 1, gatherCooldownMultiplier = 0.9f, activityRadiusBonus = 0, moveSpeedMultiplier = 1f };
     public RoleStats tankStats = new RoleStats { bonusMaxHealth = 20, bonusAttack = 0, attackCooldownMultiplier = 1.1f, gatherAmountBonus = 0, gatherCooldownMultiplier = 1f, activityRadiusBonus = 1, moveSpeedMultiplier = 0.8f };
 
-    // cached base values
+    // cached components
     private CombatUnit combat;
     private UnitBehaviorController behavior;
+    private UnitController controller;
 
+    // cached base values (captured once in Awake)
     private int baseMaxHealth;
     private int baseAttack;
     private float baseAttackCooldown;
@@ -56,18 +58,20 @@ public class RoleAssigner : MonoBehaviour, IUnitCommandProvider
 
     private float baseMoveSpeed = 2f;
 
+    private bool baseInitialized = false;
+
     // assignable commands for this role (inspector)
     public SOCommand[] roleCommands;
 
-    void Start()
+    void Awake()
     {
         if (agent == null) agent = GetComponent<UnitAgent>();
 
         // cache components
         combat = GetComponent<CombatUnit>();
         behavior = GetComponent<UnitBehaviorController>();
+        controller = GetComponent<UnitController>();
 
-        var controller = GetComponent<UnitController>();
         if (controller != null)
         {
             baseMoveSpeed = controller.moveSpeed;
@@ -77,7 +81,6 @@ public class RoleAssigner : MonoBehaviour, IUnitCommandProvider
         {
             baseMaxHealth = combat.maxHealth;
             baseAttack = combat.attack;
-            // use CombatUnit API to get base cooldown
             baseAttackCooldown = combat.GetBaseAttackCooldown();
         }
         else
@@ -100,6 +103,11 @@ public class RoleAssigner : MonoBehaviour, IUnitCommandProvider
             baseActivityRadius = 0;
         }
 
+        baseInitialized = true;
+    }
+
+    void Start()
+    {
         // apply initial role stats
         ApplyRole(role);
     }
@@ -159,13 +167,30 @@ public class RoleAssigner : MonoBehaviour, IUnitCommandProvider
         ApplyRole(newRole);
     }
 
+    // expose refresh so external systems (HiveManager) can reapply role-based stats including global upgrades
+    public void RefreshRole()
+    {
+        ApplyRole(role);
+    }
+
     void ApplyRole(RoleType r)
     {
+        if (!baseInitialized)
+        {
+            // ensure bases are cached
+            Awake();
+        }
+
         RoleStats stats = GetStatsForRole(r);
 
         if (combat != null)
         {
+            // compute max health including role stat and global upgrades (health upgrades only apply to Tank role)
             int newMax = baseMaxHealth + stats.bonusMaxHealth;
+            if (r == RoleType.Tank && HiveManager.Instance != null)
+            {
+                newMax += HiveManager.Instance.workerHealthLevel * 2; // workerHealthLevel increases max health by 2 per level
+            }
             if (newMax < 1) newMax = 1;
 
             // capture previous max/health to allow increasing current health when max increases
@@ -182,6 +207,11 @@ public class RoleAssigner : MonoBehaviour, IUnitCommandProvider
             }
 
             int newAttack = baseAttack + stats.bonusAttack;
+            // apply global attack upgrades only to Attacker role
+            if (r == RoleType.Attacker && HiveManager.Instance != null)
+            {
+                newAttack += HiveManager.Instance.workerAttackLevel; // each level gives +1 attack
+            }
             if (newAttack < 0) newAttack = 0;
             combat.SetAttack(newAttack);
 
@@ -191,13 +221,19 @@ public class RoleAssigner : MonoBehaviour, IUnitCommandProvider
 
         if (behavior != null)
         {
-            behavior.gatherAmount = Mathf.Max(0, baseGatherAmount + stats.gatherAmountBonus);
+            int effectiveGather = Mathf.Max(0, baseGatherAmount + stats.gatherAmountBonus);
+            // apply global gather upgrades only to Gatherer role
+            if (r == RoleType.Gatherer && HiveManager.Instance != null)
+            {
+                effectiveGather += HiveManager.Instance.gatherAmountLevel; // each level increases gather amount by 1
+            }
+            behavior.gatherAmount = effectiveGather;
+
             behavior.gatherCooldown = Mathf.Max(0.01f, baseGatherCooldown * stats.gatherCooldownMultiplier);
             behavior.activityRadius = Mathf.Max(0, baseActivityRadius + stats.activityRadiusBonus);
         }
 
         // apply movement speed multiplier if UnitController exists
-        var controller = GetComponent<UnitController>();
         if (controller != null)
         {
             controller.moveSpeed = baseMoveSpeed * stats.moveSpeedMultiplier;

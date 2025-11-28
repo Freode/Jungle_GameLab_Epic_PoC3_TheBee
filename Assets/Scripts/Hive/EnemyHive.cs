@@ -28,6 +28,9 @@ public class EnemyHive : MonoBehaviour
     public int visionRange = 5; // 말벌집 시야 범위
     public int activityRange = 5; // 말벌 활동 범위
 
+    [Header("자원 약탈")]
+    public int stolenResources = 0;
+
     [Header("디버그")]
     public bool showDebugLogs = false;
 
@@ -385,7 +388,7 @@ public class EnemyHive : MonoBehaviour
     }
     
     /// <summary>
-    /// 하이브 위치를 자원 타일로 변경 ✅
+    /// 하이브 위치를 자원 타일로 변경 ✅(훔친 자원 포함)
     /// </summary>
     void ConvertToResourceTile()
     {
@@ -417,7 +420,7 @@ public class EnemyHive : MonoBehaviour
         // (0,0)으로부터의 거리 계산
         int distanceFromOrigin = Pathfinder.AxialDistance(0, 0, q, r);
         
-        // 거리에 따라 자원량 결정 ✅
+        // 거리에 따라 기본 자원량 결정
         int resourceAmount = 0;
         System.Random rnd = new System.Random(q * 1000 + r);
         
@@ -443,13 +446,20 @@ public class EnemyHive : MonoBehaviour
         {
             // 그 외: 200~300
             resourceAmount = rnd.Next(200, 301);
-            Debug.Log($"[적 하이브] 자원 타일 생성: ({q}, {r}), 거리: {distanceFromOrigin}, 자원: {resourceAmount} (10칸 이상)");
+            Debug.Log($"[적 하이브] 자원 타일 생성: ({q}, {r}), 거리: {distanceFromOrigin}, 자원: {resourceAmount} (10칸 초과)");
         }
         
+        // ✅ [추가됨] 훔친 자원을 기본 자원에 합산
+        if (stolenResources > 0)
+        {
+            Debug.Log($"[적 하이브] 훔친 자원 {stolenResources}을 포함하여 드랍합니다. (기본: {resourceAmount})");
+            resourceAmount += stolenResources;
+        }
+
         // 타일 변경
         tile.SetTerrain(resourceTerrain);
         tile.SetResourceAmount(resourceAmount);
         
-        Debug.Log($"[적 하이브] ({q}, {r}) 위치가 자원 타일로 변경되었습니다. 자원량: {resourceAmount}");
+        Debug.Log($"[적 하이브] ({q}, {r}) 위치가 자원 타일로 변경되었습니다. 최종 자원량: {resourceAmount}");
     }
 }
