@@ -280,7 +280,25 @@ public class UnitCommandPanel : MonoBehaviour
             {
                 if (HiveManager.Instance != null)
                 {
-                    workerCountText.text = $"일꾼 수: {HiveManager.Instance.currentWorkers}/{HiveManager.Instance.maxWorkers}";
+                    // Show total and per-role counts and capacities with colors
+                    int totalCurrent = HiveManager.Instance.GetCurrentWorkers();
+                    int totalMax = HiveManager.Instance.GetMaxWorkers();
+
+                    int gatherCur = HiveManager.Instance.GetSquadCount(WorkerSquad.Squad1);
+                    int attackerCur = HiveManager.Instance.GetSquadCount(WorkerSquad.Squad2);
+                    int tankCur = HiveManager.Instance.GetSquadCount(WorkerSquad.Squad3);
+
+                    int gatherMax = HiveManager.Instance.GetMaxWorkersForRole(RoleType.Gatherer);
+                    int attackerMax = HiveManager.Instance.GetMaxWorkersForRole(RoleType.Attacker);
+                    int tankMax = HiveManager.Instance.GetMaxWorkersForRole(RoleType.Tank);
+
+                    string totalColor = "00FF00"; // overall green
+                    string gatherColor = ColorUtility.ToHtmlStringRGB(HiveManager.Instance.squad1Color);
+                    string attackerColor = ColorUtility.ToHtmlStringRGB(HiveManager.Instance.squad2Color);
+                    string tankColor = ColorUtility.ToHtmlStringRGB(HiveManager.Instance.squad3Color);
+
+                    workerCountText.text =
+                        $"일꾼 수: <color=#{totalColor}>{totalCurrent}</color>[<color=#{gatherColor}>{gatherCur}</color>/<color=#{attackerColor}>{attackerCur}</color>/<color=#{tankColor}>{tankCur}</color>]  //  최대: <color=#{totalColor}>{totalMax}</color>[<color=#{gatherColor}>{gatherMax}</color>/<color=#{attackerColor}>{attackerMax}</color>/<color=#{tankColor}>{tankMax}</color>]";
                 }
                 else
                 {
@@ -292,7 +310,24 @@ public class UnitCommandPanel : MonoBehaviour
             {
                 if (HiveManager.Instance != null)
                 {
-                    workerCountText.text = $"일꾼 수: {HiveManager.Instance.currentWorkers}/{HiveManager.Instance.maxWorkers}";
+                    int totalCurrent = HiveManager.Instance.GetCurrentWorkers();
+                    int totalMax = HiveManager.Instance.GetMaxWorkers();
+
+                    int gatherCur = HiveManager.Instance.GetSquadCount(WorkerSquad.Squad1);
+                    int attackerCur = HiveManager.Instance.GetSquadCount(WorkerSquad.Squad2);
+                    int tankCur = HiveManager.Instance.GetSquadCount(WorkerSquad.Squad3);
+
+                    int gatherMax = HiveManager.Instance.GetMaxWorkersForRole(RoleType.Gatherer);
+                    int attackerMax = HiveManager.Instance.GetMaxWorkersForRole(RoleType.Attacker);
+                    int tankMax = HiveManager.Instance.GetMaxWorkersForRole(RoleType.Tank);
+
+                    string totalColor = "00FF00";
+                    string gatherColor = ColorUtility.ToHtmlStringRGB(HiveManager.Instance.squad1Color);
+                    string attackerColor = ColorUtility.ToHtmlStringRGB(HiveManager.Instance.squad2Color);
+                    string tankColor = ColorUtility.ToHtmlStringRGB(HiveManager.Instance.squad3Color);
+
+                    workerCountText.text =
+                        $"일꾼 수: <color=#{totalColor}>{totalCurrent}</color>[<color=#{gatherColor}>{gatherCur}</color>/<color=#{attackerColor}>{attackerCur}</color>/<color=#{tankColor}>{tankCur}</color>]  //  최대: <color=#{totalColor}>{totalMax}</color>[<color=#{gatherColor}>{gatherMax}</color>/<color=#{attackerColor}>{attackerMax}</color>/<color=#{tankColor}>{tankMax}</color>]";
                 }
                 else
                 {

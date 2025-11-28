@@ -93,11 +93,18 @@ public class SOUpgradeCommand : SOCommand
             case UpgradeType.HiveHealth:
                 return HiveManager.Instance.hiveHealthLevel;
             case UpgradeType.MaxWorkers:
-                return HiveManager.Instance.maxWorkersLevel;
-            case UpgradeType.GatherAmount:
-                return HiveManager.Instance.gatherAmountLevel;
-            default:
-                return 0;
+                // role-specific: return level for the configured targetRole
+                switch (targetRole)
+                {
+                    case RoleType.Attacker: return HiveManager.Instance.maxWorkersLevelAttacker;
+                    case RoleType.Gatherer: return HiveManager.Instance.maxWorkersLevelGatherer;
+                    case RoleType.Tank: return HiveManager.Instance.maxWorkersLevelTank;
+                    default: return HiveManager.Instance.maxWorkersLevelGatherer;
+                }
+             case UpgradeType.GatherAmount:
+                 return HiveManager.Instance.gatherAmountLevel;
+             default:
+                 return 0;
         }
     }
     
@@ -122,6 +129,20 @@ public class SOUpgradeCommand : SOCommand
             else
             {
                 Debug.LogWarning("[업그레이드] HiveManager 없음: UpgradeWorkerSpeedForRole 호출 불가");
+            }
+            return;
+        }
+
+        // role-specific handling for MaxWorkers as well
+        if (upgradeType == UpgradeType.MaxWorkers)
+        {
+            if (HiveManager.Instance != null)
+            {
+                HiveManager.Instance.UpgradeMaxWorkersForRole(targetRole, currentCost);
+            }
+            else
+            {
+                Debug.LogWarning("[업그레이드] HiveManager 없음: UpgradeMaxWorkersForRole 호출 불가");
             }
             return;
         }
