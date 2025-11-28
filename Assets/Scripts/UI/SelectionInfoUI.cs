@@ -34,6 +34,7 @@ public class SelectionInfoUI : MonoBehaviour
     // 이벤트 구독 관리 ?
     private CombatUnit subscribedCombat; // 현재 구독 중인 CombatUnit
     private UnitBehaviorController subscribedBehavior; // 현재 구독 중인 UnitBehaviorController ?
+    private bool hiveManagerSubscribed = false;
 
     void Awake()
     {
@@ -115,10 +116,28 @@ public class SelectionInfoUI : MonoBehaviour
             
             // 초기 위치 설정은 AdjustPanelPosition에서 처리
         }
+
+        // Subscribe to HiveManager upgrade/resource events so UI updates when stats change
+        if (HiveManager.Instance != null)
+        {
+            HiveManager.Instance.OnResourcesChanged += OnHiveManagerChangedSimple;
+            HiveManager.Instance.OnWorkerCountChanged += OnHiveManagerWorkerCountChanged;
+            HiveManager.Instance.OnUpgradeApplied += OnHiveManagerUpgradeApplied;
+            hiveManagerSubscribed = true;
+        }
     }
     
     void OnDisable()
     {
+        // Unsubscribe hive manager if subscribed
+        if (hiveManagerSubscribed && HiveManager.Instance != null)
+        {
+            HiveManager.Instance.OnResourcesChanged -= OnHiveManagerChangedSimple;
+            HiveManager.Instance.OnWorkerCountChanged -= OnHiveManagerWorkerCountChanged;
+            HiveManager.Instance.OnUpgradeApplied -= OnHiveManagerUpgradeApplied;
+            hiveManagerSubscribed = false;
+        }
+
         // 이벤트 구독 해제 (스크립트 비활성화 시) ?
         UnsubscribeFromCombat();
         UnsubscribeFromBehavior(); // ?
@@ -152,8 +171,25 @@ public class SelectionInfoUI : MonoBehaviour
         Debug.Log($"[SelectionInfoUI] {name} 설정 완료");
     }
 
+    void OnHiveManagerUpgradeApplied()
+    {
+        if (selectedUnit != null) UpdateUnitInfo(selectedUnit);
+    }
+
+    void EnsureHiveManagerSubscription()
+    {
+        if (!hiveManagerSubscribed && HiveManager.Instance != null)
+        {
+            HiveManager.Instance.OnResourcesChanged += OnHiveManagerChangedSimple;
+            HiveManager.Instance.OnWorkerCountChanged += OnHiveManagerWorkerCountChanged;
+            HiveManager.Instance.OnUpgradeApplied += OnHiveManagerUpgradeApplied;
+            hiveManagerSubscribed = true;
+        }
+    }
+    
     void FixedUpdate()
     {
+        EnsureHiveManagerSubscription();
         UpdateInfo();
     }
 
@@ -408,6 +444,16 @@ public class SelectionInfoUI : MonoBehaviour
         }
     }
     
+    private void OnHiveManagerChangedSimple()
+    {
+        if (selectedUnit != null) UpdateUnitInfo(selectedUnit);
+    }
+    
+    private void OnHiveManagerWorkerCountChanged(int cur, int max)
+    {
+        if (selectedUnit != null) UpdateUnitInfo(selectedUnit);
+    }
+    
     void UpdateUnitInfo(UnitAgent unit)
     {
         if (detailsText == null || unit == null) return;
@@ -428,6 +474,32 @@ public class SelectionInfoUI : MonoBehaviour
         {
             details += $"현재 작업: <color=#00FF00>{behavior.currentTaskString}</color>\n";
         }
+
+        //// Show global/role upgrades from HiveManager when available
+        //if (HiveManager.Instance != null)
+        //{
+        //    details += "\n=== 업그레이드 ===\n";
+
+        //    // 일벌 채취 (Gatherer)
+        //    int gatherAmount = HiveManager.Instance.GetGatherAmount();
+        //    details += $"자원 채취량 (채취형 일벌): <color=#00FF00>+{gatherAmount}</color>\n";
+
+        //    // 일벌 공격력 (Attacker)
+        //    int attack = HiveManager.Instance.GetWorkerAttack();
+        //    details += $"일벌 공격력 (공격형 일벌): <color=#00FF00>+{attack}</color>\n";
+
+        //    // 일벌 체력 (Tank role is primary for health upgrades)
+        //    int wHealth = HiveManager.Instance.GetWorkerMaxHealth();
+        //    details += $"일벌 최대 체력 (탱커형 일벌 기준): <color=#00FF00>{wHealth}</color>\n";
+
+        //    // 벌집 체력
+        //    int hiveHealth = HiveManager.Instance.GetHiveMaxHealth();
+        //    details += $"벌집 최대 체력: <color=#00FF00>{hiveHealth} HP</color>\n";
+
+        //    // 활동 범위
+        //    int range = HiveManager.Instance.hiveActivityRadius;
+        //    details += $"하이브 활동 범위: <color=#00FF00>{range}</color>칸\n";
+        //}
 
         detailsText.text = details.TrimEnd('\n');
         AdjustPanelPosition();
@@ -726,17 +798,17 @@ public class SelectionInfoUI : MonoBehaviour
                 switch (roleAssigner.role)
                 {
                     case RoleType.Gatherer:
-                        return "일꾼 꿀벌(채취형)";
+                        return "일벌(채취형)";
                     case RoleType.Attacker:
-                        return "일꾼 꿀벌(공격형)";
+                        return "일벌(공격형)";
                     case RoleType.Tank:
-                        return "일꾼 꿀벌(탱커형)";
+                        return "일벌(탱커형)";
                     default:
-                        return "일꾼 꿀벌";
+                        return "일벌";
                 }
             }
 
-            return "일꾼 꿀벌";
+            return "일벌";
         }
         else if (unit.faction == Faction.Enemy)
         {

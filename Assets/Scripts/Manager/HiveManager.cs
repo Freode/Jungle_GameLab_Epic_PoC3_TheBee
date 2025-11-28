@@ -378,6 +378,21 @@ public class HiveManager : MonoBehaviour
             + GetMaxWorkersForRole(RoleType.Tank);
     }
 
+    // Helper: role display name in Korean
+    private string GetRoleDisplayName(RoleType role)
+    {
+        switch (role)
+        {
+            case RoleType.Attacker: return "공격형 일벌";
+            case RoleType.Gatherer: return "채취형 일벌";
+            case RoleType.Tank: return "탱커형 일벌";
+            default: return "일벌";
+        }
+    }
+
+    // Event fired when any upgrade is applied (so UIs can refresh)
+    public event System.Action OnUpgradeApplied;
+
     // Role-specific max upgrade (+2 per level)
     public bool UpgradeMaxWorkersForRole(RoleType role, int cost)
     {
@@ -390,14 +405,15 @@ public class HiveManager : MonoBehaviour
             default: maxWorkersLevelGatherer++; break;
         }
         UpdateAllHiveMaxWorkers();
+
+        string roleName = GetRoleDisplayName(role);
         if (UpgradeResultUI.Instance != null)
-            UpgradeResultUI.Instance.ShowUpgradeResult("확장 군집", $"{role} 최대 일꾼 +2", $"{GetMaxWorkersForRole(role)}마리");
+            UpgradeResultUI.Instance.ShowUpgradeResult("확장 군집", $"{roleName} 최대 일꾼 +2", $"<color=#00FF00>{GetMaxWorkersForRole(role)}마리</color>");
+
+        // notify listeners about upgrade
+        OnUpgradeApplied?.Invoke();
         return true;
     }
-
-    // Backwards-compatible wrappers
-    public bool UpgradeWorkerSpeed(int cost) { return UpgradeWorkerSpeedForRole(RoleType.Gatherer, cost); }
-    public bool UpgradeMaxWorkers(int cost) { return UpgradeMaxWorkersForRole(RoleType.Gatherer, cost); }
 
     public bool UpgradeWorkerSpeedForRole(RoleType role, int cost)
     {
@@ -409,15 +425,109 @@ public class HiveManager : MonoBehaviour
             case RoleType.Tank: workerSpeedLevelTank++; RefreshRoleFor(RoleType.Tank); break;
             default: workerSpeedLevelGatherer++; RefreshRoleFor(RoleType.Gatherer); break;
         }
+
+        // show UI result with localized role name and new speed
+        string roleName = GetRoleDisplayName(role);
+        float newSpeed = GetWorkerSpeed(role);
+        if (UpgradeResultUI.Instance != null)
+        {
+            UpgradeResultUI.Instance.ShowUpgradeResult("빠른 날개", $"일꾼 이동 속도({roleName}) 증가", $"<color=#00FF00>{newSpeed:F2} 속도</color>");
+        }
+
+        // notify listeners about upgrade
+        OnUpgradeApplied?.Invoke();
+        
         return true;
     }
 
     // Simplified other upgrades
-    public bool UpgradeHiveRange(int cost) { if (!TrySpendResources(cost)) return false; hiveRangeLevel++; hiveActivityRadius = 4 + hiveRangeLevel; foreach (var h in hives) if (h != null && HexBoundaryHighlighter.Instance != null) HexBoundaryHighlighter.Instance.ShowBoundary(h, hiveActivityRadius); return true; }
-    public bool UpgradeWorkerAttack(int cost) { if (!TrySpendResources(cost)) return false; workerAttackLevel++; RefreshRoleFor(RoleType.Attacker); return true; }
-    public bool UpgradeWorkerHealth(int cost) { if (!TrySpendResources(cost)) return false; workerHealthLevel++; RefreshRoleFor(RoleType.Tank); return true; }
-    public bool UpgradeHiveHealth(int cost) { if (!TrySpendResources(cost)) return false; hiveHealthLevel++; UpdateAllHiveHealth(); return true; }
-    public bool UpgradeGatherAmount(int cost) { if (!TrySpendResources(cost)) return false; gatherAmountLevel++; RefreshRoleFor(RoleType.Gatherer); return true; }
+    public bool UpgradeHiveRange(int cost)
+    {
+        if (!TrySpendResources(cost)) return false;
+
+        hiveRangeLevel++;
+        hiveActivityRadius = 4 + hiveRangeLevel;
+
+        foreach (var h in hives)
+            if (h != null && HexBoundaryHighlighter.Instance != null)
+                HexBoundaryHighlighter.Instance.ShowBoundary(h, hiveActivityRadius);
+
+        if (UpgradeResultUI.Instance != null)
+        {
+            UpgradeResultUI.Instance.ShowUpgradeResult("활동 범위 확장", "일벌 활동 범위 +1", $"<color=#00FF00>{hiveActivityRadius}칸</color>");
+        }
+
+        OnUpgradeApplied?.Invoke();
+        return true;
+    }
+
+    public bool UpgradeWorkerAttack(int cost)
+    {
+        if (!TrySpendResources(cost)) return false;
+
+        workerAttackLevel++;
+        // Apply to attacker-role units
+        RefreshRoleFor(RoleType.Attacker);
+        UpdateAllWorkerCombat();
+
+        if (UpgradeResultUI.Instance != null)
+        {
+            UpgradeResultUI.Instance.ShowUpgradeResult("날카로운 침", "일벌(공격형) 공격력 +1", $"<color=#00FF00>{GetWorkerAttack()}</color>");
+        }
+
+        OnUpgradeApplied?.Invoke();
+        return true;
+    }
+
+    public bool UpgradeWorkerHealth(int cost)
+    {
+        if (!TrySpendResources(cost)) return false;
+
+        workerHealthLevel++;
+        // Apply to tank-role units
+        RefreshRoleFor(RoleType.Tank);
+        UpdateAllWorkerCombat();
+
+        if (UpgradeResultUI.Instance != null)
+        {
+            UpgradeResultUI.Instance.ShowUpgradeResult("강화 외골격", "일벌(탱커형) 체력 +2", $"<color=#00FF00>{GetWorkerMaxHealth()} HP</color>");
+        }
+
+        OnUpgradeApplied?.Invoke();
+        return true;
+    }
+
+    public bool UpgradeHiveHealth(int cost)
+    {
+        if (!TrySpendResources(cost)) return false;
+
+        hiveHealthLevel++;
+        UpdateAllHiveHealth();
+
+        if (UpgradeResultUI.Instance != null)
+        {
+            UpgradeResultUI.Instance.ShowUpgradeResult("강화 성벽", "꿀벌집 체력 +30", $"<color=#00FF00>{GetHiveMaxHealth()} HP</color>");
+        }
+
+        OnUpgradeApplied?.Invoke();
+        return true;
+    }
+
+    public bool UpgradeGatherAmount(int cost)
+    {
+        if (!TrySpendResources(cost)) return false;
+
+        gatherAmountLevel++;
+        UpdateAllWorkerGatherAmount();
+
+        if (UpgradeResultUI.Instance != null)
+        {
+            UpgradeResultUI.Instance.ShowUpgradeResult("효율적 채집", "자원 채취량 +1", $"<color=#00FF00>{GetGatherAmount()}</color>");
+        }
+
+        OnUpgradeApplied?.Invoke();
+        return true;
+    }
 
     void UpdateAllWorkerCombat()
     {
@@ -615,5 +725,16 @@ public class HiveManager : MonoBehaviour
         
         // 실제 건설 로직 실행
         onComplete?.Invoke();
+    }
+
+    // Backwards-compatible wrappers for legacy callers
+    public bool UpgradeWorkerSpeed(int cost)
+    {
+        return UpgradeWorkerSpeedForRole(RoleType.Gatherer, cost);
+    }
+
+    public bool UpgradeMaxWorkers(int cost)
+    {
+        return UpgradeMaxWorkersForRole(RoleType.Gatherer, cost);
     }
 }
