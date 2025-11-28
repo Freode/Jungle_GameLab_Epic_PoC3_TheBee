@@ -378,27 +378,27 @@ public class GameManager : MonoBehaviour
         if (distanceFromOrigin <= 3)
         {
             // 3칸 이내: 400~450
-            resourceAmount = rnd.Next(400, 451);
+            resourceAmount = rnd.Next(340, 401);
         }
         else if (distanceFromOrigin <= 5)
         {
             // 7칸 이내: 275~325
-            resourceAmount = rnd.Next(275, 326);
+            resourceAmount = rnd.Next(215, 276);
         }
-        else if (distanceFromOrigin <= 7)
+        else if (distanceFromOrigin <= 8)
         {
             // 10칸 이내: 175~225
-            resourceAmount = rnd.Next(175, 226);
+            resourceAmount = rnd.Next(100, 161);
         }
-        else if (distanceFromOrigin <= 10)
+        else if (distanceFromOrigin <= 12)
         {
-            // 10칸 이내: 90~130
-            resourceAmount = rnd.Next(90, 131);
+            // 10칸 이내: 60~85
+            resourceAmount = rnd.Next(50, 76);
         }
         else
         {
-            // 그 외: 35~75
-            resourceAmount = rnd.Next(35, 76);
+            // 그 외: 15~40
+            resourceAmount = rnd.Next(15, 41);
         }
         
         // 중심으로부터의 거리에 따라 추가 감소 (클러스터 중심이 더 많음)
@@ -432,8 +432,8 @@ public class GameManager : MonoBehaviour
         };
         Vector2Int chosenDir = dirs[dir];
         // position at radius-2 along that direction
-        int qPos = chosenDir.x * (radius - 2);
-        int rPos = chosenDir.y * (radius - 2);
+        int qPos = chosenDir.x * (radius - 1);
+        int rPos = chosenDir.y * (radius - 1);
         // slight random offset along adjacent edge positions
         int offset = rnd.Next(-1, 2);
         qPos += offset * dirs[(dir + 2) % 6].x;
