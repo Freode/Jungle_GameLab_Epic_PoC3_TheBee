@@ -17,8 +17,8 @@ MonoBehaviour:
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0
-  resourceCost: 30
+  resourceCost: 1
   upgradeType: 5
   targetRole: 1
-  baseCost: 30
+  baseCost: 20
   maxLevel: 24

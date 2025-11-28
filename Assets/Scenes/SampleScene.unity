@@ -236,8 +236,8 @@ MonoBehaviour:
   m_text: "<color=#00FF00>[\uBAA9\uD45C]</color>\\n\uC7A5\uC218\uB9D0\uBC8C\uC9D1\uC744
     \uD30C\uAD34\uD558\uC138\uC694!"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 895970bc277c4984b953ee24472a6307, type: 2}
-  m_sharedMaterial: {fileID: -3144751857821069581, guid: 895970bc277c4984b953ee24472a6307, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 04a1907e186964b4987ff4dc2a35455f, type: 2}
+  m_sharedMaterial: {fileID: 8631761547772752354, guid: 04a1907e186964b4987ff4dc2a35455f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

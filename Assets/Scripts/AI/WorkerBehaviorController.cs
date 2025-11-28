@@ -177,6 +177,13 @@ public class WorkerBehaviorController : UnitBehaviorController
 
     IEnumerator MovingStateCoroutine()
     {
+        // 꿀 보유 중(1번 부대)이라면 항상 하이브로 우선 복귀
+        if (isCarryingResource && agent.homeHive != null && ShouldForceReturnToHive())
+        {
+            targetTile = TileManager.Instance.GetTile(agent.homeHive.q, agent.homeHive.r);
+            Debug.Log($"[Worker State] 자원 보유 → 하이브 우선 복귀: ({targetTile.q}, {targetTile.r})");
+        }
+
         if (targetTile == null)
         {
             TransitionToState(WorkerState.Idle);
@@ -381,6 +388,16 @@ public class WorkerBehaviorController : UnitBehaviorController
         }
 
         TransitionToState(WorkerState.Idle);
+    }
+
+    // 1번 부대(채집)이고 자원 보유 중이면 하이브를 우선하게 만들기
+    private bool ShouldForceReturnToHive()
+    {
+        if (!isCarryingResource) return false;
+        if (HiveManager.Instance == null) return false;
+
+        var squadWorkers = HiveManager.Instance.GetSquadWorkers(WorkerSquad.Squad1);
+        return squadWorkers.Contains(agent);
     }
 
     IEnumerator GatheringStateCoroutine()
