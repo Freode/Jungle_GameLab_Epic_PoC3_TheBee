@@ -49,7 +49,10 @@ public class HiveManager : MonoBehaviour
     public int hiveRangeLevel = 0;          // 하이브 활동 범위 레벨
     public int workerAttackLevel = 0;       // 일꾼 공격력 레벨
     public int workerHealthLevel = 0;       // 일꾼 체력 레벨
-    public int workerSpeedLevel = 0;        // 일꾼 이동 속도 레벨
+    // per-role worker speed levels (each level = +0.2 moveSpeed)
+    public int workerSpeedLevelGatherer = 0;
+    public int workerSpeedLevelAttacker = 0;
+    public int workerSpeedLevelTank = 0;
     public int hiveHealthLevel = 0;         // 하이브 체력 레벨
     public int maxWorkersLevel = 0;         // 최대 일꾼 수 레벨
     public int gatherAmountLevel = 0;       // 자원 채취량 레벨
@@ -542,25 +545,39 @@ public class HiveManager : MonoBehaviour
     }
 
     // 4. 일꾼 이동 속도 업그레이드
+    // Backwards-compatible: default upgrade applies to Gatherer role
     public bool UpgradeWorkerSpeed(int cost)
+    {
+        return UpgradeWorkerSpeedForRole(RoleType.Gatherer, cost);
+    }
+
+    // New: upgrade speed for specific role
+    public bool UpgradeWorkerSpeedForRole(RoleType role, int cost)
     {
         if (!TrySpendResources(cost)) return false;
 
-        workerSpeedLevel++;
-        UpdateAllWorkerSpeed();
-
-        Debug.Log($"[업그레이드] 일꾼 이동 속도 +0.2! 현재: {GetWorkerSpeed()}");
-        
-        // UI 표시
-        if (UpgradeResultUI.Instance != null)
+        switch (role)
         {
-            UpgradeResultUI.Instance.ShowUpgradeResult(
-                "빠른 날개",
-                "일꾼 이동 속도 +0.2",
-                $"{GetWorkerSpeed():F1}"
-            );
+            case RoleType.Attacker:
+                workerSpeedLevelAttacker++;
+                RefreshRoleFor(RoleType.Attacker);
+                break;
+            case RoleType.Gatherer:
+                workerSpeedLevelGatherer++;
+                RefreshRoleFor(RoleType.Gatherer);
+                break;
+            case RoleType.Tank:
+                workerSpeedLevelTank++;
+                RefreshRoleFor(RoleType.Tank);
+                break;
+            default:
+                workerSpeedLevelGatherer++;
+                RefreshRoleFor(RoleType.Gatherer);
+                break;
         }
-        
+
+        Debug.Log($"[업그레이드] 일꾼 이동 속도({role}) 증가! 현재: {GetWorkerSpeed(role)}");
+        // UI 표시 can be added by caller
         return true;
     }
 
@@ -675,17 +692,19 @@ public class HiveManager : MonoBehaviour
         {
             if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
 
-            // 하이브 자체는 제외 ?
-//             var hive = unit.GetComponent<Hive>();
-//             if (hive != null) continue;
-
-            // 하이브 안에 있는 여왕벌 제외 (비활성화 상태) ?
-//             if (!unit.gameObject.activeInHierarchy) continue;
-
             var controller = unit.GetComponent<UnitController>();
             if (controller != null)
             {
-                controller.moveSpeed = GetWorkerSpeed();
+                // if unit has a RoleAssigner, use role-specific speed, otherwise default to Gatherer speed
+                var roleAssigner = unit.GetComponent<RoleAssigner>();
+                if (roleAssigner != null)
+                {
+                    controller.moveSpeed = GetWorkerSpeed(roleAssigner.role);
+                }
+                else
+                {
+                    controller.moveSpeed = GetWorkerSpeed(RoleType.Gatherer);
+                }
             }
         }
     }
@@ -778,9 +797,32 @@ public class HiveManager : MonoBehaviour
         return 10 + (workerHealthLevel * 2);
     }
 
-    public float GetWorkerSpeed()
+    public float GetWorkerSpeed(RoleType role)
     {
-        return 2.0f + (float)workerSpeedLevel / 5f;
+        float baseSpeed = 2.0f;
+        int level = 0;
+        switch (role)
+        {
+            case RoleType.Attacker: level = workerSpeedLevelAttacker; break;
+            case RoleType.Gatherer: level = workerSpeedLevelGatherer; break;
+            case RoleType.Tank: level = workerSpeedLevelTank; break;
+            default: level = workerSpeedLevelGatherer; break;
+        }
+        return baseSpeed + (float)level / 5f; // 0.2 per level
+    }
+
+    // return only the additive bonus (e.g., for RoleAssigner to add to baseMoveSpeed)
+    public float GetWorkerSpeedBonusForRole(RoleType role)
+    {
+        int level = 0;
+        switch (role)
+        {
+            case RoleType.Attacker: level = workerSpeedLevelAttacker; break;
+            case RoleType.Gatherer: level = workerSpeedLevelGatherer; break;
+            case RoleType.Tank: level = workerSpeedLevelTank; break;
+            default: level = workerSpeedLevelGatherer; break;
+        }
+        return (float)level / 5f; // 0.2 per level
     }
 
     public int GetHiveMaxHealth()

@@ -11,6 +11,10 @@ public class SOUpgradeCommand : SOCommand
     [Tooltip("업그레이드 종류를 선택하세요")]
     public UpgradeType upgradeType;
 
+    // New: target role for role-specific upgrades (e.g., WorkerSpeed)
+    [Tooltip("역할별 업그레이드 대상 (일꾼 속도 등)")]
+    public RoleType targetRole = RoleType.Gatherer;
+
     [Header("비용 설정")]
     [Tooltip("초기 업그레이드 비용 (매 업그레이드마다 이 값만큼 증가)")]
     public int baseCost = 10; // 초기 비용
@@ -78,7 +82,14 @@ public class SOUpgradeCommand : SOCommand
             case UpgradeType.WorkerHealth:
                 return HiveManager.Instance.workerHealthLevel;
             case UpgradeType.WorkerSpeed:
-                return HiveManager.Instance.workerSpeedLevel;
+                // role-specific: return level for targetRole
+                switch (targetRole)
+                {
+                    case RoleType.Attacker: return HiveManager.Instance.workerSpeedLevelAttacker;
+                    case RoleType.Gatherer: return HiveManager.Instance.workerSpeedLevelGatherer;
+                    case RoleType.Tank: return HiveManager.Instance.workerSpeedLevelTank;
+                    default: return HiveManager.Instance.workerSpeedLevelGatherer;
+                }
             case UpgradeType.HiveHealth:
                 return HiveManager.Instance.hiveHealthLevel;
             case UpgradeType.MaxWorkers:
@@ -100,6 +111,22 @@ public class SOUpgradeCommand : SOCommand
     {
         // 현재 비용으로 업그레이드 실행
         int currentCost = GetCurrentCost();
+
+        if (upgradeType == UpgradeType.WorkerSpeed)
+        {
+            // role-specific path
+            if (HiveManager.Instance != null)
+            {
+                HiveManager.Instance.UpgradeWorkerSpeedForRole(targetRole, currentCost);
+            }
+            else
+            {
+                Debug.LogWarning("[업그레이드] HiveManager 없음: UpgradeWorkerSpeedForRole 호출 불가");
+            }
+            return;
+        }
+
+        // fallback to existing handler for other upgrade types
         UpgradeCommandHandler.ExecuteUpgrade(upgradeType, currentCost);
     }
     
