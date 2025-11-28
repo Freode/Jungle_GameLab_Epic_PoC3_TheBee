@@ -2,8 +2,7 @@ using UnityEngine;
 using TMPro;
 
 /// <summary>
-/// 플레이어 하이브의 현재/최대 일꾼 수를 화면에 표시
-/// 이벤트 기반으로 업데이트 (interval 사용 안 함) ?
+/// Worker count UI showing total and per-role counts.
 /// </summary>
 public class WorkerCountUI : MonoBehaviour
 {
@@ -13,7 +12,7 @@ public class WorkerCountUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI workerCountText;
     
     [Header("Settings")]
-    [Tooltip("디버그 로그 표시")]
+    [Tooltip("Show debug logs")]
     [SerializeField] private bool showDebugLogs = false;
 
     void Awake()
@@ -28,82 +27,67 @@ public class WorkerCountUI : MonoBehaviour
 
     void Start()
     {
-        // 초기 텍스트 설정
+        // initial text
         if (workerCountText != null)
         {
-            workerCountText.text = $"일꾼 : <color=#00FF00>0</color>/{HiveManager.Instance.GetMaxWorkers()}";
+            if (HiveManager.Instance != null)
+                ForceUpdate();
+            else
+                workerCountText.text = $"일꾼 수: <color=#00FF00>0</color>[0/0/0]  //  최대: <color=#00FF00>0</color>[0/0/0]";
         }
 
-        // HiveManager의 일꾼 수 변경 이벤트 구독 ?
         if (HiveManager.Instance != null)
         {
             HiveManager.Instance.OnWorkerCountChanged += OnWorkerCountChanged;
-
-            if (showDebugLogs)
-                Debug.Log("[WorkerCountUI] 일꾼 수 변경 이벤트 구독");
-
-            // 초기 업데이트
-            ForceUpdate();
+            if (showDebugLogs) Debug.Log("[WorkerCountUI] Subscribed to HiveManager.OnWorkerCountChanged");
         }
     }
 
     void OnDestroy()
     {
-        // 이벤트 구독 해제 ?
         if (HiveManager.Instance != null)
         {
             HiveManager.Instance.OnWorkerCountChanged -= OnWorkerCountChanged;
-            
-            if (showDebugLogs)
-                Debug.Log("[WorkerCountUI] 일꾼 수 변경 이벤트 구독 해제");
+            if (showDebugLogs) Debug.Log("[WorkerCountUI] Unsubscribed from HiveManager.OnWorkerCountChanged");
         }
     }
 
-    /// <summary>
-    /// 일꾼 수 변경 이벤트 핸들러 ?
-    /// </summary>
     void OnWorkerCountChanged(int currentWorkers, int maxWorkers)
     {
         if (workerCountText == null) return;
-        
-        //// 텍스트 업데이트 (색상 포함)
-        //if (currentWorkers >= maxWorkers)
-        //{
-        //    // 최대치 도달 - 노란색
-        //    workerCountText.text = $"일꾼: <color=#00FF00>{currentWorkers}</color>/{maxWorkers}";
-        //}
-        //else if (currentWorkers >= maxWorkers * 0.7f)
-        //{
-        //    // 70% 이상 - 초록색
-        //    workerCountText.text = $"일꾼: <color=#00FF00>{currentWorkers}</color>/{maxWorkers}";
-        //}
-        //else if (currentWorkers >= maxWorkers * 0.4f)
-        //{
-        //    // 40% 이상 - 흰색
-        //    workerCountText.text = $"일꾼: {currentWorkers}/{maxWorkers}";
-        //}
-        //else
-        //{
-        //    // 40% 미만 - 빨간색
-        //    workerCountText.text = $"일꾼: <color=#FF0000>{currentWorkers}/{maxWorkers}</color>";
-        //}
+        if (HiveManager.Instance == null)
+        {
+            workerCountText.text = $"일꾼 수: <color=#00FF00>{currentWorkers}</color>[0/0/0]  //  최대: <color=#00FF00>{maxWorkers}</color>[0/0/0]";
+            return;
+        }
 
-        workerCountText.text = $"일꾼: <color=#00FF00>{currentWorkers}</color>/{maxWorkers}";
+        int totalCurrent = HiveManager.Instance.GetCurrentWorkers();
+        int totalMax = HiveManager.Instance.GetMaxWorkers();
 
-        if (showDebugLogs)
-            Debug.Log($"[WorkerCountUI] 업데이트: {currentWorkers}/{maxWorkers}");
+        int gatherCur = HiveManager.Instance.GetSquadCount(WorkerSquad.Squad1);
+        int attackerCur = HiveManager.Instance.GetSquadCount(WorkerSquad.Squad2);
+        int tankCur = HiveManager.Instance.GetSquadCount(WorkerSquad.Squad3);
+
+        int gatherMax = HiveManager.Instance.GetMaxWorkersForRole(RoleType.Gatherer);
+        int attackerMax = HiveManager.Instance.GetMaxWorkersForRole(RoleType.Attacker);
+        int tankMax = HiveManager.Instance.GetMaxWorkersForRole(RoleType.Tank);
+
+        string gatherColor = ColorUtility.ToHtmlStringRGB(HiveManager.Instance.squad1Color);
+        string attackerColor = ColorUtility.ToHtmlStringRGB(HiveManager.Instance.squad2Color);
+        string tankColor = ColorUtility.ToHtmlStringRGB(HiveManager.Instance.squad3Color);
+
+        workerCountText.text =
+            $"일벌 수: <color=#00FF00>{totalCurrent}</color>[<color=#{gatherColor}>{gatherCur}</color>/<color=#{attackerColor}>{attackerCur}</color>/<color=#{tankColor}>{tankCur}</color>]\n//  " +
+            $"최대: <color=#00FF00>{totalMax}</color>[<color=#{gatherColor}>{gatherMax}</color>/<color=#{attackerColor}>{attackerMax}</color>/<color=#{tankColor}>{tankMax}</color>]";
+
+        if (showDebugLogs) Debug.Log($"[WorkerCountUI] Updated: {totalCurrent}/{totalMax} [{gatherCur}/{gatherMax} {attackerCur}/{attackerMax} {tankCur}/{tankMax}]");
     }
 
-    /// <summary>
-    /// 즉시 업데이트 (외부 호출용)
-    /// HiveManager에 수동으로 이벤트 발생 요청
-    /// </summary>
     public void ForceUpdate()
     {
         if (HiveManager.Instance != null)
         {
-            // HiveManager의 현재 값으로 직접 업데이트 ?
-            OnWorkerCountChanged(HiveManager.Instance.currentWorkers, HiveManager.Instance.maxWorkers);
+            OnWorkerCountChanged(HiveManager.Instance.GetCurrentWorkers(), HiveManager.Instance.GetMaxWorkers());
         }
     }
 }

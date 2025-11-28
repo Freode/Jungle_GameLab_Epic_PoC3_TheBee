@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 78cca2511c7769342bc6df97870b7f8a, type: 3}
-  m_Name: Upgrade_MaxWorkers
+  m_Name: Upgrade_MaxWorkers_Attacker
   m_EditorClassIdentifier: 
-  id: upgrade_max_workers
-  displayName: "\uCD5C\uB300 \uC77C\uBC8C \uC218 +3"
+  id: upgrade_max_workers_attacker
+  displayName: "\uACF5\uACA9\uD615 \uCD5C\uB300 \uC77C\uBC8C \uC218 +2"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0
   resourceCost: 30
   upgradeType: 5
+  targetRole: 0
   baseCost: 30
   maxLevel: 24

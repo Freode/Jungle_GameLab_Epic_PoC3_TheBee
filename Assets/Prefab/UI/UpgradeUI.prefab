@@ -1775,14 +1775,16 @@ MonoBehaviour:
   attackerCommands:
   - {fileID: 11400000, guid: bc1529ea45252e741a6697671d767d2a, type: 2}
   - {fileID: 11400000, guid: 86433f4fc0dcbdf4b983e74860e71b48, type: 2}
+  - {fileID: 11400000, guid: f94f9073dd03c084a92267b77f96f854, type: 2}
   tankCommands:
   - {fileID: 11400000, guid: 2ea96debc829fb240adee03310cde272, type: 2}
   - {fileID: 11400000, guid: 1d9ac9d57cebbbd47bc146ac507f65ae, type: 2}
+  - {fileID: 11400000, guid: 241675f5447c5ed439b56e3afbe94f2b, type: 2}
   gathererCommands:
   - {fileID: 11400000, guid: db5317760427a0d4e894a464b0bc356f, type: 2}
   - {fileID: 11400000, guid: d3d81fb6d2899834d81fbf86daf8be1d, type: 2}
+  - {fileID: 11400000, guid: 6d6db9f563acf0147b0a0316e873f744, type: 2}
   queenCommands: []
   hiveCommands:
   - {fileID: 11400000, guid: 44a7cf4add082a049b2a08706c820179, type: 2}
   - {fileID: 11400000, guid: 0db3374cb4df1bc43bea01b805c0fce9, type: 2}
-  - {fileID: 11400000, guid: f94f9073dd03c084a92267b77f96f854, type: 2}
