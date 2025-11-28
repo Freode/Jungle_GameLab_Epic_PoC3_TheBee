@@ -71,6 +71,20 @@ public class HiveManager : MonoBehaviour
     public int baseMaxWorkersAttacker = 2;
     public int baseMaxWorkersTank = 1;
 
+    // Flag indicating player-initiated hive construction in progress
+    [HideInInspector]
+    public bool isConstructingHive = false;
+
+    // Event fired when construction state changes (true = constructing in progress)
+    public event System.Action<bool> OnHiveConstructionStateChanged;
+
+    // Set constructing state and notify listeners
+    public void SetConstructingState(bool constructing)
+    {
+        isConstructingHive = constructing;
+        OnHiveConstructionStateChanged?.Invoke(constructing);
+    }
+
     void Awake()
     {
         if (Instance != null && Instance != this)

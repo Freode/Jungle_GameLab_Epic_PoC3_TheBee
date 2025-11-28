@@ -20,16 +20,6 @@ public class ConstructHiveHandler : MonoBehaviour
         var tile = tm.GetTile(q, r);
         if (tile == null) return;
 
-        // ✅ [에러 해결 1] HexTile에 변수가 없으므로 일단 주석 처리 (나중에 필요시 주석 해제)
-        /*
-        if (tile.isWater || tile.isObstacle) 
-        {
-            if (NotificationToast.Instance != null) 
-                NotificationToast.Instance.ShowMessage("건설할 수 없는 지형입니다.", 2f);
-            return;
-        }
-        */
-
         var gm = GameManager.Instance;
         if (gm == null) return;
         var hivePrefab = gm.hivePrefab;
@@ -43,87 +33,104 @@ public class ConstructHiveHandler : MonoBehaviour
             return;
         }
 
-        // ✅ [에러 해결 3] UnitAgent에 StartCasting이 없으므로, 여기서 코루틴 직접 실행
-        // agent가 MonoBehaviour이므로 코루틴 실행 주체가 될 수 있음
+        // mark constructing immediately so construct command is disabled while building
+        if (HiveManager.Instance != null)
+        {
+            HiveManager.Instance.SetConstructingState(true);
+        }
+
         agent.StartCoroutine(BuildProcessRoutine(agent, q, r, gm));
     }
 
     // ✅ [추가] 3초 대기 및 건설 코루틴
     private static IEnumerator BuildProcessRoutine(UnitAgent agent, int q, int r, GameManager gm)
     {
-        float duration = 3.0f;
-        float timer = duration;
-        Vector3 startPos = agent.transform.position;
-
-        // 시작 알림
-        if (NotificationToast.Instance != null)
-            NotificationToast.Instance.ShowMessage($"3초 뒤 하이브를 건설합니다. 움직이면 취소됩니다.", 2f);
-        
-        Debug.Log($"[Construct] 건설 준비... ({duration}초)");
-
-        // 3초 카운트다운
-        while (timer > 0)
+        // Ensure flag is cleared regardless of how coroutine exits
+        try
         {
-            if (agent == null) yield break; // 죽었으면 중단
+            float duration = 3.0f;
+            float timer = duration;
+            Vector3 startPos = agent != null ? agent.transform.position : Vector3.zero;
 
-            // 움직임 체크 (0.1f 이상 움직이면 취소)
-            if (Vector3.Distance(agent.transform.position, startPos) > 0.1f)
+            // 시작 알림
+            if (NotificationToast.Instance != null)
+                NotificationToast.Instance.ShowMessage($"3초 뒤 하이브를 건설합니다. 움직이면 취소됩니다.", 2f);
+        
+            Debug.Log($"[Construct] 건설 준비... ({duration}초)");
+
+            // 3초 카운트다운
+            while (timer > 0)
             {
-                if (NotificationToast.Instance != null)
-                    NotificationToast.Instance.ShowMessage("이동하여 건설이 취소되었습니다.", 1.5f);
-                Debug.Log("[Construct] 움직임 감지되어 취소됨");
-                yield break;
+                if (agent == null) yield break; // 죽었으면 중단
+
+                // 움직임 체크 (0.1f 이상 움직이면 취소)
+                if (Vector3.Distance(agent.transform.position, startPos) > 0.1f)
+                {
+                    if (NotificationToast.Instance != null)
+                        NotificationToast.Instance.ShowMessage("이동하여 건설이 취소되었습니다.", 1.5f);
+                    Debug.Log("[Construct] 움직임 감지되어 취소됨");
+                    yield break;
+                }
+
+                timer -= Time.deltaTime;
+                yield return null;
             }
 
-            timer -= Time.deltaTime;
-            yield return null;
-        }
+            // === 건설 시작 ===
+        
+            if (NotificationToast.Instance != null)
+                NotificationToast.Instance.ShowMessage("건설 완료!", 1.5f);
 
-        // === 건설 시작 ===
-        
-        if (NotificationToast.Instance != null)
-            NotificationToast.Instance.ShowMessage("건설 완료!", 1.5f);
+            Vector3 pos = TileHelper.HexToWorld(q, r, gm.hexSize);
+            var go = GameObject.Instantiate(gm.hivePrefab, pos, Quaternion.identity);
 
-        Vector3 pos = TileHelper.HexToWorld(q, r, gm.hexSize);
-        var go = GameObject.Instantiate(gm.hivePrefab, pos, Quaternion.identity);
-
-        // Ensure Hive component exists
-        Hive hive = go.GetComponent<Hive>();
-        if (hive == null) hive = go.AddComponent<Hive>();
+            // Ensure Hive component exists
+            Hive hive = go.GetComponent<Hive>();
+            if (hive == null) hive = go.AddComponent<Hive>();
         
-        // Add UnitAgent to hive
-        var hiveAgent = go.GetComponent<UnitAgent>();
-        if (hiveAgent == null) hiveAgent = go.AddComponent<UnitAgent>();
+            // Add UnitAgent to hive
+            var hiveAgent = go.GetComponent<UnitAgent>();
+            if (hiveAgent == null) hiveAgent = go.AddComponent<UnitAgent>();
         
-        hiveAgent.q = q;
-        hiveAgent.r = r;
-        hiveAgent.canMove = false;
-        hiveAgent.faction = Faction.Player;
-        hiveAgent.SetPosition(q, r);
+            hiveAgent.q = q;
+            hiveAgent.r = r;
+            hiveAgent.canMove = false;
+            hiveAgent.faction = Faction.Player;
+            hiveAgent.SetPosition(q, r);
         
-        // Update queen's home hive
-        if (agent.isQueen)
-        {
-            agent.homeHive = hive;
-            hive.queenBee = agent;
+            // Update queen's home hive
+            if (agent != null && agent.isQueen)
+            {
+                agent.homeHive = hive;
+                hive.queenBee = agent;
             
-            Debug.Log($"[하이브 건설] 여왕벌 참조 설정 완료");
-        }
+                Debug.Log($"[하이브 건설] 여왕벌 참조 설정 완료");
+            }
         
-        // Initialize hive
-        hive.Initialize(q, r);
+            // Initialize hive
+            hive.Initialize(q, r);
         
-        // Transfer workers
-        if (agent.isQueen)
-        {
-            // homeHive가 없는 일꾼들을 찾아서 할당
-            AssignHomelessWorkersToHive(hive, q, r);
-        }
+            // Transfer workers
+            if (agent != null && agent.isQueen)
+            {
+                // homeHive가 없는 일꾼들을 찾아서 할당
+                AssignHomelessWorkersToHive(hive, q, r);
+            }
         
-        Debug.Log($"[하이브 건설] 하이브 건설 완료: ({q}, {r})");
+            Debug.Log($"[하이브 건설] 하이브 건설 완료: ({q}, {r})");
 
-        // 검증 코루틴 실행
-        agent.StartCoroutine(VerifyHiveSetup(hive, q, r));
+            // 검증 코루틴 실행
+            if (agent != null)
+                agent.StartCoroutine(VerifyHiveSetup(hive, q, r));
+        }
+        finally
+        {
+            // Always clear constructing flag when coroutine exits (cancel or complete)
+            if (HiveManager.Instance != null)
+            {
+                HiveManager.Instance.SetConstructingState(false);
+            }
+        }
     }
 
     // ✅ [헬퍼] 플레이어 하이브 존재 여부 확인 (내부 로직)
@@ -139,8 +146,6 @@ public class ConstructHiveHandler : MonoBehaviour
         }
         return false;
     }
-    
-    // ... (VerifyHiveSetup, AssignHomelessWorkersToHive 등 나머지 메서드는 기존 코드 그대로 유지) ...
     
     private static IEnumerator VerifyHiveSetup(Hive hive, int q, int r)
     {
