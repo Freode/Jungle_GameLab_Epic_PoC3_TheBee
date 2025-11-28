@@ -51,6 +51,9 @@ public class UnitAgent : MonoBehaviour
     private UnityEngine.Color originalColor = UnityEngine.Color.white;
     private MaterialPropertyBlock mpb;
 
+    // ✅ 운반 중인 하이브 참조 (여왕벌용)
+    [HideInInspector] public Hive carriedHive = null;
+
     private void Awake()
     {
         if (id == 0) id = GetInstanceID();

@@ -22,6 +22,10 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     private Coroutine spawnRoutine;
     private Coroutine relocateRoutine;
 
+    private float savedQueenSpeed = 0f;
+    [Header("Relocation Settings")]
+    public float carrySpeedMultiplier = 0.5f; // 이사 중 이동 속도 배율 (0.5 = 50% 속도)
+
     // Commands for hive
     [Header("Hive Commands")]
     public SOCommand[] hiveCommands; // All hive commands (including relocate)
@@ -31,6 +35,8 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     
     [Header("UI")]
     public TMPro.TextMeshProUGUI relocateTimerText; // 이사 준비 타이머 텍스트?
+
+    public bool isFloating = false; // 이사 중(떠있는 상태) 여부
 
     void OnEnable()
     {
@@ -228,37 +234,25 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         {
             yield return new WaitForSeconds(spawnInterval);
             
+            // ✅ 이사 중(Floating)이면 스폰하지 않음
+            if (isFloating) continue;
+
             // 일꾼 리스트 정리 (null 제거)
             workers.RemoveAll(w => w == null);
             
-            // 실시간으로 HiveManager에서 최대 일꾼 수 가져오기 ?
+            // 실시간 MaxWorkers 업데이트
             if (HiveManager.Instance != null)
             {
-                int currentMaxWorkers = HiveManager.Instance.GetMaxWorkers();
-                
-                // maxWorkers 업데이트 (업그레이드 반영) ?
-//                 if (currentMaxWorkers != maxWorkers)
-        //                 {
-//                     if (showDebugLogs)
-//                         Debug.Log($"[하이브] maxWorkers 업데이트: {maxWorkers} → {currentMaxWorkers}");
-                    
-//                     maxWorkers = currentMaxWorkers;
-//                 }
+                maxWorkers = HiveManager.Instance.GetMaxWorkers();
             }
             
             // MaxWorkers 체크
-            if (!isRelocating && workers.Count < maxWorkers)
+            if (workers.Count < maxWorkers)
             {
                 SpawnWorker();
             }
-            else if (workers.Count >= maxWorkers)
-            {
-                if (showDebugLogs)
-                    Debug.Log($"[하이브] 최대 일꾼 수 도달: {workers.Count}/{maxWorkers}");
-            }
         }
     }
-
     void SpawnWorker()
     {
         if (workerPrefab == null) return;
@@ -395,92 +389,162 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     }
 
     // Check if hive can relocate (not already relocating)
-    public bool CanRelocate()
+    public new bool CanRelocate()
     {
-        return !isRelocating;
+        return !isFloating; // 떠있지 않을 때만 이사 가능
     }
 
     /// <summary>
     /// 하이브 이사 시작 (자원 체크는 SOCommand.IsAvailable에서 완료)
     /// </summary>
-    public void StartRelocation(int resourceCost)
+    public void LiftHive()
     {
-        if (isRelocating)
+        if (isFloating) return;
+        if (queenBee == null)
         {
-            Debug.LogWarning("이미 이사 준비 중입니다.");
+            Debug.LogError("[Hive] 여왕벌 참조가 없어 이사할 수 없습니다.");
             return;
         }
 
-        // 자원 차감
-        if (HiveManager.Instance != null)
+        // ✅ [추가된 로직] 여왕벌이 하이브와 같은 타일에 있는지 확인
+        if (queenBee.q != this.q || queenBee.r != this.r)
         {
-            if (!HiveManager.Instance.TrySpendResources(resourceCost))
+            Debug.LogWarning($"[Hive] 거리 멂: 여왕벌({queenBee.q},{queenBee.r})이 하이브({q},{r})와 같은 위치에 있지 않습니다.");
+            
+            // (선택사항) 화면에 경고 메시지 띄우기
+            if (NotificationToast.Instance != null)
             {
-                Debug.LogWarning($"[하이브 이사] 자원 차감 실패: {resourceCost}");
-                return;
+                NotificationToast.Instance.ShowMessage("여왕벌이 하이브 위에 있어야 합니다!", 2f);
             }
-            Debug.Log($"[하이브 이사] 자원 차감 성공: {resourceCost}");
+            return; // 좌표가 다르면 함수 종료
         }
 
-        isRelocating = true;
-
-        // 일꾼 생성 중지
-        if (spawnRoutine != null)
+        Debug.Log("[Hive] 하이브 이륙! 여왕벌 위로 올라갑니다.");
+        
+        // 1. 상태 변경
+        isFloating = true;
+        
+        // 2. 스폰 중지
+        if (spawnRoutine != null) StopCoroutine(spawnRoutine);
+        
+        // 3. TileManager/FogManager 등록 해제 (땅에서 떼어냄)
+        var agent = GetComponent<UnitAgent>();
+        if (agent != null)
         {
-            StopCoroutine(spawnRoutine);
-            spawnRoutine = null;
+            TileManager.Instance?.UnregisterUnit(agent);
+            agent.Unregister();
         }
 
-        // 알림 토스트 표시 ?
-//         if (NotificationToast.Instance != null)
-//         {
-//             NotificationToast.Instance.ShowMessage("이사 준비. 10초 후 벌집이 파괴됩니다.", 3f);
-//         }
+        // 4. [시각 처리] 여왕벌의 자식으로 설정 + 머리 위로 위치 조정
+        transform.SetParent(queenBee.transform);
+        // transform.localScale = Vector3.one * 0.8f; // 필요시 크기 조절
 
-        // 10초 카운트다운 시작
-        if (relocateRoutine != null)
+        // 5. [속도 처리] 여왕벌 속도 감소
+        var queenController = queenBee.GetComponent<UnitController>();
+        if (queenController != null)
         {
-            StopCoroutine(relocateRoutine);
+            savedQueenSpeed = queenController.moveSpeed; // 원래 속도 저장
+            queenController.moveSpeed *= carrySpeedMultiplier; // 속도 감소
+            Debug.Log($"[Hive] 여왕벌 속도 감소: {savedQueenSpeed} -> {queenController.moveSpeed}");
         }
-        relocateRoutine = StartCoroutine(RelocationCountdown());
 
-        Debug.Log("[하이브 이사] 이사 준비 시작! 10초 후 하이브가 파괴됩니다.");
+        // 6. 데이터 연결
+        queenBee.carriedHive = this;
+
+        // 7. 일꾼 처리
+        foreach (var worker in workers)
+        {
+            if (worker != null)
+            {
+                worker.isFollowingQueen = true;
+                worker.homeHive = null; 
+                var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
+                if (workerBehavior != null) workerBehavior.StartFollowingQueen();
+            }
+        }
+
+        // 8. 상호작용 비활성화
+        var myCollider = GetComponent<Collider>();
+        if (myCollider != null) myCollider.enabled = false;
+        
+        // UI 갱신
+        StartCoroutine(RefreshQueenUI());
     }
 
-    IEnumerator RelocationCountdown()
+    // ✅ 하이브 착륙 (Land)
+    public void LandHive(int newQ, int newR)
     {
-        float countdown = 5f;
-        var combat = GetComponent<CombatUnit>();
-        int initialHealth = combat != null ? combat.health : 0;
-        float healthDrainRate = initialHealth / countdown; // 초당 감소량
+        if (!isFloating) return;
+
+        Debug.Log($"[Hive] 하이브 착륙: ({newQ}, {newR})");
+
+        // 1. 상태 변경
+        isFloating = false;
+
+        // 2. ✅ [시각 처리] 부모 해제 및 타일 정중앙 배치
+        transform.SetParent(null); // 여왕벌에게서 분리
+        transform.localScale = Vector3.one; // 크기 원상복구
         
-        NotificationToast.Instance.ShowMessage("이사 준비! 5초 후 벌집이 파괴됩니다.");
-        Debug.Log($"[하이브 이사] 카운트다운 시작: {countdown}초");
-
-        while (countdown > 0f)
+        // 좌표 업데이트
+        q = newQ; 
+        r = newR;
+        var agent = GetComponent<UnitAgent>();
+        if (agent != null)
         {
-            countdown -= Time.deltaTime;
+            agent.q = newQ;
+            agent.r = newR;
+            // 타일 정중앙 좌표로 강제 이동 (HexToWorld)
+            transform.position = TileHelper.HexToWorld(newQ, newR, agent.hexSize);
             
-            // 체력 점진 감소
-            if (combat != null)
-            {
-                float drainAmount = healthDrainRate * Time.deltaTime;
-                combat.health = Mathf.Max(1, combat.health - Mathf.CeilToInt(drainAmount));
-            }
-            
-            // 1초마다 로그 출력 (디버그용)
-            if (showDebugLogs && Mathf.FloorToInt(countdown) != Mathf.FloorToInt(countdown + Time.deltaTime))
-            {
-                Debug.Log($"[하이브 이사] 남은 시간: {Mathf.FloorToInt(countdown)}초");
-            }
-
-            yield return null;
+            // 시스템 재등록
+            TileManager.Instance?.RegisterUnit(agent);
+            agent.RegisterWithFog();
         }
 
-        Debug.Log("[하이브 이사] 카운트다운 완료! 하이브 파괴 시작");
+        // 3. ✅ [속도 처리] 여왕벌 속도 복구
+        var queenController = queenBee.GetComponent<UnitController>();
+        if (queenController != null && savedQueenSpeed > 0)
+        {
+            queenController.moveSpeed = savedQueenSpeed;
+        }
+
+        // 4. 상호작용 복구
+        var myCollider = GetComponent<Collider>();
+        if (myCollider != null) myCollider.enabled = true;
+
+        // 5. 연결 해제
+        if (queenBee != null) queenBee.carriedHive = null;
+
+        // 6. 일꾼 복귀
+        foreach (var worker in workers)
+        {
+            if (worker != null)
+            {
+                worker.isFollowingQueen = false;
+                worker.homeHive = this;
+                var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
+                if (workerBehavior != null) workerBehavior.OnHiveConstructed(this);
+            }
+        }
+
+        // 7. 스폰 재개
+        if (spawnRoutine != null) StopCoroutine(spawnRoutine);
+        spawnRoutine = StartCoroutine(SpawnLoop());
         
-        // Countdown finished 후 destroy this hive
-        DestroyHive();
+        // UI 갱신
+        StartCoroutine(RefreshQueenUI());
+    }
+        private IEnumerator RefreshQueenUI()
+    {
+        yield return null;
+        if (queenBee != null && UnitCommandPanel.Instance != null)
+        {
+            // 여왕벌이 선택된 상태라면 UI 갱신
+            if (TileClickMover.Instance.GetSelectedUnit() == queenBee)
+            {
+                UnitCommandPanel.Instance.Show(queenBee);
+            }
+        }
     }
 
     void DestroyHive()

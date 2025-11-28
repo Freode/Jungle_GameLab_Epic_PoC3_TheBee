@@ -71,6 +71,20 @@ public class SOCommand : ScriptableObject, ICommand
                 }
             }
         }
+        //착륙(Land) 버튼 활성화 조건
+        if (id == "land_hive")
+        {
+            // 여왕벌이 하이브를 들고 있고(carriedHive != null), 현재 떠있는 상태일 때만 버튼 표시
+            return agent.carriedHive != null && agent.carriedHive.isFloating;
+        }
+
+        //이사(Relocate) 버튼 활성화 조건 (하이브용)
+        if (id == "relocate_hive")
+        {
+            Hive hive = agent.GetComponent<Hive>();
+            // 이미 떠있으면 이사 버튼 숨김 (이미 이사 중이니까)
+            if (hive != null && hive.isFloating) return false;
+        }
 
         // Check if command requires a hive
         if (RequiresHive())
@@ -112,13 +126,18 @@ public class SOCommand : ScriptableObject, ICommand
             case "relocate_hive":
                 RelocateHiveCommandHandler.ExecuteRelocate(agent, target);
                 break;
+                
+            //착륙 명령 추가
+            case "land_hive":
+                LandHiveCommandHandler.ExecuteLand(agent);
+                break;
             case "hive_explore":
             case "hive_gather":
             case "hive_attack":
                 HiveCommandHandler.ExecuteHiveCommand(agent, id, target);
                 break;
             
-            // ✅ 페르몬 명령 (요구사항 1)
+            //페르몬 명령 (요구사항 1)
             case "pheromone_squad1":
                 QueenPheromoneCommandHandler.ExecutePheromone(agent, target, WorkerSquad.Squad1);
                 break;

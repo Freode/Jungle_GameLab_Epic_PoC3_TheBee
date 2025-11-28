@@ -62,7 +62,7 @@ public static class RelocateHiveCommandHandler
         Debug.Log($"[RelocateHive] 자원 충분. 이사 시작!");
         
         // Start relocation process
-        hive.StartRelocation(resourceCost);
+        hive.LiftHive();
     }
 
     private static int GetRelocateResourceCost(Hive hive)
