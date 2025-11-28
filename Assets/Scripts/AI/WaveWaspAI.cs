@@ -2,27 +2,27 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// ¿şÀÌºê ¸»¹ú Àü¿ë AI (ÀÏ¹İ EnemyAI¿Í ¿ÏÀü ºĞ¸®)
-/// - ¿©¿Õ¹ú À§Ä¡·Î ÀÌµ¿
-/// - ÀÌµ¿ Áß Àû ¹ß°ß ½Ã °ø°İ
-/// - °ø°İ ¡æ È¸ÇÇ ¡æ Àû Å½»ö ¹İº¹
-/// - ÀÏ¹ú ¿ì¼±, ÇÏÀÌºê´Â 2¼øÀ§
+/// ì›¨ì´ë¸Œ ë§ë²Œ ì „ìš© AI (ì¼ë°˜ EnemyAIì™€ ì™„ì „ ë¶„ë¦¬)
+/// - ì—¬ì™•ë²Œ ìœ„ì¹˜ë¡œ ì´ë™
+/// - ì´ë™ ì¤‘ ì  ë°œê²¬ ì‹œ ê³µê²©
+/// - ê³µê²© â†’ íšŒí”¼ â†’ ì  íƒìƒ‰ ë°˜ë³µ
+/// - ì¼ë²Œ ìš°ì„ , í•˜ì´ë¸ŒëŠ” 2ìˆœìœ„
 /// </summary>
 public class WaveWaspAI : MonoBehaviour
 {
-    [Header("AI ¼³Á¤")]
-    public int visionRange = 25; // ½Ã¾ß ¹üÀ§
-    public float scanInterval = 0.5f; // Àû Å½»ö ÁÖ±â
+    [Header("AI ì„¤ì •")]
+    public int visionRange = 25; // ì‹œì•¼ ë²”ìœ„
+    public float scanInterval = 0.5f; // ì  íƒìƒ‰ ì£¼ê¸°
     
-    [Header("µğ¹ö±×")]
+    [Header("ë””ë²„ê·¸")]
     public bool showDebugLogs = true;
     
     private UnitAgent agent;
     private UnitController controller;
     private CombatUnit combat;
     
-    private UnitAgent currentTarget; // ÇöÀç °ø°İ ´ë»ó
-    private UnitAgent queenBee; // ¿©¿Õ¹ú (¸ñÇ¥)
+    private UnitAgent currentTarget; // í˜„ì¬ ê³µê²© ëŒ€ìƒ
+    private UnitAgent queenBee; // ì—¬ì™•ë²Œ (ëª©í‘œ)
     private float lastScanTime;
     
     void Awake()
@@ -39,111 +39,118 @@ public class WaveWaspAI : MonoBehaviour
     }
     
     /// <summary>
-    /// ¿şÀÌºê ¸»¹ú ¸ŞÀÎ ·çÇÁ
+    /// ì›¨ì´ë¸Œ ë§ë²Œ ë©”ì¸ ë£¨í”„
     /// </summary>
     IEnumerator WaveWaspBehavior()
     {
-        // ÃÊ±â ´ë±â (»ı¼º Á÷ÈÄ ¾ÈÁ¤È­)
+        // ì´ˆê¸° ëŒ€ê¸° (ìƒì„± ì§í›„ ì•ˆì •í™”)
         yield return new WaitForSeconds(0.5f);
         
         if (showDebugLogs)
-            Debug.Log($"[Wave Wasp] AI ½ÃÀÛ: {agent.name}");
+            Debug.Log($"[Wave Wasp] AI ì‹œì‘: {agent.name}");
         
         while (true)
         {
             yield return new WaitForSeconds(scanInterval);
             
-            // 1. ¿©¿Õ¹ú Ã£±â (¾øÀ¸¸é ÇÃ·¹ÀÌ¾î ÇÏÀÌºê Ã£±â)
+            // 1. ì—¬ì™•ë²Œ ì°¾ê¸° (ì—†ìœ¼ë©´ í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ì°¾ê¸°)
             if (queenBee == null || queenBee.gameObject == null)
             {
                 queenBee = FindQueenBee();
                 
                 if (queenBee == null)
                 {
-                    // ¿©¿Õ¹ú ¾øÀ¸¸é ÇÃ·¹ÀÌ¾î ÇÏÀÌºê Ã£±â
+                    // ì—¬ì™•ë²Œ ì—†ìœ¼ë©´ í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ì°¾ê¸°
                     UnitAgent playerHive = FindPlayerHive();
                     
                     if (playerHive != null)
                     {
-                        queenBee = playerHive; // ÀÓ½Ã·Î ÇÏÀÌºê¸¦ ¸ñÇ¥·Î ¼³Á¤
+                        queenBee = playerHive; // ì„ì‹œë¡œ í•˜ì´ë¸Œë¥¼ ëª©í‘œë¡œ ì„¤ì •
                         if (showDebugLogs)
-                            Debug.Log($"[Wave Wasp] ¿©¿Õ¹ú ¾øÀ½. ÇÃ·¹ÀÌ¾î ÇÏÀÌºê ¹ß°ß: ({playerHive.q}, {playerHive.r})");
+                            Debug.Log($"[Wave Wasp] ì—¬ì™•ë²Œ ì—†ìŒ. í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ë°œê²¬: ({playerHive.q}, {playerHive.r})");
                     }
                     else
                     {
                         if (showDebugLogs)
-                            Debug.Log($"[Wave Wasp] ¿©¿Õ¹ú/ÇÏÀÌºê ¾øÀ½. °è¼Ó Å½»ö...");
-                        continue; // ´ÙÀ½ ÇÁ·¹ÀÓ¿¡ ´Ù½Ã ½Ãµµ
+                            Debug.Log($"[Wave Wasp] ì—¬ì™•ë²Œ/í•˜ì´ë¸Œ ì—†ìŒ. ê³„ì† íƒìƒ‰...");
+                        continue; // ë‹¤ìŒ í”„ë ˆì„ì— ë‹¤ì‹œ ì‹œë„
                     }
                 }
                 else
                 {
                     if (showDebugLogs)
-                        Debug.Log($"[Wave Wasp] ¿©¿Õ¹ú ¹ß°ß! À§Ä¡: ({queenBee.q}, {queenBee.r})");
+                        Debug.Log($"[Wave Wasp] ì—¬ì™•ë²Œ ë°œê²¬! ìœ„ì¹˜: ({queenBee.q}, {queenBee.r})");
                 }
             }
             
-            // 2. Àû Å½»ö ¸ÕÀú
+            // 2. ì  íƒìƒ‰ ë¨¼ì €
             UnitAgent nearestEnemy = FindNearestEnemy();
             
             if (nearestEnemy != null)
             {
-                // Àû ¹ß°ß ¡æ Å¸°Ù ¼³Á¤
+                // ì  ë°œê²¬ â†’ íƒ€ê²Ÿ ì„¤ì •
                 if (currentTarget != nearestEnemy)
                 {
                     currentTarget = nearestEnemy;
                     if (showDebugLogs)
-                        Debug.Log($"[Wave Wasp] »õ Å¸°Ù ¼³Á¤: {currentTarget.name}");
+                        Debug.Log($"[Wave Wasp] ìƒˆ íƒ€ê²Ÿ ì„¤ì •: {currentTarget.name}");
                 }
             }
             else
             {
-                // Àû ¾øÀ½ ¡æ Å¸°Ù ÇØÁ¦
+                // ì  ì—†ìŒ â†’ íƒ€ê²Ÿ í•´ì œ
                 if (currentTarget != null)
                 {
                     if (showDebugLogs)
-                        Debug.Log($"[Wave Wasp] Àû ¾øÀ½. Å¸°Ù ÇØÁ¦.");
+                        Debug.Log($"[Wave Wasp] ì  ì—†ìŒ. íƒ€ê²Ÿ í•´ì œ.");
                     currentTarget = null;
                 }
             }
             
-            // 3. Çàµ¿ °áÁ¤
+            // 3. í–‰ë™ ê²°ì •
             if (currentTarget != null && currentTarget.gameObject != null)
             {
-                // Å¸°Ù °ø°İ
+                // íƒ€ê²Ÿ ê³µê²©
                 AttackTarget();
             }
             else
             {
-                // ¿©¿Õ¹ú/ÇÏÀÌºê·Î ÀÌµ¿
+                // ì—¬ì™•ë²Œ/í•˜ì´ë¸Œë¡œ ì´ë™
                 MoveToQueenBee();
             }
         }
     }
     
     /// <summary>
-    /// Å¸°Ù °ø°İ
+    /// íƒ€ê²Ÿ ê³µê²©
     /// </summary>
     void AttackTarget()
     {
         if (currentTarget == null || currentTarget.gameObject == null)
         {
             if (showDebugLogs)
-                Debug.Log($"[Wave Wasp] Å¸°Ù »ç¶óÁü. ÀçÅ½»ö.");
+                Debug.Log($"[Wave Wasp] íƒ€ê²Ÿ ì‚¬ë¼ì§. ì¬íƒìƒ‰.");
             currentTarget = null;
             return;
         }
-        
+
+        // ì—¬ì™•ì´ í•˜ì´ë¸Œ ìœ„ì— ìˆìœ¼ë©´ í•˜ì´ë¸Œë¡œ ê³µê²© ì „í™˜
+        var redirected = RedirectTargetIfQueenOnHive(currentTarget);
+        if (redirected != currentTarget)
+        {
+            currentTarget = redirected;
+        }
+
         int distance = GetDistance(agent.q, agent.r, currentTarget.q, currentTarget.r);
         
-        // ÇÏÀÌºê´Â ÀÎÁ¢ Å¸ÀÏ¿¡¼­ °ø°İ
+        // í•˜ì´ë¸ŒëŠ” ì¸ì ‘ íƒ€ì¼ì—ì„œ ê³µê²©
         var targetHive = currentTarget.GetComponent<Hive>();
         int attackDistance = (targetHive != null) ? 1 : 0;
         
-        // °ø°İ ¹üÀ§ ³»
+        // ê³µê²© ë²”ìœ„ ë‚´
         if (distance <= attackDistance)
         {
-            // °ø°İ °¡´ÉÇÏ¸é °ø°İ
+            // ê³µê²© ê°€ëŠ¥í•˜ë©´ ê³µê²©
             if (combat != null && combat.CanAttack())
             {
                 var targetCombat = currentTarget.GetComponent<CombatUnit>();
@@ -154,13 +161,13 @@ public class WaveWaspAI : MonoBehaviour
                     if (attacked)
                     {
                         if (showDebugLogs)
-                            Debug.Log($"[Wave Wasp] {currentTarget.name} °ø°İ! HP: {targetCombat.health}");
+                            Debug.Log($"[Wave Wasp] {currentTarget.name} ê³µê²©! HP: {targetCombat.health}");
                         
-                        // Å¸°Ù Á×À½ Ã¼Å©
+                        // íƒ€ê²Ÿ ì£½ìŒ ì²´í¬
                         if (targetCombat.health <= 0)
                         {
                             if (showDebugLogs)
-                                Debug.Log($"[Wave Wasp] {currentTarget.name} Ã³Ä¡!");
+                                Debug.Log($"[Wave Wasp] {currentTarget.name} ì²˜ì¹˜!");
                             currentTarget = null;
                         }
                     }
@@ -168,19 +175,19 @@ public class WaveWaspAI : MonoBehaviour
             }
             else
             {
-                // ÄğÅ¸ÀÓ ¡æ È¸ÇÇ
+                // ì¿¨íƒ€ì„ â†’ íšŒí”¼
                 Evade();
             }
         }
         else
         {
-            // Ãß°İ
+            // ì¶”ê²©
             ChaseTarget();
         }
     }
     
     /// <summary>
-    /// Å¸°Ù Ãß°İ
+    /// íƒ€ê²Ÿ ì¶”ê²©
     /// </summary>
     void ChaseTarget()
     {
@@ -199,60 +206,67 @@ public class WaveWaspAI : MonoBehaviour
             controller.SetPathSimple(path);
             
             if (showDebugLogs)
-                Debug.Log($"[Wave Wasp] {currentTarget.name} Ãß°İ Áß. °Å¸®: {GetDistance(agent.q, agent.r, currentTarget.q, currentTarget.r)}");
+                Debug.Log($"[Wave Wasp] {currentTarget.name} ì¶”ê²© ì¤‘. ê±°ë¦¬: {GetDistance(agent.q, agent.r, currentTarget.q, currentTarget.r)}");
         }
     }
     
     /// <summary>
-    /// È¸ÇÇ ±âµ¿
+    /// íšŒí”¼ ê¸°ë™
     /// </summary>
     void Evade()
     {
         if (controller == null) return;
         
-        // ÀÌ¹Ì ÀÌµ¿ ÁßÀÌ¸é ½ºÅµ
+        // ì´ë¯¸ ì´ë™ ì¤‘ì´ë©´ ìŠ¤í‚µ
         if (controller.IsMoving()) return;
         
         controller.MoveWithinCurrentTile();
         
         if (showDebugLogs)
-            Debug.Log($"[Wave Wasp] È¸ÇÇ ±âµ¿!");
+            Debug.Log($"[Wave Wasp] íšŒí”¼ ê¸°ë™!");
     }
     
     /// <summary>
-    /// ¿©¿Õ¹ú·Î ÀÌµ¿
+    /// ì—¬ì™•ë²Œë¡œ ì´ë™
     /// </summary>
     void MoveToQueenBee()
     {
         if (queenBee == null || controller == null || agent == null)
         {
             if (showDebugLogs)
-                Debug.Log($"[Wave Wasp] ¿©¿Õ¹ú ¶Ç´Â ÄÄÆ÷³ÍÆ® ¾øÀ½.");
+                Debug.Log($"[Wave Wasp] ì—¬ì™•ë²Œ ë˜ëŠ” ì»´í¬ë„ŒíŠ¸ ì—†ìŒ.");
             return;
         }
-        
-        // ¿©¿Õ¹ú°úÀÇ °Å¸®
+
+        // ì—¬ì™•ì´ í•˜ì´ë¸Œ ìœ„ì— ìˆìœ¼ë©´ í•˜ì´ë¸Œë¥¼ ëª©í‘œë¡œ ì „í™˜
+        var redirected = RedirectTargetIfQueenOnHive(queenBee);
+        if (redirected != queenBee)
+        {
+            currentTarget = redirected;
+        }
+
+        // ì—¬ì™•ë²Œê³¼ì˜ ê±°ë¦¬
         int distance = GetDistance(agent.q, agent.r, queenBee.q, queenBee.r);
         
         if (showDebugLogs)
-            Debug.Log($"[Wave Wasp] ¿©¿Õ¹ú±îÁö °Å¸®: {distance}");
+            Debug.Log($"[Wave Wasp] ì—¬ì™•ë²Œê¹Œì§€ ê±°ë¦¬: {distance}");
         
-        // ÀÌ¹Ì ÀÎÁ¢ÇÏ¸é ´ë±â
+        // ì´ë¯¸ ì¸ì ‘í•˜ë©´ ëŒ€ê¸°
         if (distance <= 1)
         {
             if (showDebugLogs)
-                Debug.Log($"[Wave Wasp] ¿©¿Õ¹ú ÀÎÁ¢. ´ë±â Áß...");
+                Debug.Log($"[Wave Wasp] ì—¬ì™•ë²Œ ì¸ì ‘. ëŒ€ê¸° ì¤‘...");
             return;
         }
         
-        // °æ·Î °è»ê
+        // ê²½ë¡œ ê³„ì‚°
         var startTile = TileManager.Instance?.GetTile(agent.q, agent.r);
         var queenTile = TileManager.Instance?.GetTile(queenBee.q, queenBee.r);
         
         if (startTile == null || queenTile == null)
         {
             if (showDebugLogs)
-                Debug.LogWarning($"[Wave Wasp] Å¸ÀÏ ¾øÀ½! Start: {startTile}, Queen: {queenTile}");
+                Debug.LogWarning($"[Wave Wasp] íƒ€ì¼ ì—†ìŒ! Start: {startTile}, Queen: {queenTile}");
             return;
         }
         
@@ -264,17 +278,32 @@ public class WaveWaspAI : MonoBehaviour
             controller.SetPathSimple(path);
             
             if (showDebugLogs)
-                Debug.Log($"[Wave Wasp] ¿©¿Õ¹ú·Î ÀÌµ¿ ½ÃÀÛ. °æ·Î: {path.Count}Å¸ÀÏ");
+                Debug.Log($"[Wave Wasp] ì—¬ì™•ë²Œë¡œ ì´ë™ ì‹œì‘. ê²½ë¡œ: {path.Count}íƒ€ì¼");
         }
         else
         {
             if (showDebugLogs)
-                Debug.LogWarning($"[Wave Wasp] °æ·Î ¾øÀ½! ({agent.q}, {agent.r}) ¡æ ({queenBee.q}, {queenBee.r})");
+                Debug.LogWarning($"[Wave Wasp] ê²½ë¡œ ì—†ìŒ! ({agent.q}, {agent.r}) â†’ ({queenBee.q}, {queenBee.r})");
         }
+    }
+
+    UnitAgent RedirectTargetIfQueenOnHive(UnitAgent queen)
+    {
+        if (queen == null || queen.homeHive == null) return queen;
+        if (queen.q == queen.homeHive.q && queen.r == queen.homeHive.r)
+        {
+            var hiveAgent = queen.homeHive.GetComponent<UnitAgent>();
+            if (hiveAgent != null)
+            {
+                if (showDebugLogs) Debug.Log("[Wave Wasp] ì—¬ì™•ì´ í•˜ì´ë¸Œ ìœ„ â†’ í•˜ì´ë¸Œë¡œ ëª©í‘œ ì „í™˜");
+                return hiveAgent;
+            }
+        }
+        return queen;
     }
     
     /// <summary>
-    /// °¡Àå °¡±î¿î Àû Ã£±â (ÀÏ¹ú ¿ì¼±, ÇÏÀÌºê 2¼øÀ§)
+    /// ê°€ì¥ ê°€ê¹Œìš´ ì  ì°¾ê¸° (ì¼ë²Œ ìš°ì„ , í•˜ì´ë¸Œ 2ìˆœìœ„)
     /// </summary>
     UnitAgent FindNearestEnemy()
     {
@@ -289,23 +318,23 @@ public class WaveWaspAI : MonoBehaviour
         {
             if (unit == null || unit == agent) continue;
             
-            // ÇÃ·¹ÀÌ¾î¸¸
+            // í”Œë ˆì´ì–´ë§Œ
             if (unit.faction != Faction.Player) continue;
             
-            // ¹«Àû Á¦¿Ü
+            // ë¬´ì  ì œì™¸
             var combatUnit = unit.GetComponent<CombatUnit>();
             if (combatUnit != null && combatUnit.isInvincible) continue;
             
             int distance = GetDistance(agent.q, agent.r, unit.q, unit.r);
             
-            // ½Ã¾ß ¹üÀ§ ³»
+            // ì‹œì•¼ ë²”ìœ„ ë‚´
             if (distance <= visionRange)
             {
                 var hive = unit.GetComponent<Hive>();
                 
                 if (hive != null)
                 {
-                    // ÇÏÀÌºê
+                    // í•˜ì´ë¸Œ
                     if (distance < minHiveDist)
                     {
                         minHiveDist = distance;
@@ -314,7 +343,7 @@ public class WaveWaspAI : MonoBehaviour
                 }
                 else
                 {
-                    // ÀÏ¹ú
+                    // ì¼ë²Œ
                     if (distance < minWorkerDist)
                     {
                         minWorkerDist = distance;
@@ -324,19 +353,19 @@ public class WaveWaspAI : MonoBehaviour
             }
         }
         
-        // ÀÏ¹ú ¿ì¼±
+        // ì¼ë²Œ ìš°ì„ 
         if (closestWorker != null)
         {
             if (showDebugLogs)
-                Debug.Log($"[Wave Wasp] ÀÏ¹ú ¹ß°ß: {closestWorker.name}, °Å¸®: {minWorkerDist}");
+                Debug.Log($"[Wave Wasp] ì¼ë²Œ ë°œê²¬: {closestWorker.name}, ê±°ë¦¬: {minWorkerDist}");
             return closestWorker;
         }
         
-        // ÇÏÀÌºê 2¼øÀ§
+        // í•˜ì´ë¸Œ 2ìˆœìœ„
         if (closestHive != null)
         {
             if (showDebugLogs)
-                Debug.Log($"[Wave Wasp] ÇÏÀÌºê ¹ß°ß: {closestHive.name}, °Å¸®: {minHiveDist}");
+                Debug.Log($"[Wave Wasp] í•˜ì´ë¸Œ ë°œê²¬: {closestHive.name}, ê±°ë¦¬: {minHiveDist}");
             return closestHive;
         }
         
@@ -344,7 +373,7 @@ public class WaveWaspAI : MonoBehaviour
     }
     
     /// <summary>
-    /// ¿©¿Õ¹ú Ã£±â
+    /// ì—¬ì™•ë²Œ ì°¾ê¸°
     /// </summary>
     UnitAgent FindQueenBee()
     {
@@ -357,7 +386,7 @@ public class WaveWaspAI : MonoBehaviour
             if (unit.faction == Faction.Player && unit.isQueen)
             {
                 if (showDebugLogs)
-                    Debug.Log($"[Wave Wasp] ¿©¿Õ¹ú ¹ß°ß: ({unit.q}, {unit.r})");
+                    Debug.Log($"[Wave Wasp] ì—¬ì™•ë²Œ ë°œê²¬: ({unit.q}, {unit.r})");
                 return unit;
             }
         }
@@ -366,7 +395,7 @@ public class WaveWaspAI : MonoBehaviour
     }
     
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ÇÏÀÌºê Ã£±â
+    /// í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ì°¾ê¸°
     /// </summary>
     UnitAgent FindPlayerHive()
     {
@@ -376,14 +405,14 @@ public class WaveWaspAI : MonoBehaviour
         {
             if (unit == null) continue;
             
-            // ÇÃ·¹ÀÌ¾î ÇÏÀÌºê Ã£±â
+            // í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ì°¾ê¸°
             if (unit.faction == Faction.Player)
             {
                 var hive = unit.GetComponent<Hive>();
                 if (hive != null)
                 {
                     if (showDebugLogs)
-                        Debug.Log($"[Wave Wasp] ÇÃ·¹ÀÌ¾î ÇÏÀÌºê ¹ß°ß: ({unit.q}, {unit.r})");
+                        Debug.Log($"[Wave Wasp] í”Œë ˆì´ì–´ í•˜ì´ë¸Œ ë°œê²¬: ({unit.q}, {unit.r})");
                     return unit;
                 }
             }
@@ -393,7 +422,7 @@ public class WaveWaspAI : MonoBehaviour
     }
     
     /// <summary>
-    /// °Å¸® °è»ê
+    /// ê±°ë¦¬ ê³„ì‚°
     /// </summary>
     int GetDistance(int q1, int r1, int q2, int r2)
     {
