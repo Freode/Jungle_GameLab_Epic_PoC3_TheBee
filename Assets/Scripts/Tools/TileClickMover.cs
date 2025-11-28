@@ -117,6 +117,12 @@ public class TileClickMover : MonoBehaviour
         {
             SelectPlayerHive();
         }
+
+        // 총공격: A키로 모든 부대 페로몬을 하나의 위치에 재분사
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            ExecuteAllSquadPheromone();
+        }
         
         // ✅ Q/W/E: 부대 페르몬 명령 (탭/홀드 분기)
         HandlePheromoneKey(KeyCode.Q, WorkerSquad.Squad1);
@@ -214,6 +220,93 @@ public class TileClickMover : MonoBehaviour
         string squadName = squad == WorkerSquad.Squad1 ? "1번" :
                           squad == WorkerSquad.Squad2 ? "2번" : "3번";
         Debug.Log($"[단축키] {squadName} 부대 페르몬 명령 (queen: {queen.name})");
+    }
+
+    /// <summary>
+    /// A키: 모든 부대 페로몬 제거 후 같은 위치에 재분사
+    /// </summary>
+    void ExecuteAllSquadPheromone()
+    {
+        // 마우스 위치의 타일 찾기
+        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mouseWorldPos.z = 0f;
+
+        HexTile targetTile = null;
+        RaycastHit2D[] hits = Physics2D.RaycastAll(mouseWorldPos, Vector2.zero);
+        foreach (var hit in hits)
+        {
+            var tile = hit.collider?.GetComponentInParent<HexTile>();
+            if (tile != null)
+            {
+                targetTile = tile;
+                break;
+            }
+        }
+
+        if (targetTile == null && TileManager.Instance != null)
+        {
+            float minDistance = float.MaxValue;
+            float hexSize = GameManager.Instance != null ? GameManager.Instance.hexSize : 0.5f;
+            foreach (var candidateTile in TileManager.Instance.GetAllTiles())
+            {
+                if (candidateTile == null) continue;
+                float dist = Vector3.Distance(mouseWorldPos, TileHelper.HexToWorld(candidateTile.q, candidateTile.r, hexSize));
+                if (dist < minDistance)
+                {
+                    minDistance = dist;
+                    targetTile = candidateTile;
+                }
+            }
+        }
+
+        if (targetTile == null)
+        {
+            Debug.LogWarning("[총공격] 마우스 위치의 타일을 찾을 수 없습니다.");
+            return;
+        }
+
+        // 모든 부대 페로몬 제거
+        if (PheromoneManager.Instance != null)
+        {
+            PheromoneManager.Instance.ClearAllPheromones();
+        }
+
+        // 각 부대에 동일 위치 분사
+        ExecutePheromoneForAllSquads(targetTile.q, targetTile.r);
+
+        Debug.Log($"[총공격] 모든 부대 페로몬 재분사: ({targetTile.q}, {targetTile.r})");
+    }
+
+    void ExecutePheromoneForAllSquads(int q, int r)
+    {
+        // 여왕 찾기
+        UnitAgent queen = null;
+        if (selectedUnitInstance != null && selectedUnitInstance.isQueen && selectedUnitInstance.faction == Faction.Player)
+        {
+            queen = selectedUnitInstance;
+        }
+        else if (TileManager.Instance != null)
+        {
+            foreach (var unit in TileManager.Instance.GetAllUnits())
+            {
+                if (unit != null && unit.isQueen && unit.faction == Faction.Player)
+                {
+                    queen = unit;
+                    break;
+                }
+            }
+        }
+
+        if (queen == null)
+        {
+            Debug.Log("[총공격] 여왕벌을 찾을 수 없습니다.");
+            return;
+        }
+
+        var target = CommandTarget.ForTile(q, r);
+        QueenPheromoneCommandHandler.ExecutePheromone(queen, target, WorkerSquad.Squad1);
+        QueenPheromoneCommandHandler.ExecutePheromone(queen, target, WorkerSquad.Squad2);
+        QueenPheromoneCommandHandler.ExecutePheromone(queen, target, WorkerSquad.Squad3);
     }
 
     /// <summary>
