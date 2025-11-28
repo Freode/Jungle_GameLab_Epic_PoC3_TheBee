@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SOCommand_Hive_Land_Hive
   m_EditorClassIdentifier: 
   id: land_hive
-  displayName: Land
+  displayName: "\uBC8C\uC9D1 \uCC29\uB959"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0

@@ -238,6 +238,25 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         if (showDebugLogs)
             Debug.Log($"[하이브 초기화] 기존 일꾼 수: {existingWorkerCount}, 최대 일꾼 수: {maxWorkers}");
     }
+    void Update()
+    {
+        // 떠있는 상태라면, 내 논리적 좌표(q,r)를 여왕벌과 똑같이 맞춤
+        if (isFloating && queenBee != null)
+        {
+            // 여왕벌이 이동해서 좌표가 바뀌었다면
+            if (q != queenBee.q || r != queenBee.r)
+            {
+                // 하이브의 좌표도 갱신 (그래야 적들이 여기로 쫓아옴)
+                var agent = GetComponent<UnitAgent>();
+                if (agent != null)
+                {
+                    agent.SetPosition(queenBee.q, queenBee.r);
+                }
+                q = queenBee.q;
+                r = queenBee.r;
+            }
+        }
+    }
 
     IEnumerator SpawnLoop()
     {
@@ -439,8 +458,8 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         if (spawnRoutine != null) StopCoroutine(spawnRoutine);
         
         // 2. 타일에서 제거
-        var agent = GetComponent<UnitAgent>();
-        if (agent != null) { TileManager.Instance?.UnregisterUnit(agent); agent.Unregister(); }
+        //var agent = GetComponent<UnitAgent>();
+        //if (agent != null) { TileManager.Instance?.UnregisterUnit(agent); agent.Unregister(); }
 
         // 3. 시각적 처리 (여왕벌 위로)
         transform.SetParent(queenBee.transform);
@@ -457,6 +476,12 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         }
         queenBee.homeHive = null;
 
+        var queenCombat = queenBee.GetComponent<CombatUnit>();
+        if (queenCombat != null)
+        {
+            queenCombat.SetInvincible(true); 
+            Debug.Log("[Hive] 여왕벌 무적 모드 ON");
+        }
         // 4. 속도 감소
         var queenController = queenBee.GetComponent<UnitController>();
         if (queenController != null)
@@ -481,8 +506,8 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         }
 
         // 7. 콜라이더 끄기
-        var myCollider = GetComponent<Collider>();
-        if (myCollider != null) myCollider.enabled = false;
+        //var myCollider = GetComponent<Collider>();
+        //if (myCollider != null) myCollider.enabled = false;
         
         // 8. UI 갱신 (Land 버튼 활성화)
         StartCoroutine(RefreshQueenUI());
@@ -535,10 +560,17 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
 
             HexBoundaryHighlighter.Instance.ShowBoundary(this, radius);
         }
+        // 여왕벌 귀속 및 무적 해제
         if (queenBee != null)
         {
-            queenBee.homeHive = this; // 집 등록!
-            queenBee.carriedHive = null; // 손 비우기
+            queenBee.homeHive = this;
+            queenBee.carriedHive = null;
+            var queenCombat = queenBee.GetComponent<CombatUnit>();
+            if (queenCombat != null)
+            {
+                queenCombat.SetInvincible(false);
+                Debug.Log("[Hive] 여왕벌 무적 모드 OFF");
+            }
         }
 
         // 4. 속도 복구
@@ -548,9 +580,6 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             queenController.moveSpeed = savedQueenSpeed;
         }
 
-        // 5. 콜라이더 켜기
-        var myCollider = GetComponent<Collider>();
-        if (myCollider != null) myCollider.enabled = true;
 
         // 6. 데이터 해제
         if (queenBee != null) queenBee.carriedHive = null;
@@ -705,18 +734,32 @@ private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
 
         if (isFloating && queenBee != null)
         {
-            // 1. 여왕벌 속도 복구
+            Debug.LogWarning("[하이브 파괴] 운반 중 파괴됨! 여왕벌 상태를 복구합니다.");
+
+            // 1. 여왕벌 속도 원상복구
             var queenController = queenBee.GetComponent<UnitController>();
+            // 현재 속도가 저장된 속도보다 느리다면(패널티 상태라면) 복구
             if (queenController != null && savedQueenSpeed > 0)
             {
                 queenController.moveSpeed = savedQueenSpeed;
-                Debug.Log($"[하이브 파괴] 여왕벌 속도 복구됨: {savedQueenSpeed}");
+                Debug.Log($"[하이브 파괴] 여왕벌 속도 복구: {savedQueenSpeed}");
             }
 
-            // 2. 여왕벌이 들고 있는 하이브 정보 초기화
-            queenBee.carriedHive = null;
-            
-            // 3. (혹시 모르니) UI 갱신
+            // 2. 여왕벌이 "나 하이브 들고 있어"라고 생각하는 거 지우기
+            if (queenBee.carriedHive == this)
+            {
+                queenBee.carriedHive = null;
+            }
+            var queenCombat = queenBee.GetComponent<CombatUnit>();
+            if (queenCombat != null)
+            {
+                queenCombat.SetInvincible(false);
+            }
+
+            // 3. 여왕벌의 homeHive는 이미 null(LiftHive에서 해제됨)이므로 
+            //    건드릴 필요 없음 (집이 터졌으니 홈이 없는 게 맞음)
+
+            // 4. UI 강제 갱신 (Land 버튼 없애기 위해)
             StartCoroutine(RefreshQueenUI());
         }
         
@@ -1028,5 +1071,36 @@ private IEnumerator RefreshQueenUI()
         }
         
         Debug.Log($"[하이브 파괴] 자원 {amount}개를 {targetTiles.Count}개 타일에 안전하게 흩뿌렸습니다.");
+    }
+    // ✅ [추가] 안전장치: 스크립트가 파괴될 때 마지막 점검
+    void OnDestroy()
+    {
+        // 1. 타일 매니저 등록 해제
+        if (TileManager.Instance != null)
+        {
+            var agent = GetComponent<UnitAgent>();
+            if(agent != null) TileManager.Instance.UnregisterUnit(agent);
+        }
+
+        // 2. 운반 중 파괴되었을 때 여왕벌 상태 복구 (DestroyHive가 호출 안 됐을 경우 대비)
+        if (isFloating && queenBee != null)
+        {
+            var queenController = queenBee.GetComponent<UnitController>();
+            // 여왕벌이 아직 살아있고, 속도가 느려진 상태라면
+            if (queenController != null && savedQueenSpeed > 0)
+            {
+                // 현재 속도가 저장된(원래) 속도보다 작다면 복구
+                if (queenController.moveSpeed < savedQueenSpeed)
+                {
+                    queenController.moveSpeed = savedQueenSpeed;
+                }
+            }
+
+            // 참조 끊기
+            if (queenBee.carriedHive == this)
+            {
+                queenBee.carriedHive = null;
+            }
+        }
     }
 }
