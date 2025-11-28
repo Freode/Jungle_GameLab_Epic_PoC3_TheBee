@@ -2,23 +2,23 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Àû À¯´Ö(¸»¹ú) AI ÃÑ°ı
+/// ì  ìœ ë‹›(ë§ë²Œ) AI ì´ê´„
 /// </summary>
 public class EnemyAI : MonoBehaviour
 {
-    [Header("AI ¼³Á¤")]
-    [Tooltip("½Ã¾ß ¹üÀ§ (Å¸ÀÏ ¼ö)")]
+    [Header("AI ì„¤ì •")]
+    [Tooltip("ì‹œì•¼ ë²”ìœ„ (íƒ€ì¼ ìˆ˜)")]
     public int visionRange = 3;
-    [Tooltip("ÇÏÀÌºê È°µ¿ ¹üÀ§ (Å¸ÀÏ ¼ö)")]
+    [Tooltip("í•˜ì´ë¸Œ í™œë™ ë²”ìœ„ (íƒ€ì¼ ìˆ˜)")]
     public int activityRange = 5;
-    [Tooltip("½ºÄµ °£°İ (ÃÊ)")]
+    [Tooltip("ìŠ¤ìº” ê°„ê²© (ì´ˆ)")]
     public float scanInterval = 1f;
-    [Tooltip("°ø°İ ¹üÀ§ (Å¸ÀÏ °Å¸®) - 0ÀÌ¸é °°Àº Å¸ÀÏ¿¡¼­¸¸ °ø°İ")]
+    [Tooltip("ê³µê²© ë²”ìœ„ (íƒ€ì¼ ê±°ë¦¬) - 0ì´ë©´ ê°™ì€ íƒ€ì¼ì—ì„œë§Œ ê³µê²©")]
     public int attackRange = 0;
-    [Tooltip("¼øÂû °£°İ (ÃÊ)")]
+    [Tooltip("ìˆœì°° ê°„ê²© (ì´ˆ)")]
     public float patrolInterval = 3f;
 
-    [Header("µğ¹ö±×")]
+    [Header("ë””ë²„ê·¸")]
     public bool showDebugLogs = false;
 
     [HideInInspector]
@@ -74,48 +74,48 @@ public class EnemyAI : MonoBehaviour
 
     void UpdateBehavior()
     {
-        // ? 1. Å¸°Ù ÇÏÀÌºê À¯È¿¼º Ã¼Å© (¿şÀÌºê ¸»¹ú¸¸)
+        // ? 1. íƒ€ê²Ÿ í•˜ì´ë¸Œ ìœ íš¨ì„± ì²´í¬ (ì›¨ì´ë¸Œ ë§ë²Œë§Œ)
         if (isWaveWasp && targetHive != null)
         {
-            // Å¸°Ù ÇÏÀÌºê°¡ ÆÄ±«µÇ¾ú´ÂÁö È®ÀÎ
+            // íƒ€ê²Ÿ í•˜ì´ë¸Œê°€ íŒŒê´´ë˜ì—ˆëŠ”ì§€ í™•ì¸
             if (targetHive == null || targetHive.gameObject == null)
             {
                 if (showDebugLogs)
-                    Debug.Log($"[Enemy AI] Å¸°Ù ÇÏÀÌºê ÆÄ±«µÊ. ¿©¿Õ¹ú Ã£±â.");
+                    Debug.Log($"[Enemy AI] íƒ€ê²Ÿ í•˜ì´ë¸Œ íŒŒê´´ë¨. ì—¬ì™•ë²Œ ì°¾ê¸°.");
                 
                 targetHive = null;
                 isMovingToTargetHive = false;
-                // ¿©¿Õ¹ú Ã£±â·Î ÀüÈ¯
+                // ì—¬ì™•ë²Œ ì°¾ê¸°ë¡œ ì „í™˜
                 MoveToQueenBee();
                 return;
             }
         }
         
-        // ? 2. Àû Å¸°ÙÀÌ ÀÖ´Â °æ¿ì - ¿ì¼± Ã³¸®
+        // ? 2. ì  íƒ€ê²Ÿì´ ìˆëŠ” ê²½ìš° - ìš°ì„  ì²˜ë¦¬
         if (currentTarget != null)
         {
-            // Å¸°ÙÀÌ Á×¾ú°Å³ª Á¦°ÅµÊ
+            // íƒ€ê²Ÿì´ ì£½ì—ˆê±°ë‚˜ ì œê±°ë¨
             if (currentTarget == null || currentTarget.gameObject == null)
             {
                 StopChasing();
-                // ? ´ÙÀ½ UpdateBehavior()¿¡¼­ ÀÚµ¿À¸·Î Àû Å½»ö
+                // ? ë‹¤ìŒ UpdateBehavior()ì—ì„œ ìë™ìœ¼ë¡œ ì  íƒìƒ‰
                 return;
             }
 
-            // Å¸°ÙÀÌ ½Ã¾ß ¹ÛÀ¸·Î ¹ş¾î³²
+            // íƒ€ê²Ÿì´ ì‹œì•¼ ë°–ìœ¼ë¡œ ë²—ì–´ë‚¨
             int distanceToTarget = GetDistance(agent.q, agent.r, currentTarget.q, currentTarget.r);
 
-            // ? ¿şÀÌºê ¸»¹úÀÌ ¾Æ´Ò ¶§¸¸ È°µ¿ ¹üÀ§ Ã¼Å©
+            // ? ì›¨ì´ë¸Œ ë§ë²Œì´ ì•„ë‹ ë•Œë§Œ í™œë™ ë²”ìœ„ ì²´í¬
             if (!isWaveWasp)
             {
-                // ? ½Ã¾ßÀÇ 2¹è¸¦ ¹ş¾î³ª¸é Ãß°İ Áß´Ü
+                // ? ì‹œì•¼ì˜ 2ë°°ë¥¼ ë²—ì–´ë‚˜ë©´ ì¶”ê²© ì¤‘ë‹¨
                 if (distanceToTarget > visionRange * 2)
                 {
                     if (showDebugLogs)
-                        Debug.Log($"[Enemy AI] Å¸°ÙÀÌ ³Ê¹« ¸Ö¾îÁü. Ãß°İ Áß´Ü.");
+                        Debug.Log($"[Enemy AI] íƒ€ê²Ÿì´ ë„ˆë¬´ ë©€ì–´ì§. ì¶”ê²© ì¤‘ë‹¨.");
                     StopChasing();
                 
-                    // ? Å¸°Ù ÇÏÀÌºê·Î º¹±Í
+                    // ? íƒ€ê²Ÿ í•˜ì´ë¸Œë¡œ ë³µê·€
                     if (isWaveWasp && targetHive != null)
                     {
                         MoveToTargetHive();
@@ -123,33 +123,33 @@ public class EnemyAI : MonoBehaviour
                     return;
                 }
 
-                // ? Å¸°ÙÀÌ È°µ¿ ¹üÀ§¸¦ ¹ş¾î³ª¸é Ãß°İ Áß´Ü
+                // ? íƒ€ê²Ÿì´ í™œë™ ë²”ìœ„ë¥¼ ë²—ì–´ë‚˜ë©´ ì¶”ê²© ì¤‘ë‹¨
                 if (!IsWithinHiveRange(currentTarget.q, currentTarget.r))
                 {
                     if (showDebugLogs)
-                        Debug.Log($"[Enemy AI] Å¸°ÙÀÌ ÇÏÀÌºê ¹üÀ§ ¹Û. Ãß°İ Áß´Ü.");
+                        Debug.Log($"[Enemy AI] íƒ€ê²Ÿì´ í•˜ì´ë¸Œ ë²”ìœ„ ë°–. ì¶”ê²© ì¤‘ë‹¨.");
                     StopChasing();
                     ReturnToHive();
                     return;
                 }
             }
 
-            // ? Å¸°ÙÀÌ ÇÏÀÌºêÀÎÁö È®ÀÎ
+            // ? íƒ€ê²Ÿì´ í•˜ì´ë¸Œì¸ì§€ í™•ì¸
             var targetHiveComponent = currentTarget.GetComponent<Hive>();
             bool isTargetHive = (targetHiveComponent != null);
 
-            // ? ÇÏÀÌºê´Â °Ç¹°ÀÌ¶ó °°Àº Å¸ÀÏ ÁøÀÔ ºÒ°¡ ¡æ ÀÎÁ¢ Å¸ÀÏ(distance = 1)¿¡¼­ °ø°İ
+            // ? í•˜ì´ë¸ŒëŠ” ê±´ë¬¼ì´ë¼ ê°™ì€ íƒ€ì¼ ì§„ì… ë¶ˆê°€ â†’ ì¸ì ‘ íƒ€ì¼(distance = 1)ì—ì„œ ê³µê²©
             if (isTargetHive && distanceToTarget == 1)
             {
-                // ? ÀÎÁ¢ Å¸ÀÏ¿¡¼­ ÀÌµ¿ Áß´Ü
+                // ? ì¸ì ‘ íƒ€ì¼ì—ì„œ ì´ë™ ì¤‘ë‹¨
                 if (controller != null && controller.IsMoving())
                 {
                     controller.ClearPath();
                     if (showDebugLogs)
-                        Debug.Log($"[Enemy AI] ÇÏÀÌºê ÀÎÁ¢ µµÂø. ÀÌµ¿ Áß´Ü.");
+                        Debug.Log($"[Enemy AI] í•˜ì´ë¸Œ ì¸ì ‘ ë„ì°©. ì´ë™ ì¤‘ë‹¨.");
                 }
                 
-                // ? °ø°İ °¡´ÉÇÏ¸é °ø°İ
+                // ? ê³µê²© ê°€ëŠ¥í•˜ë©´ ê³µê²©
                 bool canAttack = combat != null && combat.CanAttack();
                 if (canAttack)
                 {
@@ -157,26 +157,26 @@ public class EnemyAI : MonoBehaviour
                     var prioritized = FindTankOnTile(currentTarget.q, currentTarget.r);
                     if (prioritized != null && prioritized != currentTarget)
                     {
-                        if (showDebugLogs) Debug.Log($"[Enemy AI] ÅÊÅ© À¯´Ö ¹ß°ß. °ø°İ ´ë»ó º¯°æ: {prioritized.name}");
+                        if (showDebugLogs) Debug.Log($"[Enemy AI] íƒ±í¬ ìœ ë‹› ë°œê²¬. ê³µê²© ëŒ€ìƒ ë³€ê²½: {prioritized.name}");
                         currentTarget = prioritized;
                         isChasing = true;
                     }
 
                     Attack(currentTarget);
                     if (showDebugLogs)
-                        Debug.Log($"[Enemy AI] ÇÏÀÌºê °ø°İ! °Å¸®: {distanceToTarget}");
+                        Debug.Log($"[Enemy AI] í•˜ì´ë¸Œ ê³µê²©! ê±°ë¦¬: {distanceToTarget}");
                 }
                 else
                 {
-                    // °ø°İ ÄğÅ¸ÀÓ Áß¿¡´Â È¸ÇÇ
+                    // ê³µê²© ì¿¨íƒ€ì„ ì¤‘ì—ëŠ” íšŒí”¼
                     EvadeInCurrentTile();
                     if (showDebugLogs)
-                        Debug.Log($"[Enemy AI] °ø°İ ÄğÅ¸ÀÓ. È¸ÇÇ Çàµ¿.");
+                        Debug.Log($"[Enemy AI] ê³µê²© ì¿¨íƒ€ì„. íšŒí”¼ í–‰ë™.");
                 }
                 return;
             }
 
-            // ? °ø°İ ¹üÀ§ Ã¼Å© (attackRange = 0, °°Àº Å¸ÀÏ¿¡¼­¸¸ °ø°İ)
+            // ? ê³µê²© ë²”ìœ„ ì²´í¬ (attackRange = 0, ê°™ì€ íƒ€ì¼ì—ì„œë§Œ ê³µê²©)
             bool canAttack2 = combat != null && combat.CanAttack();
 
             if (distanceToTarget <= attackRange)
@@ -185,7 +185,7 @@ public class EnemyAI : MonoBehaviour
                 var prioritized = FindTankOnTile(currentTarget.q, currentTarget.r);
                 if (prioritized != null && prioritized != currentTarget)
                 {
-                    if (showDebugLogs) Debug.Log($"[Enemy AI] ÅÊÅ© À¯´Ö ¹ß°ß. °ø°İ ´ë»ó º¯°æ: {prioritized.name}");
+                    if (showDebugLogs) Debug.Log($"[Enemy AI] íƒ±í¬ ìœ ë‹› ë°œê²¬. ê³µê²© ëŒ€ìƒ ë³€ê²½: {prioritized.name}");
                     currentTarget = prioritized;
                 }
 
@@ -198,12 +198,12 @@ public class EnemyAI : MonoBehaviour
                     EvadeInCurrentTile();
                     
                     if (showDebugLogs)
-                        Debug.Log($"[Enemy AI] °ø°İ ÄğÅ¸ÀÓ. È¸ÇÇ Çàµ¿.");
+                        Debug.Log($"[Enemy AI] ê³µê²© ì¿¨íƒ€ì„. íšŒí”¼ í–‰ë™.");
                 }
                 return;
             }
 
-            // Ãß°İ Áß
+            // ì¶”ê²© ì¤‘
             if (canAttack2)
             {
                 ChaseTarget(currentTarget);
@@ -213,12 +213,12 @@ public class EnemyAI : MonoBehaviour
                 EvadeInCurrentTile();
                 
                 if (showDebugLogs)
-                    Debug.Log($"[Enemy AI] °ø°İ ÄğÅ¸ÀÓ. È¸ÇÇ Çàµ¿.");
+                    Debug.Log($"[Enemy AI] ê³µê²© ì¿¨íƒ€ì„. íšŒí”¼ í–‰ë™.");
             }
         }
         else
         {
-            // ? 3. Àû Å¸°Ù ¾øÀ½ - ¿şÀÌºê ¸»¹úÀº Å¸°Ù ÇÏÀÌºê µµÂø Ã¼Å©
+            // ? 3. ì  íƒ€ê²Ÿ ì—†ìŒ - ì›¨ì´ë¸Œ ë§ë²Œì€ íƒ€ê²Ÿ í•˜ì´ë¸Œ ë„ì°© ì²´í¬
             if (isWaveWasp && targetHive != null)
             {
                 var targetAgent = targetHive.GetComponent<UnitAgent>();
@@ -226,59 +226,59 @@ public class EnemyAI : MonoBehaviour
                 {
                     int distanceToTarget = GetDistance(agent.q, agent.r, targetAgent.q, targetAgent.r);
                     
-                    // ? Å¸°Ù ÇÏÀÌºê ÀÎÁ¢ µµÂø ¡æ currentTarget ¼³Á¤ÇÏ°í ´ÙÀ½ ÇÁ·¹ÀÓ¿¡ °ø°İ
+                    // ? íƒ€ê²Ÿ í•˜ì´ë¸Œ ì¸ì ‘ ë„ì°© â†’ currentTarget ì„¤ì •í•˜ê³  ë‹¤ìŒ í”„ë ˆì„ì— ê³µê²©
                     if (distanceToTarget <= 1)
                     {
                         if (showDebugLogs)
-                            Debug.Log($"[Enemy AI] Å¸°Ù ÇÏÀÌºê ÀÎÁ¢ µµÂø! °ø°İ ´ë»ó ¼³Á¤. °Å¸®: {distanceToTarget}");
+                            Debug.Log($"[Enemy AI] íƒ€ê²Ÿ í•˜ì´ë¸Œ ì¸ì ‘ ë„ì°©! ê³µê²© ëŒ€ìƒ ì„¤ì •. ê±°ë¦¬: {distanceToTarget}");
                         
-                        // Å¸°Ù ÇÏÀÌºê¸¦ currentTargetÀ¸·Î ¼³Á¤
+                        // íƒ€ê²Ÿ í•˜ì´ë¸Œë¥¼ currentTargetìœ¼ë¡œ ì„¤ì •
                         currentTarget = targetAgent;
                         isMovingToTargetHive = false;
                         isChasing = true;
                         
-                        // ? °æ·Î Áß´Ü (ÀÎÁ¢ Å¸ÀÏ¿¡¼­ ¸ØÃã)
+                        // ? ê²½ë¡œ ì¤‘ë‹¨ (ì¸ì ‘ íƒ€ì¼ì—ì„œ ë©ˆì¶¤)
                         if (controller != null)
                         {
                             controller.ClearPath();
                         }
                         
-                        // ? Áï½Ã °ø°İ ½Ãµµ
+                        // ? ì¦‰ì‹œ ê³µê²© ì‹œë„
                         bool canAttack = combat != null && combat.CanAttack();
                         
                         // prefer tank on tile if present
                         var prioritized = FindTankOnTile(currentTarget.q, currentTarget.r);
                         if (prioritized != null && prioritized != currentTarget)
                         {
-                            if (showDebugLogs) Debug.Log($"[Enemy AI] ÅÊÅ© À¯´Ö ¹ß°ß. °ø°İ ´ë»ó º¯°æ: {prioritized.name}");
+                            if (showDebugLogs) Debug.Log($"[Enemy AI] íƒ±í¬ ìœ ë‹› ë°œê²¬. ê³µê²© ëŒ€ìƒ ë³€ê²½: {prioritized.name}");
                             currentTarget = prioritized;
                         }
 
                         if (canAttack) Attack(currentTarget);
                         
-                        // ? return Á¦°Å - ´ÙÀ½ ÇÁ·¹ÀÓ¿¡ "Àû Å¸°ÙÀÌ ÀÖ´Â °æ¿ì" ·ÎÁ÷À¸·Î °è¼Ó °ø°İ
+                        // ? return ì œê±° - ë‹¤ìŒ í”„ë ˆì„ì— "ì  íƒ€ê²Ÿì´ ìˆëŠ” ê²½ìš°" ë¡œì§ìœ¼ë¡œ ê³„ì† ê³µê²©
                         return;
                     }
                 }
             }
             
-            // ? 4. Àû Å¸°Ù Å½»ö
+            // ? 4. ì  íƒ€ê²Ÿ íƒìƒ‰
             currentTarget = FindNearestPlayerUnit();
             
             if (currentTarget != null)
             {
                 if (showDebugLogs)
-                    Debug.Log($"[Enemy AI] »õ Å¸°Ù ¹ß°ß: {currentTarget.name}");
+                    Debug.Log($"[Enemy AI] ìƒˆ íƒ€ê²Ÿ ë°œê²¬: {currentTarget.name}");
                 isChasing = true;
                 isPatrolling = false;
-                isMovingToTargetHive = false; // ? Å¸°Ù ÇÏÀÌºê ÀÌµ¿ Áß´Ü
+                isMovingToTargetHive = false; // ? íƒ€ê²Ÿ í•˜ì´ë¸Œ ì´ë™ ì¤‘ë‹¨
             }
             else
             {
-                // ? 5. Àûµµ ¾øÀ½ - Å¸°Ù ÇÏÀÌºê ¶Ç´Â ¼øÂû
+                // ? 5. ì ë„ ì—†ìŒ - íƒ€ê²Ÿ í•˜ì´ë¸Œ ë˜ëŠ” ìˆœì°°
                 if (isWaveWasp && targetHive != null)
                 {
-                    // ? ÀÌµ¿ ÁßÀÌ ¾Æ´Ï°í, ÀÌ¹Ì ÀÌµ¿ ÁßÀÌÁö ¾ÊÀ» ¶§¸¸ ÀÌµ¿ ½ÃÀÛ
+                    // ? ì´ë™ ì¤‘ì´ ì•„ë‹ˆê³ , ì´ë¯¸ ì´ë™ ì¤‘ì´ì§€ ì•Šì„ ë•Œë§Œ ì´ë™ ì‹œì‘
                     if (!isMovingToTargetHive && (controller == null || !controller.IsMoving()))
                     {
                         MoveToTargetHive();
@@ -286,10 +286,10 @@ public class EnemyAI : MonoBehaviour
                 }
                 else
                 {
-                    // ÀÏ¹İ ¸»¹ú: ¼øÂû
+                    // ì¼ë°˜ ë§ë²Œ: ìˆœì°°
                     if (isChasing)
                     {
-                        // Ãß°İ ÁßÀÌ¾úÀ¸¸é ÇÏÀÌºê·Î º¹±Í
+                        // ì¶”ê²© ì¤‘ì´ì—ˆìœ¼ë©´ í•˜ì´ë¸Œë¡œ ë³µê·€
                         ReturnToHive();
                     }
                 }
@@ -298,7 +298,7 @@ public class EnemyAI : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç Å¸ÀÏ¿¡ ÅÊÄ¿Çü ÀÏ²ÛÀÌ ÀÖ´ÂÁö °Ë»çÇÏ°í ¹İÈ¯
+    /// í˜„ì¬ íƒ€ì¼ì— íƒ±ì»¤í˜• ì¼ê¾¼ì´ ìˆëŠ”ì§€ ê²€ì‚¬í•˜ê³  ë°˜í™˜
     /// </summary>
     UnitAgent FindTankOnTile(int q, int r)
     {
@@ -325,25 +325,25 @@ public class EnemyAI : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÏÀÌºê 1Ä­ ÀÌ³»¿¡¼­ ·£´ı ¼øÂû
+    /// í•˜ì´ë¸Œ 1ì¹¸ ì´ë‚´ì—ì„œ ëœë¤ ìˆœì°°
     /// </summary>
     void PatrolAroundHive()
     {
         if (homeHive == null || controller == null) return;
 
-        // ÀÌ¹Ì ÀÌµ¿ ÁßÀÌ¸é ¼øÂûÇÏÁö ¾ÊÀ½
+        // ì´ë¯¸ ì´ë™ ì¤‘ì´ë©´ ìˆœì°°í•˜ì§€ ì•ŠìŒ
         if (controller.IsMoving()) return;
 
-        // ÇöÀç À§Ä¡°¡ ÇÏÀÌºê 1Ä­ ÀÌ³»ÀÎÁö È®ÀÎ
+        // í˜„ì¬ ìœ„ì¹˜ê°€ í•˜ì´ë¸Œ 1ì¹¸ ì´ë‚´ì¸ì§€ í™•ì¸
         int currentDistance = GetDistance(agent.q, agent.r, homeHive.q, homeHive.r);
         if (currentDistance > 1)
         {
-            // ÇÏÀÌºê ¹ÛÀÌ¸é º¹±Í
+            // í•˜ì´ë¸Œ ë°–ì´ë©´ ë³µê·€
             ReturnToHive();
             return;
         }
 
-        // ÇÏÀÌºê 1Ä­ ÀÌ³»ÀÇ ·£´ı Å¸ÀÏ ¼±ÅÃ (Àû ¾øÀ» ¶§ ±âº» ¼øÂû)
+        // í•˜ì´ë¸Œ 1ì¹¸ ì´ë‚´ì˜ ëœë¤ íƒ€ì¼ ì„ íƒ (ì  ì—†ì„ ë•Œ ê¸°ë³¸ ìˆœì°°)
         var patrolTile = GetRandomTileAroundHive();
         if (patrolTile != null)
         {
@@ -353,18 +353,18 @@ public class EnemyAI : MonoBehaviour
             if (path != null && path.Count > 0)
             {
                 controller.agent = agent;
-                // ? SetPathSimple »ç¿ë
+                // ? SetPathSimple ì‚¬ìš©
                 controller.SetPathSimple(path);
                 isPatrolling = true;
 
                 if (showDebugLogs)
-                    Debug.Log($"[Enemy AI] ÇÏÀÌºê 1Ä­ ³» ¼øÂû: ({patrolTile.q}, {patrolTile.r})");
+                    Debug.Log($"[Enemy AI] í•˜ì´ë¸Œ 1ì¹¸ ë‚´ ìˆœì°°: ({patrolTile.q}, {patrolTile.r})");
             }
         }
     }
 
     /// <summary>
-    /// ÇÏÀÌºê 1Ä­ ÀÌ³»ÀÇ ·£´ı Å¸ÀÏ °¡Á®¿À±â ?
+    /// í•˜ì´ë¸Œ 1ì¹¸ ì´ë‚´ì˜ ëœë¤ íƒ€ì¼ ê°€ì ¸ì˜¤ê¸° ?
     /// </summary>
     HexTile GetRandomTileAroundHive()
     {
@@ -372,19 +372,19 @@ public class EnemyAI : MonoBehaviour
 
         var possibleTiles = new List<HexTile>();
 
-        // ? ÇÏÀÌºê 1Ä­ ÀÌ³»ÀÇ ¸ğµç Å¸ÀÏ ¼öÁı
+        // ? í•˜ì´ë¸Œ 1ì¹¸ ì´ë‚´ì˜ ëª¨ë“  íƒ€ì¼ ìˆ˜ì§‘
         for (int dq = -1; dq <= 1; dq++)
         {
             for (int dr = -1; dr <= 1; dr++)
             {
-                // Å¥ºê ÁÂÇ¥ Á¦¾à: dq + dr + ds = 0
+                // íë¸Œ ì¢Œí‘œ ì œì•½: dq + dr + ds = 0
                 int ds = -dq - dr;
                 if (ds < -1 || ds > 1) continue;
 
                 int tq = homeHive.q + dq;
                 int tr = homeHive.r + dr;
 
-                // ÇöÀç À§Ä¡´Â Á¦¿Ü
+                // í˜„ì¬ ìœ„ì¹˜ëŠ” ì œì™¸
                 if (tq == agent.q && tr == agent.r) continue;
 
                 var tile = TileManager.Instance.GetTile(tq, tr);
@@ -395,7 +395,7 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        // ·£´ı Å¸ÀÏ ¼±ÅÃ
+        // ëœë¤ íƒ€ì¼ ì„ íƒ
         if (possibleTiles.Count > 0)
         {
             int randomIndex = Random.Range(0, possibleTiles.Count);
@@ -406,7 +406,7 @@ public class EnemyAI : MonoBehaviour
     }
 
     /// <summary>
-    /// ½Ã¾ß ¹üÀ§ ³» °¡Àå °¡±î¿î ÇÃ·¹ÀÌ¾î À¯´Ö Ã£±â (°³¼±: ÀÏ²Û ¿ì¼± ¡æ °Ç¹° °ø°İ)
+    /// ì‹œì•¼ ë²”ìœ„ ë‚´ ê°€ì¥ ê°€ê¹Œìš´ í”Œë ˆì´ì–´ ìœ ë‹› ì°¾ê¸° (ê°œì„ : ì¼ê¾¼ ìš°ì„  â†’ ê±´ë¬¼ ê³µê²©)
     /// </summary>
     UnitAgent FindNearestPlayerUnit()
     {
@@ -419,52 +419,52 @@ public class EnemyAI : MonoBehaviour
         {
             if (unit == null || unit == agent) continue;
             
-            // ÇÃ·¹ÀÌ¾î À¯´Ö¸¸
+            // í”Œë ˆì´ì–´ ìœ ë‹›ë§Œ
             if (unit.faction != Faction.Player) continue;
 
-            // ¹«Àû À¯´ÖÀº Á¦¿Ü
+            // ë¬´ì  ìœ ë‹›ì€ ì œì™¸
             var combat = unit.GetComponent<CombatUnit>();
             if (combat != null && combat.isInvincible)
             {
                 if (showDebugLogs)
-                    Debug.Log($"[Enemy AI] {unit.name}Àº(´Â) ¹«Àû »óÅÂ¶ó Å¸°Ù¿¡¼­ Á¦¿Ü");
+                    Debug.Log($"[Enemy AI] {unit.name}ì€(ëŠ”) ë¬´ì  ìƒíƒœë¼ íƒ€ê²Ÿì—ì„œ ì œì™¸");
                 continue;
             }
 
             int distance = GetDistance(agent.q, agent.r, unit.q, unit.r);
 
-            // ? ½Ã¾ß ¹üÀ§ ³»¸¸ Ã¼Å© (È°µ¿ ¹üÀ§ Ã¼Å© Á¦°Å)
+            // ? ì‹œì•¼ ë²”ìœ„ ë‚´ë§Œ ì²´í¬ (í™œë™ ë²”ìœ„ ì²´í¬ ì œê±°)
             if (distance <= visionRange)
             {
-                // ? Å¸ÀÔº° ºĞ·ù
+                // ? íƒ€ì…ë³„ ë¶„ë¥˜
                 var hive = unit.GetComponent<Hive>();
                 if (hive != null)
                 {
-                    // ÇÏÀÌºê´Â 2¼øÀ§
+                    // í•˜ì´ë¸ŒëŠ” 2ìˆœìœ„
                     hives.Add(unit);
                 }
                 else
                 {
-                    // ÀÏ¹İ À¯´Ö (²Ü¹ú) - 1¼øÀ§
+                    // ì¼ë°˜ ìœ ë‹› (ê¿€ë²Œ) - 1ìˆœìœ„
                     workers.Add(unit);
                 }
             }
         }
 
-        // ? 1¼øÀ§: °¡Àå °¡±î¿î ÀÏ¹İ À¯´Ö(²Ü¹ú)
-        UnitAgent target = GetClosestPlayerUnit(workers, "ÀÏ¹İ À¯´Ö");
+        // ? 1ìˆœìœ„: ê°€ì¥ ê°€ê¹Œìš´ ì¼ë°˜ ìœ ë‹›(ê¿€ë²Œ)
+        UnitAgent target = GetClosestPlayerUnit(workers, "ì¼ë°˜ ìœ ë‹›");
         
-        // ? 2¼øÀ§: °¡Àå °¡±î¿î ÇÏÀÌºê
+        // ? 2ìˆœìœ„: ê°€ì¥ ê°€ê¹Œìš´ í•˜ì´ë¸Œ
         if (target == null)
         {
-            target = GetClosestPlayerUnit(hives, "ÇÃ·¹ÀÌ¾î ÇÏÀÌºê");
+            target = GetClosestPlayerUnit(hives, "í”Œë ˆì´ì–´ í•˜ì´ë¸Œ");
         }
 
         return target;
     }
     
     /// <summary>
-    /// ¸®½ºÆ®¿¡¼­ °¡Àå °¡±î¿î ÇÃ·¹ÀÌ¾î À¯´Ö Ã£±â ?
+    /// ë¦¬ìŠ¤íŠ¸ì—ì„œ ê°€ì¥ ê°€ê¹Œìš´ í”Œë ˆì´ì–´ ìœ ë‹› ì°¾ê¸° ?
     /// </summary>
     UnitAgent GetClosestPlayerUnit(List<UnitAgent> units, string typeName)
     {
@@ -485,14 +485,14 @@ public class EnemyAI : MonoBehaviour
         
         if (closest != null && showDebugLogs)
         {
-            Debug.Log($"[Enemy AI] {typeName} ¹ß°ß! ¿ì¼± °ø°İ ´ë»ó: {closest.name}");
+            Debug.Log($"[Enemy AI] {typeName} ë°œê²¬! ìš°ì„  ê³µê²© ëŒ€ìƒ: {closest.name}");
         }
         
         return closest;
     }
 
     /// <summary>
-    /// Å¸°Ù Ãß°İ
+    /// íƒ€ê²Ÿ ì¶”ê²©
     /// </summary>
     void ChaseTarget(UnitAgent target)
     {
@@ -508,17 +508,17 @@ public class EnemyAI : MonoBehaviour
         if (path != null && path.Count > 0)
         {
             controller.agent = agent;
-            // ? SetPathSimple »ç¿ë (¹æÇâ Ã¼Å© ¾øÀÌ ´Ü¼ø ¼³Á¤)
+            // ? SetPathSimple ì‚¬ìš© (ë°©í–¥ ì²´í¬ ì—†ì´ ë‹¨ìˆœ ì„¤ì •)
             controller.SetPathSimple(path);
             isPatrolling = false;
 
             if (showDebugLogs)
-                Debug.Log($"[Enemy AI] Å¸°Ù Ãß°İ Áß: {target.name}");
+                Debug.Log($"[Enemy AI] íƒ€ê²Ÿ ì¶”ê²© ì¤‘: {target.name}");
         }
     }
 
     /// <summary>
-    /// Å¸°Ù ÇÏÀÌºê·Î ÀÌµ¿ ?
+    /// íƒ€ê²Ÿ í•˜ì´ë¸Œë¡œ ì´ë™ ?
     /// </summary>
     void MoveToTargetHive()
     {
@@ -527,21 +527,21 @@ public class EnemyAI : MonoBehaviour
         var targetTile = TileManager.Instance?.GetTile(targetHive.q, targetHive.r);
         if (targetTile == null) return;
 
-        // ? ÀÌ¹Ì Å¸°Ù ÇÏÀÌºê·Î ÀÌµ¿ ÁßÀÌ¸é ½ºÅµ
+        // ? ì´ë¯¸ íƒ€ê²Ÿ í•˜ì´ë¸Œë¡œ ì´ë™ ì¤‘ì´ë©´ ìŠ¤í‚µ
         if (isMovingToTargetHive)
         {
-            // ? Á¤¸»·Î ÀÌµ¿ ÁßÀÎÁö È®ÀÎ (pathQueue ¶Ç´Â isMoving)
+            // ? ì •ë§ë¡œ ì´ë™ ì¤‘ì¸ì§€ í™•ì¸ (pathQueue ë˜ëŠ” isMoving)
             if (controller.IsMoving())
             {
                 if (showDebugLogs)
-                    Debug.Log($"[Enemy AI] ÀÌ¹Ì Å¸°Ù ÇÏÀÌºê·Î ÀÌµ¿ Áß. °æ·Î À¯Áö.");
+                    Debug.Log($"[Enemy AI] ì´ë¯¸ íƒ€ê²Ÿ í•˜ì´ë¸Œë¡œ ì´ë™ ì¤‘. ê²½ë¡œ ìœ ì§€.");
                 return;
             }
             else
             {
-                // ? ÇÃ·¡±×´Â trueÀÎµ¥ ½ÇÁ¦·Î´Â ¸ØÃçÀÖÀ½ ¡æ Àç¼³Á¤ ÇÊ¿ä
+                // ? í”Œë˜ê·¸ëŠ” trueì¸ë° ì‹¤ì œë¡œëŠ” ë©ˆì¶°ìˆìŒ â†’ ì¬ì„¤ì • í•„ìš”
                 if (showDebugLogs)
-                    Debug.Log($"[Enemy AI] ÀÌµ¿ ÇÃ·¡±× trueÀÌÁö¸¸ ½ÇÁ¦·Î´Â ¸ØÃã. °æ·Î Àç¼³Á¤.");
+                    Debug.Log($"[Enemy AI] ì´ë™ í”Œë˜ê·¸ trueì´ì§€ë§Œ ì‹¤ì œë¡œëŠ” ë©ˆì¶¤. ê²½ë¡œ ì¬ì„¤ì •.");
                 isMovingToTargetHive = false;
             }
         }
@@ -549,12 +549,12 @@ public class EnemyAI : MonoBehaviour
         var startTile = TileManager.Instance?.GetTile(agent.q, agent.r);
         if (startTile == null) return;
 
-        // ? ÀÌ¹Ì Å¸°Ù ÇÏÀÌºê ÀÎÁ¢ Å¸ÀÏÀÌ¸é ÀÌµ¿ÇÏÁö ¾ÊÀ½
+        // ? ì´ë¯¸ íƒ€ê²Ÿ í•˜ì´ë¸Œ ì¸ì ‘ íƒ€ì¼ì´ë©´ ì´ë™í•˜ì§€ ì•ŠìŒ
         int distanceToTarget = GetDistance(agent.q, agent.r, targetHive.q, targetHive.r);
         if (distanceToTarget <= 1)
         {
             if (showDebugLogs)
-                Debug.Log($"[Enemy AI] ÀÌ¹Ì Å¸°Ù ÇÏÀÌºê ÀÎÁ¢. ÀÌµ¿ ºÒÇÊ¿ä.");
+                Debug.Log($"[Enemy AI] ì´ë¯¸ íƒ€ê²Ÿ í•˜ì´ë¸Œ ì¸ì ‘. ì´ë™ ë¶ˆí•„ìš”.");
             return;
         }
 
@@ -563,31 +563,31 @@ public class EnemyAI : MonoBehaviour
         if (path != null && path.Count > 0)
         {
             controller.agent = agent;
-            // ? SetPathSimple »ç¿ë (¹æÇâ Ã¼Å© ¾øÀÌ ´Ü¼ø ¼³Á¤)
+            // ? SetPathSimple ì‚¬ìš© (ë°©í–¥ ì²´í¬ ì—†ì´ ë‹¨ìˆœ ì„¤ì •)
             controller.SetPathSimple(path);
             isMovingToTargetHive = true;
 
             if (showDebugLogs)
-                Debug.Log($"[Enemy AI] Å¸°Ù ÇÏÀÌºê·Î ÀÌµ¿ ½ÃÀÛ: ({targetHive.q}, {targetHive.r}), °æ·Î: {path.Count}Å¸ÀÏ");
+                Debug.Log($"[Enemy AI] íƒ€ê²Ÿ í•˜ì´ë¸Œë¡œ ì´ë™ ì‹œì‘: ({targetHive.q}, {targetHive.r}), ê²½ë¡œ: {path.Count}íƒ€ì¼");
         }
     }
 
     /// <summary>
-    /// ¿©¿Õ¹ú Ã£¾Æ¼­ ÀÌµ¿ ?
+    /// ì—¬ì™•ë²Œ ì°¾ì•„ì„œ ì´ë™ ?
     /// </summary>
     void MoveToQueenBee()
     {
         if (controller == null) return;
 
-        // ÇÃ·¹ÀÌ¾î ¿©¿Õ¹ú Ã£±â
+        // í”Œë ˆì´ì–´ ì—¬ì™•ë²Œ ì°¾ê¸°
         UnitAgent queenBee = FindPlayerQueenBee();
         
         if (queenBee == null)
         {
             if (showDebugLogs)
-                Debug.Log($"[Enemy AI] ¿©¿Õ¹úÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù. ¼øÂû ¸ğµå.");
+                Debug.Log($"[Enemy AI] ì—¬ì™•ë²Œì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤. ìˆœì°° ëª¨ë“œ.");
             
-            // ¿©¿Õ¹úÀÌ ¾øÀ¸¸é ¼øÂû
+            // ì—¬ì™•ë²Œì´ ì—†ìœ¼ë©´ ìˆœì°°
             if (homeHive != null)
             {
                 ReturnToHive();
@@ -605,17 +605,17 @@ public class EnemyAI : MonoBehaviour
         if (path != null && path.Count > 0)
         {
             controller.agent = agent;
-            // ? SetPathSimple »ç¿ë
+            // ? SetPathSimple ì‚¬ìš©
             controller.SetPathSimple(path);
             isMovingToTargetHive = false;
 
             if (showDebugLogs)
-                Debug.Log($"[Enemy AI] ¿©¿Õ¹ú·Î ÀÌµ¿ ½ÃÀÛ: ({queenBee.q}, {queenBee.r})");
+                Debug.Log($"[Enemy AI] ì—¬ì™•ë²Œë¡œ ì´ë™ ì‹œì‘: ({queenBee.q}, {queenBee.r})");
         }
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ¿©¿Õ¹ú Ã£±â ?
+    /// í”Œë ˆì´ì–´ ì—¬ì™•ë²Œ ì°¾ê¸° ?
     /// </summary>
     UnitAgent FindPlayerQueenBee()
     {
@@ -625,7 +625,7 @@ public class EnemyAI : MonoBehaviour
         {
             if (unit == null) continue;
             
-            // ÇÃ·¹ÀÌ¾î Áø¿µÀÇ ¿©¿Õ¹ú
+            // í”Œë ˆì´ì–´ ì§„ì˜ì˜ ì—¬ì™•ë²Œ
             if (unit.faction == Faction.Player && unit.isQueen)
             {
                 return unit;
@@ -636,7 +636,7 @@ public class EnemyAI : MonoBehaviour
     }
 
     /// <summary>
-    /// Å¸°Ù °ø°İ
+    /// íƒ€ê²Ÿ ê³µê²©
     /// </summary>
     void Attack(UnitAgent target)
     {
@@ -646,45 +646,72 @@ public class EnemyAI : MonoBehaviour
         var prioritized = FindTankOnTile(target.q, target.r);
         if (prioritized != null && prioritized != target)
         {
-            if (showDebugLogs) Debug.Log($"[Enemy AI] ¿ì¼±¼øÀ§ ÀçÅ½»ö: ÅÊÄ¿ ¹ß°ß, °ø°İ ´ë»ó º¯°æ -> {prioritized.name}");
+            if (showDebugLogs) Debug.Log($"[Enemy AI] ìš°ì„ ìˆœìœ„ ì¬íƒìƒ‰: íƒ±ì»¤ ë°œê²¬, ê³µê²© ëŒ€ìƒ ë³€ê²½ -> {prioritized.name}");
             currentTarget = prioritized;
             target = prioritized;
         }
 
+        // ì—¬ì™•ì´ í•˜ì´ë¸Œ ìœ„ì— ìˆë‹¤ë©´ í•˜ì´ë¸Œë¡œ ê³µê²© ì „í™˜
+        target = RedirectToHiveIfQueenOnHive(target);
+
         var targetCombat = target.GetComponent<CombatUnit>();
         if (targetCombat == null) return;
 
-        // °ø°İ ½Ãµµ (ÄğÅ¸ÀÓ Ã¼Å© Æ÷ÇÔ)
+        // ê³µê²© ì‹œë„ (ì¿¨íƒ€ì„ ì²´í¬ í¬í•¨)
         bool attacked = combat.TryAttack(targetCombat);
 
         if (attacked)
         {
             if (showDebugLogs)
-                Debug.Log($"[Enemy AI] {agent.name}ÀÌ(°¡) {target.name}À»(¸¦) °ø°İ! µ¥¹ÌÁö: {combat.attack}");
+                Debug.Log($"[Enemy AI] {agent.name}ì´(ê°€) {target.name}ì„(ë¥¼) ê³µê²©! ë°ë¯¸ì§€: {combat.attack}");
 
-            // Å¸°ÙÀÌ Á×¾úÀ¸¸é Ãß°İ Áß´Ü
+            // íƒ€ê²Ÿì´ ì£½ì—ˆìœ¼ë©´ ì¶”ê²© ì¤‘ë‹¨
             if (targetCombat.health <= 0)
             {
-                if (showDebugLogs) Debug.Log($"[Enemy AI] Å¸°Ù Ã³Ä¡!");
+                if (showDebugLogs) Debug.Log($"[Enemy AI] íƒ€ê²Ÿ ì²˜ì¹˜!");
                 StopChasing();
             }
         }
         else
         {
-            if (showDebugLogs) Debug.Log($"[Enemy AI] °ø°İ ÄğÅ¸ÀÓ Áß...");
+            if (showDebugLogs) Debug.Log($"[Enemy AI] ê³µê²© ì¿¨íƒ€ì„ ì¤‘...");
         }
     }
 
     /// <summary>
-    /// Ãß°İ Áß´Ü
+    /// ì—¬ì™•ê³¼ í•˜ì´ë¸Œê°€ ê°™ì€ íƒ€ì¼ì¼ ë•Œ ê³µê²© ëŒ€ìƒì„ í•˜ì´ë¸Œë¡œ ì „í™˜
+    /// </summary>
+    UnitAgent RedirectToHiveIfQueenOnHive(UnitAgent target)
+    {
+        if (target == null || !target.isQueen) return target;
+
+        // ì—¬ì™•ì´ ì†í•œ í•˜ì´ë¸Œê°€ ì—†ìœ¼ë©´ ê·¸ëŒ€ë¡œ
+        if (target.homeHive == null) return target;
+
+        // ì¢Œí‘œ ë¹„êµ
+        if (target.q == target.homeHive.q && target.r == target.homeHive.r)
+        {
+            var hiveAgent = target.homeHive.GetComponent<UnitAgent>();
+            if (hiveAgent != null)
+            {
+                if (showDebugLogs) Debug.Log("[Enemy AI] ì—¬ì™•ì´ í•˜ì´ë¸Œ ìœ„ â†’ ê³µê²© ëŒ€ìƒ í•˜ì´ë¸Œë¡œ ì „í™˜");
+                return hiveAgent;
+            }
+        }
+
+        return target;
+    }
+
+    /// <summary>
+    /// ì¶”ê²© ì¤‘ë‹¨
     /// </summary>
     void StopChasing()
     {
         currentTarget = null;
         isChasing = false;
 
-        // ? ¿şÀÌºê ¸»¹ú: Å¸°Ù¸¸ ÃÊ±âÈ­ (´ÙÀ½ UpdateBehavior¿¡¼­ ÀÚµ¿À¸·Î Å½»ö)
-        // ? ÀÏ¹İ ¸»¹ú: ÀÌµ¿ Áß´Ü
+        // ? ì›¨ì´ë¸Œ ë§ë²Œ: íƒ€ê²Ÿë§Œ ì´ˆê¸°í™” (ë‹¤ìŒ UpdateBehaviorì—ì„œ ìë™ìœ¼ë¡œ íƒìƒ‰)
+        // ? ì¼ë°˜ ë§ë²Œ: ì´ë™ ì¤‘ë‹¨
         if (!isWaveWasp && !isMovingToTargetHive)
         {
             if (controller != null)
@@ -694,28 +721,28 @@ public class EnemyAI : MonoBehaviour
         }
 
         if (showDebugLogs)
-            Debug.Log($"[Enemy AI] Ãß°İ Áß´Ü");
+            Debug.Log($"[Enemy AI] ì¶”ê²© ì¤‘ë‹¨");
     }
 
     /// <summary>
-    /// ÇöÀç Å¸ÀÏ ³»¿¡¼­ ·£´ı À§Ä¡·Î È¸ÇÇ (ÄğÅ¸ÀÓ µ¿¾È)
+    /// í˜„ì¬ íƒ€ì¼ ë‚´ì—ì„œ ëœë¤ ìœ„ì¹˜ë¡œ íšŒí”¼ (ì¿¨íƒ€ì„ ë™ì•ˆ)
     /// </summary>
     void EvadeInCurrentTile()
     {
         if (controller == null) return;
 
-        // ÀÌ¹Ì ÀÌµ¿ ÁßÀÌ¸é È¸ÇÇÇÏÁö ¾ÊÀ½
+        // ì´ë¯¸ ì´ë™ ì¤‘ì´ë©´ íšŒí”¼í•˜ì§€ ì•ŠìŒ
         if (controller.IsMoving()) return;
 
-        // ÇöÀç Å¸ÀÏ ³»ºÎ¿¡¼­¸¸ ÀÌµ¿
+        // í˜„ì¬ íƒ€ì¼ ë‚´ë¶€ì—ì„œë§Œ ì´ë™
         controller.MoveWithinCurrentTile();
 
         if (showDebugLogs)
-            Debug.Log($"[Enemy AI] Å¸ÀÏ ³»ºÎ È¸ÇÇ ÀÌµ¿");
+            Debug.Log($"[Enemy AI] íƒ€ì¼ ë‚´ë¶€ íšŒí”¼ ì´ë™");
     }
 
     /// <summary>
-    /// ÇÏÀÌºê·Î º¹±Í
+    /// í•˜ì´ë¸Œë¡œ ë³µê·€
     /// </summary>
     void ReturnToHive()
     {
@@ -726,7 +753,7 @@ public class EnemyAI : MonoBehaviour
 
         if (startTile == null || hiveTile == null) return;
 
-        // ÇÏÀÌºê 1Ä­ ÀÌ³»¿¡ ÀÖÀ¸¸é º¹±ÍÇÏÁö ¾ÊÀ½
+        // í•˜ì´ë¸Œ 1ì¹¸ ì´ë‚´ì— ìˆìœ¼ë©´ ë³µê·€í•˜ì§€ ì•ŠìŒ
         int distanceToHive = GetDistance(agent.q, agent.r, homeHive.q, homeHive.r);
         if (distanceToHive <= 1)
         {
@@ -739,35 +766,35 @@ public class EnemyAI : MonoBehaviour
         if (path != null && path.Count > 0)
         {
             controller.agent = agent;
-            // ? SetPathSimple »ç¿ë
+            // ? SetPathSimple ì‚¬ìš©
             controller.SetPathSimple(path);
 
             if (showDebugLogs)
-                Debug.Log($"[Enemy AI] ÇÏÀÌºê·Î º¹±Í");
+                Debug.Log($"[Enemy AI] í•˜ì´ë¸Œë¡œ ë³µê·€");
         }
 
         isChasing = false;
     }
 
     /// <summary>
-    /// ÇÏÀÌºê È°µ¿ ¹üÀ§ ³»¿¡ ÀÖ´ÂÁö È®ÀÎ
+    /// í•˜ì´ë¸Œ í™œë™ ë²”ìœ„ ë‚´ì— ìˆëŠ”ì§€ í™•ì¸
     /// </summary>
     bool IsWithinHiveRange(int q, int r)
     {
-        if (homeHive == null) return true; // ÇÏÀÌºê ¾øÀ¸¸é Á¦ÇÑ ¾øÀ½
+        if (homeHive == null) return true; // í•˜ì´ë¸Œ ì—†ìœ¼ë©´ ì œí•œ ì—†ìŒ
 
         int distance = GetDistance(homeHive.q, homeHive.r, q, r);
         
-        // ÇÏÀÌºê 1Ä­ ÀÌ³»¸é Ç×»ó Çã¿ë
+        // í•˜ì´ë¸Œ 1ì¹¸ ì´ë‚´ë©´ í•­ìƒ í—ˆìš©
         if (distance <= 1)
             return true;
 
-        // È°µ¿ ¹üÀ§ ³»ÀÎÁö È®ÀÎ
+        // í™œë™ ë²”ìœ„ ë‚´ì¸ì§€ í™•ì¸
         return distance <= activityRange;
     }
 
     /// <summary>
-    /// µÎ ÁöÁ¡ »çÀÌÀÇ °Å¸® °è»ê (Axial Distance)
+    /// ë‘ ì§€ì  ì‚¬ì´ì˜ ê±°ë¦¬ ê³„ì‚° (Axial Distance)
     /// </summary>
     int GetDistance(int q1, int r1, int q2, int r2)
     {
@@ -775,7 +802,7 @@ public class EnemyAI : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç Å¸°Ù °¡Á®¿À±â (µğ¹ö±×¿ë)
+    /// í˜„ì¬ íƒ€ê²Ÿ ê°€ì ¸ì˜¤ê¸° (ë””ë²„ê·¸ìš©)
     /// </summary>
     public UnitAgent GetCurrentTarget()
     {
@@ -783,7 +810,7 @@ public class EnemyAI : MonoBehaviour
     }
 
     /// <summary>
-    /// Ãß°İ ÁßÀÎÁö È®ÀÎ (µğ¹ö±×¿ë)
+    /// ì¶”ê²© ì¤‘ì¸ì§€ í™•ì¸ (ë””ë²„ê·¸ìš©)
     /// </summary>
     public bool IsChasing()
     {
@@ -791,24 +818,24 @@ public class EnemyAI : MonoBehaviour
     }
 
     /// <summary>
-    /// ¼øÂû ÁßÀÎÁö È®ÀÎ (µğ¹ö±×¿ë)
+    /// ìˆœì°° ì¤‘ì¸ì§€ í™•ì¸ (ë””ë²„ê·¸ìš©)
     /// </summary>
     public bool IsPatrolling()
     {
         return isPatrolling;
     }
 
-    // Gizmos·Î ½Ã¾ß ¹× È°µ¿ ¹üÀ§ Ç¥½Ã
+    // Gizmosë¡œ ì‹œì•¼ ë° í™œë™ ë²”ìœ„ í‘œì‹œ
     void OnDrawGizmosSelected()
     {
         if (agent == null) return;
 
-        // ½Ã¾ß ¹üÀ§ (³ë¶õ»ö)
+        // ì‹œì•¼ ë²”ìœ„ (ë…¸ë€ìƒ‰)
         Gizmos.color = Color.yellow;
         Vector3 pos = TileHelper.HexToWorld(agent.q, agent.r, 0.5f);
         Gizmos.DrawWireSphere(pos, visionRange * 0.5f);
 
-        // È°µ¿ ¹üÀ§ (»¡°£»ö)
+        // í™œë™ ë²”ìœ„ (ë¹¨ê°„ìƒ‰)
         if (homeHive != null)
         {
             Gizmos.color = Color.red;
@@ -816,7 +843,7 @@ public class EnemyAI : MonoBehaviour
             Gizmos.DrawWireSphere(hivePos, activityRange * 0.5f);
         }
 
-        // ÇöÀç Å¸°Ù (ÃÊ·Ï»ö ¼±)
+        // í˜„ì¬ íƒ€ê²Ÿ (ì´ˆë¡ìƒ‰ ì„ )
         if (currentTarget != null)
         {
             Gizmos.color = Color.green;
@@ -826,7 +853,7 @@ public class EnemyAI : MonoBehaviour
     }
 
     /// <summary>
-    /// °¡Àå °¡±î¿î EnemyHive Ã£±â
+    /// ê°€ì¥ ê°€ê¹Œìš´ EnemyHive ì°¾ê¸°
     /// </summary>
     EnemyHive FindNearestEnemyHive()
     {
