@@ -429,11 +429,64 @@ public static class QueenPheromoneCommandHandler
         if (pheromonePositions.Count == 0) return;
 
         int workerIndex = 0;
-        int baseShare = squadWorkers.Count / pheromonePositions.Count;
-        int remainder = squadWorkers.Count % pheromonePositions.Count;
+        int pCount = pheromonePositions.Count;
 
-        // FIFO: 가장 먼저 뿌린 페르몬부터 배정
-        for (int i = 0; i < pheromonePositions.Count; i++)
+        // 특별 케이스: 페르몬 1개면 전원 집결, 2개면 반씩
+        if (pCount == 1)
+        {
+            var coord = pheromonePositions[0];
+            var targetTile = TileManager.Instance?.GetTile(coord.x, coord.y);
+            if (targetTile == null) return;
+
+            foreach (var worker in squadWorkers)
+            {
+                if (worker == null) continue;
+                worker.hasManualOrder = true;
+                worker.hasManualTarget = true;
+                worker.manualTargetCoord = coord;
+
+                var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
+                if (workerBehavior != null)
+                {
+                    workerBehavior.IssueCommandToTile(targetTile);
+                }
+            }
+            return;
+        }
+
+        if (pCount == 2)
+        {
+            int half = Mathf.CeilToInt(squadWorkers.Count / 2f);
+            int[] share = new int[] { half, squadWorkers.Count - half };
+            for (int i = 0; i < 2; i++)
+            {
+                Vector2Int coord = pheromonePositions[i];
+                var targetTile = TileManager.Instance?.GetTile(coord.x, coord.y);
+                if (targetTile == null) continue;
+
+                for (int j = 0; j < share[i] && workerIndex < squadWorkers.Count; j++)
+                {
+                    var worker = squadWorkers[workerIndex++];
+                    if (worker == null) continue;
+                    worker.hasManualOrder = true;
+                    worker.hasManualTarget = true;
+                    worker.manualTargetCoord = coord;
+
+                    var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
+                    if (workerBehavior != null)
+                    {
+                        workerBehavior.IssueCommandToTile(targetTile);
+                    }
+                }
+            }
+            return;
+        }
+
+        // 기본: 3개 이상은 균등 분배(잔여는 앞에서부터)
+        int baseShare = squadWorkers.Count / pCount;
+        int remainder = squadWorkers.Count % pCount;
+
+        for (int i = 0; i < pCount; i++)
         {
             int assignCount = baseShare + (i < remainder ? 1 : 0);
             Vector2Int coord = pheromonePositions[i];
@@ -453,7 +506,6 @@ public static class QueenPheromoneCommandHandler
                 if (workerBehavior != null)
                 {
                     workerBehavior.IssueCommandToTile(targetTile);
-                    Debug.Log($"[페르몬] {worker.name} → ({coord.x}, {coord.y}) 배정 (index {i}, base {baseShare}, rem {remainder})");
                 }
             }
         }

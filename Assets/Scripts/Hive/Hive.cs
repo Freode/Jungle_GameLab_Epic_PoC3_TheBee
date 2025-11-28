@@ -176,7 +176,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         {
             // 하이브 자신의 UnitAgent
             var hiveAgent = GetComponent<UnitAgent>();
-
+            
             // ✅ GetAllUnits()를 ToList()로 복사하여 컬렉션 수정 문제 해결
             var allUnits = TileManager.Instance.GetAllUnits();
 
@@ -574,6 +574,17 @@ public void StartLiftSequence()
         // 이륙 카운트다운 시작
         castingRoutine = StartCoroutine(CastingRoutine(true, 0, 0));
         StartCoroutine(RefreshQueenUI());
+
+
+        // Immediately refresh command UI so Land command becomes available when float begins
+        StartCoroutine(DelayedRefreshCommandsAfterCastStart());
+    }
+
+    private IEnumerator DelayedRefreshCommandsAfterCastStart()
+    {
+        // small delay to allow internal flags (isFloating/isRelocating) to update if set elsewhere
+        yield return null;
+        if (UnitCommandPanel.Instance != null) UnitCommandPanel.Instance.RefreshAllCommands();
     }
 public void StartLandSequence(int targetQ, int targetR)
     {
@@ -583,6 +594,10 @@ public void StartLandSequence(int targetQ, int targetR)
         // 착륙 카운트다운 시작
         castingRoutine = StartCoroutine(CastingRoutine(false, targetQ, targetR));
         StartCoroutine(RefreshQueenUI());
+
+
+        // Force UI refresh so relocating/land-mode buttons update immediately
+        StartCoroutine(DelayedRefreshCommandsAfterCastStart());
     }
 private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
     {
@@ -652,6 +667,10 @@ private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
 
         if (isLifting) LiftHive();         // 실제 이륙
         else LandHive(targetQ, targetR);   // 실제 착륙
+
+        // After lift/land, force UI refresh on next frame
+        yield return null;
+        if (UnitCommandPanel.Instance != null) UnitCommandPanel.Instance.RefreshAllCommands();
     }
 
     // 캐스팅 강제 취소 (내부용)
