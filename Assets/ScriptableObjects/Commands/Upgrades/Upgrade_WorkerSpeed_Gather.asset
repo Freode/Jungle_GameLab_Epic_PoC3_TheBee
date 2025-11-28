@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 78cca2511c7769342bc6df97870b7f8a, type: 3}
-  m_Name: Upgrade_WorkerSpeed
+  m_Name: Upgrade_WorkerSpeed_Gather
   m_EditorClassIdentifier: 
-  id: upgrade_worker_speed
-  displayName: "\uC77C\uBC8C \uC774\uC18D\\n+0.2"
+  id: upgrade_worker_speed_gatherer
+  displayName: "\uCC44\uCDE8\uD615\\n\uC77C\uBC8C \uC774\uC18D\\n+0.2"
   icon: {fileID: 0}
   requiresTarget: 0
   hidePanelOnClick: 0
   resourceCost: 35
   upgradeType: 3
+  targetRole: 1
   baseCost: 35
   maxLevel: 0

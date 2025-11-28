@@ -331,7 +331,16 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             var controller = go.GetComponent<UnitController>();
             if (controller != null)
             {
-                controller.moveSpeed = HiveManager.Instance.GetWorkerSpeed();
+                // Use role-specific worker speed if available, fallback to Gatherer
+                var ra = go.GetComponent<RoleAssigner>();
+                if (ra != null && HiveManager.Instance != null)
+                {
+                    controller.moveSpeed = HiveManager.Instance.GetWorkerSpeed(ra.role);
+                }
+                else if (HiveManager.Instance != null)
+                {
+                    controller.moveSpeed = HiveManager.Instance.GetWorkerSpeed(RoleType.Gatherer);
+                }
             }
         }
         
