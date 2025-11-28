@@ -208,6 +208,29 @@ public class HiveManager : MonoBehaviour
             
             // ✅ 부대 데이터 저장 (UnitAgent에 squad 필드 추가 필요)
             // workerAgent.squad = squad; // 나중에 추가
+
+            // ✅ 부대에 따른 역할 자동 할당: 1번 부대 = 채취형, 2번 = 공격형, 3번 = 탱커형
+            var roleAssigner = worker.GetComponent<RoleAssigner>();
+            if (roleAssigner == null)
+            {
+                roleAssigner = worker.gameObject.AddComponent<RoleAssigner>();
+            }
+
+            switch (squad)
+            {
+                case WorkerSquad.Squad1:
+                    roleAssigner.SetRole(RoleType.Gatherer);
+                    break;
+                case WorkerSquad.Squad2:
+                    roleAssigner.SetRole(RoleType.Attacker);
+                    break;
+                case WorkerSquad.Squad3:
+                    roleAssigner.SetRole(RoleType.Tank);
+                    break;
+                default:
+                    roleAssigner.SetRole(RoleType.Gatherer);
+                    break;
+            }
         }
         
         // 부대 리스트에 추가
@@ -227,6 +250,18 @@ public class HiveManager : MonoBehaviour
                 StartCoroutine(ApplyPheromoneToWorkerDelayed(worker, squad, pheromonePos.Value));
             }
         }
+
+        // If this is a tank squad, scale up the worker prefab slightly; otherwise ensure default scale
+        float targetScale = 1f;
+        if (squad == WorkerSquad.Squad3)
+        {
+            targetScale = 1.35f; // 탱커형 일벌은 35% 크게
+        }
+        worker.transform.localScale = Vector3.one * targetScale;
+        Debug.Log($"[부대] {worker.name} 스케일 설정 시도: {targetScale}");
+
+        // Ensure scale persists (in case other initialization overwrites scale) - reapply next frame
+        StartCoroutine(EnsureScaleApplied(worker, targetScale));
     }
     
     /// <summary>
@@ -603,11 +638,11 @@ public class HiveManager : MonoBehaviour
             if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
 
             // 하이브 자체는 제외 ?
-            var hive = unit.GetComponent<Hive>();
-            if (hive != null) continue;
+//             var hive = unit.GetComponent<Hive>();
+//             if (hive != null) continue;
 
             // 하이브 안에 있는 여왕벌 제외 (비활성화 상태) ?
-            if (!unit.gameObject.activeInHierarchy) continue;
+//             if (!unit.gameObject.activeInHierarchy) continue;
 
             var combat = unit.GetComponent<CombatUnit>();
             if (combat != null)
@@ -635,11 +670,11 @@ public class HiveManager : MonoBehaviour
             if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
 
             // 하이브 자체는 제외 ?
-            var hive = unit.GetComponent<Hive>();
-            if (hive != null) continue;
+//             var hive = unit.GetComponent<Hive>();
+//             if (hive != null) continue;
 
             // 하이브 안에 있는 여왕벌 제외 (비활성화 상태) ?
-            if (!unit.gameObject.activeInHierarchy) continue;
+//             if (!unit.gameObject.activeInHierarchy) continue;
 
             var controller = unit.GetComponent<UnitController>();
             if (controller != null)
@@ -711,11 +746,11 @@ public class HiveManager : MonoBehaviour
             if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
 
             // 하이브 자체는 제외 ?
-            var hive = unit.GetComponent<Hive>();
-            if (hive != null) continue;
+//             var hive = unit.GetComponent<Hive>();
+//             if (hive != null) continue;
 
             // 하이브 안에 있는 여왕벌 제외 (비활성화 상태) ?
-            if (!unit.gameObject.activeInHierarchy) continue;
+//             if (!unit.gameObject.activeInHierarchy) continue;
 
             var behavior = unit.GetComponent<UnitBehaviorController>();
             if (behavior != null)
@@ -755,5 +790,14 @@ public class HiveManager : MonoBehaviour
     public int GetGatherAmount()
     {
         return 1 + gatherAmountLevel;
+    }
+
+    // Reapply scale on the next frame to guard against other initialization resetting it
+    private System.Collections.IEnumerator EnsureScaleApplied(UnitAgent worker, float targetScale)
+    {
+        yield return null; // wait one frame
+        if (worker == null) yield break;
+        worker.transform.localScale = Vector3.one * targetScale;
+        Debug.Log($"[부대] {worker.name} 스케일 강제 적용: {targetScale}");
     }
 }

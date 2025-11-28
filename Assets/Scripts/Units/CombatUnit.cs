@@ -10,16 +10,20 @@ public class CombatUnit : MonoBehaviour
 
     [Header("공격 쿨타임")]
     public float attackCooldown = 2f; // 공격 쿨타임 (초)
-    
+
+    // internal base cooldown and multiplier to allow role-based modifiers
+    private float baseAttackCooldown = 2f;
+    private float attackCooldownMultiplier = 1f;
+
     [Header("무적 상태")]
     public bool isInvincible = false; // 무적 상태 ?
-    
+
     [Header("피격 이펙트")]
     [Tooltip("피격 시 색상")]
     public Color hitFlashColor = Color.white;
     [Tooltip("플래시 지속 시간")]
     public float hitFlashDuration = 0.2f;
-    
+
     private float lastAttackTime = -999f; // 마지막 공격 시간
     private UnitAgent agent;
     private SpriteRenderer spriteRenderer;
@@ -27,7 +31,7 @@ public class CombatUnit : MonoBehaviour
     private Color originalColor;
     private MaterialPropertyBlock mpb;
     private Coroutine hitFlashCoroutine;
-    
+
     // 체력/공격력 변경 이벤트
     public event System.Action OnStatsChanged;
 
@@ -35,7 +39,11 @@ public class CombatUnit : MonoBehaviour
     {
         agent = GetComponent<UnitAgent>();
         health = maxHealth;
-        
+
+        // ensure base cooldown is initialized from inspector value
+        baseAttackCooldown = Mathf.Max(0.0001f, attackCooldown);
+        attackCooldown = baseAttackCooldown * attackCooldownMultiplier;
+
         // 렌더러 초기화
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer != null)
@@ -51,7 +59,7 @@ public class CombatUnit : MonoBehaviour
                 originalColor = spriteRenderer.color;
             }
         }
-        
+
         // 3D Renderer도 지원
         if (spriteRenderer == null)
         {
@@ -60,7 +68,7 @@ public class CombatUnit : MonoBehaviour
             {
                 meshRenderer = GetComponentInChildren<Renderer>();
             }
-            
+
             if (meshRenderer != null)
             {
                 mpb = new MaterialPropertyBlock();
@@ -97,21 +105,21 @@ public class CombatUnit : MonoBehaviour
     public bool TryAttack(CombatUnit target)
     {
         if (target == null) return false;
-        
+
         // 무적 상태 체크 ?
         if (target.isInvincible)
         {
             Debug.Log($"[전투] {target.name}은(는) 무적 상태입니다. 공격 불가!");
             return false;
         }
-        
+
         // 쿨타임 체크
         if (!CanAttack()) return false;
-        
+
         // 공격 실행
         target.TakeDamage(attack);
         lastAttackTime = Time.time;
-        
+
         return true;
     }
 
@@ -123,26 +131,26 @@ public class CombatUnit : MonoBehaviour
             Debug.Log($"[전투] {gameObject.name}은(는) 무적 상태라 데미지를 받지 않습니다!");
             return;
         }
-        
+
         health -= dmg;
-        
+
         // ✅ 피격 색상 플래시 효과
         if (hitFlashCoroutine != null)
         {
             StopCoroutine(hitFlashCoroutine);
         }
         hitFlashCoroutine = StartCoroutine(HitFlashEffect());
-        
+
         // 이벤트 발생
         OnStatsChanged?.Invoke();
-        
+
         if (health <= 0)
         {
             health = 0;
             Die();
         }
     }
-    
+
     /// <summary>
     /// 피격 색상 플래시 효과 ✅
     /// </summary>
@@ -153,7 +161,7 @@ public class CombatUnit : MonoBehaviour
         {
             spriteRenderer.color = hitFlashColor;
             yield return new WaitForSeconds(hitFlashDuration);
-            
+
             // ✅ 선택 상태 및 자원 보유 상태 확인 후 색상 복원
             if (agent != null && agent.GetComponent<UnitAgent>() != null)
             {
@@ -162,7 +170,7 @@ public class CombatUnit : MonoBehaviour
                 {
                     // 현재 선택 상태 확인
                     bool isSelected = false;
-                    
+
                     if (TileClickMover.Instance != null && TileClickMover.Instance.GetSelectedUnit() == unitAgent)
                     {
                         isSelected = true;
@@ -171,7 +179,7 @@ public class CombatUnit : MonoBehaviour
                     {
                         isSelected = true;
                     }
-                    
+
                     // SetSelected 호출 (내부에서 자원 보유 상태도 고려)
                     unitAgent.SetSelected(isSelected);
                 }
@@ -187,9 +195,9 @@ public class CombatUnit : MonoBehaviour
         {
             mpb.SetColor("_Color", hitFlashColor);
             meshRenderer.SetPropertyBlock(mpb);
-            
+
             yield return new WaitForSeconds(hitFlashDuration);
-            
+
             // ✅ 선택 상태 및 자원 보유 상태 확인 후 색상 복원
             if (agent != null && agent.GetComponent<UnitAgent>() != null)
             {
@@ -197,7 +205,7 @@ public class CombatUnit : MonoBehaviour
                 if (unitAgent != null)
                 {
                     bool isSelected = false;
-                    
+
                     if (TileClickMover.Instance != null && TileClickMover.Instance.GetSelectedUnit() == unitAgent)
                     {
                         isSelected = true;
@@ -206,7 +214,7 @@ public class CombatUnit : MonoBehaviour
                     {
                         isSelected = true;
                     }
-                    
+
                     unitAgent.SetSelected(isSelected);
                 }
             }
@@ -216,7 +224,7 @@ public class CombatUnit : MonoBehaviour
                 meshRenderer.SetPropertyBlock(mpb);
             }
         }
-        
+
         hitFlashCoroutine = null;
     }
 
@@ -229,7 +237,7 @@ public class CombatUnit : MonoBehaviour
 
         // 현재 체력 회복
         health = maxHealth;
-        
+
         if (invincible)
             Debug.Log($"[무적] {gameObject.name} 무적 상태 활성화");
         else
@@ -264,35 +272,63 @@ public class CombatUnit : MonoBehaviour
         OnStatsChanged?.Invoke();
     }
 
+    /// <summary>
+    /// Get base attack cooldown (the value before multipliers)
+    /// </summary>
+    public float GetBaseAttackCooldown()
+    {
+        return baseAttackCooldown;
+    }
+
+    /// <summary>
+    /// Set base attack cooldown and update effective cooldown
+    /// </summary>
+    public void SetBaseAttackCooldown(float baseCooldown)
+    {
+        baseAttackCooldown = Mathf.Max(0.0001f, baseCooldown);
+        attackCooldown = baseAttackCooldown * attackCooldownMultiplier;
+        OnStatsChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Set multiplier (e.g., from Role) and update effective cooldown
+    /// </summary>
+    public void SetAttackCooldownMultiplier(float multiplier)
+    {
+        attackCooldownMultiplier = Mathf.Max(0.0001f, multiplier);
+        attackCooldown = baseAttackCooldown * attackCooldownMultiplier;
+        OnStatsChanged?.Invoke();
+    }
+
     void Die()
     {
         // 여왕벌인지 확인
         if (agent != null && agent.isQueen)
         {
             Debug.Log("[CombatUnit] 여왕벌 사망!");
-            
+
             // GameManager에 알림
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.OnQueenDied();
             }
-            
+
             Destroy(gameObject);
             return;
         }
-        
+
         // 일꾼인지 확인
         bool isWorker = false;
         UnitAgent workerAgent = null;
-        
+
         // 플레이어 하이브인 경우 DestroyHive() 호출
         var hive = GetComponent<Hive>();
         if (hive != null)
         {
             // Hive의 DestroyHive() 메서드를 리플렉션으로 호출
-            var destroyMethod = typeof(Hive).GetMethod("DestroyHive", 
+            var destroyMethod = typeof(Hive).GetMethod("DestroyHive",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            
+
             if (destroyMethod != null)
             {
                 destroyMethod.Invoke(hive, null);
@@ -316,13 +352,13 @@ public class CombatUnit : MonoBehaviour
                 // 일반 유닛 (일꾼)
                 isWorker = true;
                 workerAgent = GetComponent<UnitAgent>();
-                
+
                 // HiveManager에서 일꾼 해제 ✅
                 if (workerAgent != null && HiveManager.Instance != null)
                 {
                     HiveManager.Instance.UnregisterWorker(workerAgent);
                 }
-                
+
                 // 일반 유닛은 바로 파괴
                 Destroy(gameObject);
             }

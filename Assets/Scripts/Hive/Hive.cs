@@ -204,6 +204,14 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                         {
                             behavior.CancelCurrentTask();
                         }
+
+                        // Ensure RoleAssigner exists and apply default role (Gatherer)
+                        var roleAssigner = unit.GetComponent<RoleAssigner>();
+                        if (roleAssigner == null)
+                        {
+                            roleAssigner = unit.gameObject.AddComponent<RoleAssigner>();
+                        }
+                        // Note: Role will be assigned by HiveManager.RegisterWorker based on squad. Do not forcibly set RoleType here.
                     }
                 }
             }
@@ -271,7 +279,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         // assign home hive so activity radius checks work
         agent.homeHive = this;
         agent.canMove = true;
-        
+
         // 하이브의 faction 상속
         var hiveAgent = GetComponent<UnitAgent>();
         if (hiveAgent != null)
@@ -293,7 +301,18 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         {
             HiveManager.Instance.RegisterWorker(agent);
         }
-        
+
+        // Ensure RoleAssigner exists and apply default role (Gatherer) for player workers
+        if (agent.faction == Faction.Player)
+        {
+            var roleAssigner = go.GetComponent<RoleAssigner>();
+            if (roleAssigner == null)
+            {
+                roleAssigner = go.AddComponent<RoleAssigner>();
+            }
+            // Note: role is assigned by HiveManager.RegisterWorker (squad-based). Do not override here.
+        }
+
         // Apply upgrades to newly spawned worker (Player만)
         if (agent.faction == Faction.Player && HiveManager.Instance != null)
         {
