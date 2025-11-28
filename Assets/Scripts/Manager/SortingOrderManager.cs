@@ -116,7 +116,7 @@ public class SortingOrderManager : MonoBehaviour
         if (spriteRenderer != null)
         {
             spriteRenderer.sortingOrder = sortingOrder;
-            Debug.Log($"[SortingOrder] {agent.name} ({agent.faction}): Sorting Order = {sortingOrder}");
+            //Debug.Log($"[SortingOrder] {agent.name} ({agent.faction}): Sorting Order = {sortingOrder}");
         }
         else
         {

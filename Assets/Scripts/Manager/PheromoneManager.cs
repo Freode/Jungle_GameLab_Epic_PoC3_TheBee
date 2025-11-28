@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -17,12 +18,30 @@ public class PheromoneManager : MonoBehaviour
     [Tooltip("페르몬 강조선 두께")]
     public float pheromoneLineWidth = 0.04f;
     
-    // 부대별 페르몬 타일 (q, r 좌표)
+    // 부대별 페르몬 타일 (q, r 좌표) - 최대 3개, FIFO 유지
     private Dictionary<WorkerSquad, HashSet<Vector2Int>> pheromoneTiles = new Dictionary<WorkerSquad, HashSet<Vector2Int>>()
     {
         { WorkerSquad.Squad1, new HashSet<Vector2Int>() },
         { WorkerSquad.Squad2, new HashSet<Vector2Int>() },
         { WorkerSquad.Squad3, new HashSet<Vector2Int>() }
+    };
+
+    // 추가 순서를 유지하기 위한 리스트 (FIFO)
+    private Dictionary<WorkerSquad, List<Vector2Int>> pheromoneOrder = new Dictionary<WorkerSquad, List<Vector2Int>>()
+    {
+        { WorkerSquad.Squad1, new List<Vector2Int>() },
+        { WorkerSquad.Squad2, new List<Vector2Int>() },
+        { WorkerSquad.Squad3, new List<Vector2Int>() }
+    };
+
+    private const int MaxPheromonePerSquad = 3;
+
+    // 동일 프레임 중복 요청 방지용
+    private Dictionary<WorkerSquad, (Vector2Int coord, int frame)> lastPheromoneRequest = new Dictionary<WorkerSquad, (Vector2Int, int)>()
+    {
+        { WorkerSquad.Squad1, (new Vector2Int(int.MinValue, int.MinValue), -1) },
+        { WorkerSquad.Squad2, (new Vector2Int(int.MinValue, int.MinValue), -1) },
+        { WorkerSquad.Squad3, (new Vector2Int(int.MinValue, int.MinValue), -1) }
     };
     
     // ? 부대별 페르몬 색상 (HiveManager에서 가져옴) (요구사항 2)
@@ -77,31 +96,51 @@ public class PheromoneManager : MonoBehaviour
     public void AddPheromone(int q, int r, WorkerSquad squad)
     {
         Vector2Int coord = new Vector2Int(q, r);
-        
-        // ? 같은 부대의 이전 페르몬 제거 (요구사항 3)
-        ClearPheromone(squad);
-        
-        // 페르몬 타일 추적
-        if (!pheromoneTiles[squad].Contains(coord))
+
+        Debug.Log($"[페르몬] 요청: {squad} ({q}, {r}), 현재 리스트: {string.Join(" | ", pheromoneOrder[squad])}");
+
+        // 동일 프레임에 같은 좌표 요청이면 무시 (중복 호출 방지)
+        var last = lastPheromoneRequest[squad];
+        if (last.frame == Time.frameCount && last.coord == coord)
         {
-            pheromoneTiles[squad].Add(coord);
+            Debug.Log($"[페르몬] {squad} 동일 프레임 중복 요청 무시: ({q}, {r})");
+            return;
         }
-        
-        // ? 타일별 부대 추적 (요구사항 4)
+        lastPheromoneRequest[squad] = (coord, Time.frameCount);
+
+        // 이미 같은 타일에 뿌려져 있으면 삭제 후 종료 (총 개수 감소)
+        if (pheromoneTiles[squad].Contains(coord))
+        {
+            RemovePheromone(coord, squad);
+            Debug.Log($"[페르몬] {squad} 기존 타일에 재분사 → 삭제: ({q}, {r}), 삭제 후 리스트: {string.Join(" | ", pheromoneOrder[squad])}");
+            return;
+        }
+
+        // 최대 개수 초과 시 가장 오래된 페르몬 제거 (FIFO)
+        if (pheromoneOrder[squad].Count >= MaxPheromonePerSquad)
+        {
+            var oldest = pheromoneOrder[squad][0];
+            RemovePheromone(oldest, squad);
+            Debug.Log($"[페르몬] {squad} 최대치 초과, 가장 오래된 페르몬 제거: ({oldest.x}, {oldest.y})");
+        }
+
+        pheromoneTiles[squad].Add(coord);
+        pheromoneOrder[squad].Add(coord);
+
+        // 타일별 부대 추적 (겹침 고려)
         if (!tileSquads.ContainsKey(coord))
         {
             tileSquads[coord] = new List<WorkerSquad>();
         }
-        
+
         if (!tileSquads[coord].Contains(squad))
         {
             tileSquads[coord].Add(squad);
         }
-        
-        // ? 해당 타일의 모든 부대 페르몬 재생성 (겹침 고려)
+
         RefreshPheromoneHighlightsForTile(coord);
-        
-        Debug.Log($"[페르몬] {squad} 페르몬 추가: ({q}, {r}), 겹침 수: {tileSquads[coord].Count}");
+
+        Debug.Log($"[페르몬] {squad} 페르몬 추가: ({q}, {r}), 현재 개수: {pheromoneOrder[squad].Count}");
     }
     
     /// <summary>
@@ -110,30 +149,17 @@ public class PheromoneManager : MonoBehaviour
     public void ClearPheromone(WorkerSquad squad)
     {
         if (!pheromoneTiles.ContainsKey(squad)) return;
-        
-        // 해당 부대의 모든 페르몬 타일 강조 제거
-        foreach (var coord in pheromoneTiles[squad])
+
+        // 리스트 복사 후 순회(제거 중 컬렉션 수정 방지)
+        var coords = new List<Vector2Int>(pheromoneOrder[squad]);
+        foreach (var coord in coords)
         {
-            RemovePheromoneHighlight(coord, squad);
-            
-            // ? 타일별 부대 리스트에서 제거
-            if (tileSquads.ContainsKey(coord))
-            {
-                tileSquads[coord].Remove(squad);
-                
-                // ? 해당 타일의 남은 부대들 페르몬 재생성
-                if (tileSquads[coord].Count > 0)
-                {
-                    RefreshPheromoneHighlightsForTile(coord);
-                }
-                else
-                {
-                    tileSquads.Remove(coord);
-                }
-            }
+            RemovePheromone(coord, squad);
         }
-        
+
         pheromoneTiles[squad].Clear();
+        pheromoneOrder[squad].Clear();
+        lastPheromoneRequest[squad] = (new Vector2Int(int.MinValue, int.MinValue), -1);
         Debug.Log($"[페르몬] {squad} 페르몬 모두 제거");
     }
     
@@ -146,9 +172,12 @@ public class PheromoneManager : MonoBehaviour
         {
             ClearPheromone(squad);
         }
-        
+
         tileSquads.Clear();
-        
+        lastPheromoneRequest[WorkerSquad.Squad1] = (new Vector2Int(int.MinValue, int.MinValue), -1);
+        lastPheromoneRequest[WorkerSquad.Squad2] = (new Vector2Int(int.MinValue, int.MinValue), -1);
+        lastPheromoneRequest[WorkerSquad.Squad3] = (new Vector2Int(int.MinValue, int.MinValue), -1);
+
         Debug.Log("[페르몬] 모든 페르몬 제거");
     }
     
@@ -278,21 +307,51 @@ public class PheromoneManager : MonoBehaviour
     }
     
     /// <summary>
-    /// 특정 부대의 현재 페르몬 위치 가져오기 (1개만 있음) (요구사항 4)
+    /// 특정 부대의 페르몬 위치 목록(추가 순서) 가져오기
+    /// </summary>
+    public List<Vector2Int> GetPheromonePositionsOrdered(WorkerSquad squad)
+    {
+        if (!pheromoneOrder.ContainsKey(squad)) return new List<Vector2Int>();
+        return new List<Vector2Int>(pheromoneOrder[squad]);
+    }
+    
+    /// <summary>
+    /// 특정 부대의 가장 최근 페르몬 위치 가져오기 (없으면 null)
     /// </summary>
     public Vector2Int? GetCurrentPheromonePosition(WorkerSquad squad)
     {
-        if (!pheromoneTiles.ContainsKey(squad)) return null;
-        
-        var tiles = pheromoneTiles[squad];
-        if (tiles.Count == 0) return null;
-        
-        // 가장 최근 페르몬 위치 (마지막 요소)
-        foreach (var tile in tiles)
+        if (!pheromoneOrder.ContainsKey(squad)) return null;
+        var list = pheromoneOrder[squad];
+        if (list.Count == 0) return null;
+        return list[list.Count - 1];
+    }
+
+    /// <summary>
+    /// 특정 좌표의 페르몬 제거 (내부 사용)
+    /// </summary>
+    private void RemovePheromone(Vector2Int coord, WorkerSquad squad)
+    {
+        if (!pheromoneTiles.ContainsKey(squad)) return;
+
+        if (!pheromoneTiles[squad].Contains(coord)) return;
+
+        pheromoneTiles[squad].Remove(coord);
+        pheromoneOrder[squad].Remove(coord);
+
+        RemovePheromoneHighlight(coord, squad);
+
+        if (tileSquads.ContainsKey(coord))
         {
-            return tile; // 첫 번째 (유일한) 타일 반환
+            tileSquads[coord].Remove(squad);
+
+            if (tileSquads[coord].Count > 0)
+            {
+                RefreshPheromoneHighlightsForTile(coord);
+            }
+            else
+            {
+                tileSquads.Remove(coord);
+            }
         }
-        
-        return null;
     }
 }

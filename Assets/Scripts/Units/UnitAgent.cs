@@ -33,6 +33,8 @@ public class UnitAgent : MonoBehaviour
     // Worker behavior flags for hive relocation
     public bool isFollowingQueen = false; // Worker is following queen during relocation
     public bool hasManualOrder = false; // Worker received manual move order
+    [HideInInspector] public bool hasManualTarget = false; // 수동 명령 목표 보유 여부
+    [HideInInspector] public Vector2Int manualTargetCoord; // 수동 명령 목표 좌표
     
     // ✅ 자원 보유 상태
     [HideInInspector]

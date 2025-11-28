@@ -30,6 +30,8 @@ public class MoveCommandHandler : MonoBehaviour
         {
             agent.hasManualOrder = true;
             agent.isFollowingQueen = false;
+            agent.hasManualTarget = true;
+            agent.manualTargetCoord = new Vector2Int(target.q, target.r);
         }
 
         var ctrl = agent.GetComponent<UnitController>();

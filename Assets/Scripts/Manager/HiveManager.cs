@@ -293,6 +293,8 @@ public class HiveManager : MonoBehaviour
             
             // ✅ 수동 명령 플래그 설정 (자동 자원 채취 방지)
             worker.hasManualOrder = true;
+            worker.hasManualTarget = true;
+            worker.manualTargetCoord = pheromonePos;
             
             // ✅ 페르몬 위치로 이동
             workerBehavior.IssueCommandToTile(targetTile);

@@ -196,6 +196,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
 
                         // 수동 명령 플래그 초기화
                         unit.hasManualOrder = false;
+                        unit.hasManualTarget = false;
                         unit.isFollowingQueen = false;
 
                         // UnitBehaviorController 초기화
@@ -524,6 +525,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             {
                 worker.isFollowingQueen = true;
                 worker.hasManualOrder = false;
+                worker.hasManualTarget = false;
                 worker.homeHive = null; // 하이브 참조 제거
                 
                 // WorkerBehaviorController가 있으면 StartFollowingQueen 호출
@@ -600,6 +602,7 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             if (worker == null) continue;
             worker.isFollowingQueen = false;
             worker.hasManualOrder = false;
+            worker.hasManualTarget = false;
             
             // ✅ 2. 하이브와 같은 타일에 있지 않으면 이동
             bool isSameTile = (worker.q == q && worker.r == r);

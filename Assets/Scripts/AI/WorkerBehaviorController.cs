@@ -258,64 +258,94 @@ public class WorkerBehaviorController : UnitBehaviorController
                 agent.SetCarryingResource(false);
             }
 
-            // ✅ 수동 명령(페르몬)이 있으면 페르몬 위치로 복귀 (요구사항 1)
-            if (agent.hasManualOrder && PheromoneManager.Instance != null)
+            // ✅ 수동 명령(페르몬)이 있으면 지정된 수동 목표로 복귀
+            if (agent.hasManualOrder)
             {
-                // ✅ 부대 정보 가져오기
-                WorkerSquad workerSquad = WorkerSquad.None;
-                
-                // HiveManager에서 부대 찾기
-                if (HiveManager.Instance != null)
+                if (agent.hasManualTarget)
                 {
-                    foreach (WorkerSquad squad in System.Enum.GetValues(typeof(WorkerSquad)))
-                    {
-                        if (squad == WorkerSquad.None) continue;
-                        
-                        var squadWorkers = HiveManager.Instance.GetSquadWorkers(squad);
-                        if (squadWorkers.Contains(agent))
-                        {
-                            workerSquad = squad;
-                            break;
-                        }
-                    }
-                }
-                
-                // ✅ 페르몬 위치 가져오기
-                var pheromonePos = PheromoneManager.Instance.GetCurrentPheromonePosition(workerSquad);
-                
-                if (pheromonePos.HasValue)
-                {
-                    int pheroQ = pheromonePos.Value.x;
-                    int pheroR = pheromonePos.Value.y;
-                    
+                    int manualQ = agent.manualTargetCoord.x;
+                    int manualR = agent.manualTargetCoord.y;
+
                     int distanceToHive = Pathfinder.AxialDistance(
                         agent.homeHive.q, agent.homeHive.r,
-                        pheroQ, pheroR
+                        manualQ, manualR
                     );
 
-                    // ✅ 페르몬 위치가 활동 범위 내면 복귀
                     if (distanceToHive <= activityRadius)
                     {
-                        Debug.Log($"[Worker State] 페르몬 명령: 페르몬 위치로 복귀 ({pheroQ}, {pheroR})");
-                        
-                        targetTile = TileManager.Instance.GetTile(pheroQ, pheroR);
-                        if (targetTile != null)
+                        var manualTile = TileManager.Instance.GetTile(manualQ, manualR);
+                        if (manualTile != null)
                         {
+                            Debug.Log($"[Worker State] 수동 명령: 지정 위치로 복귀 ({manualQ}, {manualR})");
+                            targetTile = manualTile;
                             TransitionToState(WorkerState.Moving);
                             yield break;
                         }
                     }
                     else
                     {
-                        Debug.Log($"[Worker State] 페르몬 위치가 활동 범위 밖: {distanceToHive}/{activityRadius}, 수동 명령 해제");
-                        agent.hasManualOrder = false;
+                        Debug.Log($"[Worker State] 수동 목표가 활동 범위 밖: {distanceToHive}/{activityRadius}, 수동 명령 해제");
                     }
                 }
-                else
+
+                // 기존 로직과의 호환을 위해 페르몬 위치 조회 (수동 목표가 없거나 실패 시)
+                if (PheromoneManager.Instance != null)
                 {
-                    Debug.Log($"[Worker State] 페르몬 위치 없음: 수동 명령 해제");
-                    agent.hasManualOrder = false;
+                    // ✅ 부대 정보 가져오기
+                    WorkerSquad workerSquad = WorkerSquad.None;
+
+                    if (HiveManager.Instance != null)
+                    {
+                        foreach (WorkerSquad squad in System.Enum.GetValues(typeof(WorkerSquad)))
+                        {
+                            if (squad == WorkerSquad.None) continue;
+
+                            var squadWorkers = HiveManager.Instance.GetSquadWorkers(squad);
+                            if (squadWorkers.Contains(agent))
+                            {
+                                workerSquad = squad;
+                                break;
+                            }
+                        }
+                    }
+
+                    var pheromonePos = PheromoneManager.Instance.GetCurrentPheromonePosition(workerSquad);
+
+                    if (pheromonePos.HasValue)
+                    {
+                        int pheroQ = pheromonePos.Value.x;
+                        int pheroR = pheromonePos.Value.y;
+
+                        int distanceToHive = Pathfinder.AxialDistance(
+                            agent.homeHive.q, agent.homeHive.r,
+                            pheroQ, pheroR
+                        );
+
+                        if (distanceToHive <= activityRadius)
+                        {
+                            Debug.Log($"[Worker State] 페르몬 명령: 페르몬 위치로 복귀 ({pheroQ}, {pheroR})");
+
+                            targetTile = TileManager.Instance.GetTile(pheroQ, pheroR);
+                            if (targetTile != null)
+                            {
+                                TransitionToState(WorkerState.Moving);
+                                yield break;
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log($"[Worker State] 페르몬 위치가 활동 범위 밖: {distanceToHive}/{activityRadius}, 수동 명령 해제");
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log($"[Worker State] 페르몬 위치 없음: 수동 명령 해제");
+                    }
                 }
+
+                // 유효한 수동 목적지가 없으면 수동 명령 해제
+                agent.hasManualOrder = false;
+                agent.hasManualTarget = false;
             }
             // ✅ 수동 명령이 없으면 Idle
             else if (!agent.hasManualOrder)
@@ -829,6 +859,7 @@ public class WorkerBehaviorController : UnitBehaviorController
     {
         agent.isFollowingQueen = true;
         agent.hasManualOrder = false;
+        agent.hasManualTarget = false;
         TransitionToState(WorkerState.FollowingQueen);
     }
 

@@ -14,6 +14,10 @@ public class TileClickMover : MonoBehaviour
     private UnitAgent selectedUnitInstance;
     public TextMeshProUGUI debugText; // UI text to show coordinates
 
+    // 페르몬 입력 홀드 감지
+    private Dictionary<KeyCode, float> pheromoneKeyDownTimes = new Dictionary<KeyCode, float>();
+    private const float pheromoneHoldThreshold = 0.6f;
+
     // If true, moving requires pressing Move in UI first, then clicking a target tile
     public bool requireMoveConfirm = true;
     private bool moveMode = false;
@@ -105,20 +109,10 @@ public class TileClickMover : MonoBehaviour
             SelectPlayerHive();
         }
         
-        // ✅ Q/W/E: 부대 페르몬 명령 (요구사항 5)
-        // Allow Q/W/E to work even if another unit is selected by finding the queen if needed
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            ExecutePheromoneCommand(WorkerSquad.Squad1);
-        }
-        else if (Input.GetKeyDown(KeyCode.W))
-        {
-            ExecutePheromoneCommand(WorkerSquad.Squad2);
-        }
-        else if (Input.GetKeyDown(KeyCode.E))
-        {
-            ExecutePheromoneCommand(WorkerSquad.Squad3);
-        }
+        // ✅ Q/W/E: 부대 페르몬 명령 (탭/홀드 분기)
+        HandlePheromoneKey(KeyCode.Q, WorkerSquad.Squad1);
+        HandlePheromoneKey(KeyCode.W, WorkerSquad.Squad2);
+        HandlePheromoneKey(KeyCode.E, WorkerSquad.Squad3);
     }
     
     /// <summary>
@@ -211,6 +205,55 @@ public class TileClickMover : MonoBehaviour
         string squadName = squad == WorkerSquad.Squad1 ? "1번" :
                           squad == WorkerSquad.Squad2 ? "2번" : "3번";
         Debug.Log($"[단축키] {squadName} 부대 페르몬 명령 (queen: {queen.name})");
+    }
+
+    /// <summary>
+    /// Q/W/E 입력을 탭/홀드로 구분
+    /// </summary>
+    void HandlePheromoneKey(KeyCode key, WorkerSquad squad)
+    {
+        if (Input.GetKeyDown(key))
+        {
+            pheromoneKeyDownTimes[key] = Time.time;
+        }
+        else if (Input.GetKeyUp(key))
+        {
+            if (!pheromoneKeyDownTimes.ContainsKey(key))
+                return;
+
+            float heldTime = Time.time - pheromoneKeyDownTimes[key];
+            pheromoneKeyDownTimes.Remove(key);
+
+            if (heldTime >= pheromoneHoldThreshold)
+            {
+                HandlePheromoneHold(squad);
+            }
+            else
+            {
+                ExecutePheromoneCommand(squad);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 홀드 시 해당 부대 페르몬 전체 삭제 후 복귀 처리
+    /// </summary>
+    void HandlePheromoneHold(WorkerSquad squad)
+    {
+        QueenPheromoneCommandHandler.CancelCurrentPheromoneCommand();
+
+        if (PheromoneManager.Instance != null)
+        {
+            PheromoneManager.Instance.ClearPheromone(squad);
+        }
+
+        if (HiveManager.Instance != null)
+        {
+            var squadWorkers = HiveManager.Instance.GetSquadWorkers(squad);
+            QueenPheromoneCommandHandler.SendSquadWorkersHome(squadWorkers);
+        }
+
+        Debug.Log($"[단축키] {squad} 부대 페르몬 홀드 → 전체 삭제");
     }
 
     // Check if mouse is over UI element

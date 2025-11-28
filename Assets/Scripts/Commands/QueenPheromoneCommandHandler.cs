@@ -1,41 +1,42 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
-/// ¿©¿Õ¹ú Æä¸£¸ó ¸í·É ÇÚµé·¯
-/// Æ¯Á¤ ºÎ´ëÀÇ ÀÏ¹úµéÀ» ¿©¿Õ¹úÀÇ ÇöÀç À§Ä¡·Î ÀÌµ¿½ÃÅ´
+/// ì—¬ì™•ë²Œ í˜ë¥´ëª¬ ëª…ë ¹ í•¸ë“¤ëŸ¬
+/// íŠ¹ì • ë¶€ëŒ€ì˜ ì¼ë²Œë“¤ì„ ì—¬ì™•ë²Œì˜ í˜„ì¬ ìœ„ì¹˜ë¡œ ì´ë™ì‹œí‚´
 /// </summary>
 public static class QueenPheromoneCommandHandler
 {
-    // ? ÇöÀç ½ÇÇà ÁßÀÎ Æä¸£¸ó ÄÚ·çÆ¾ ÃßÀû
+    // ? í˜„ì¬ ì‹¤í–‰ ì¤‘ì¸ í˜ë¥´ëª¬ ì½”ë£¨í‹´ ì¶”ì 
     private static Coroutine currentPheromoneCoroutine = null;
     private static MonoBehaviour currentCoroutineHost = null;
     
     /// <summary>
-    /// Æä¸£¸ó ¸í·É ½ÇÇà (¸¶¿ì½º ¹æÇâ ±â¹İ ¹èÄ¡)
+    /// í˜ë¥´ëª¬ ëª…ë ¹ ì‹¤í–‰ (ë§ˆìš°ìŠ¤ ë°©í–¥ ê¸°ë°˜ ë°°ì¹˜)
     /// </summary>
     public static void ExecutePheromone(UnitAgent queenAgent, CommandTarget target, WorkerSquad squad)
     {
         if (queenAgent == null)
         {
-            Debug.LogWarning("[Æä¸£¸ó] ¿©¿Õ¹úÀÌ ¾ø½À´Ï´Ù!");
+            Debug.LogWarning("[í˜ë¥´ëª¬] ì—¬ì™•ë²Œì´ ì—†ìŠµë‹ˆë‹¤!");
             return;
         }
         
-        // ? ÀÌÀü Æä¸£¸ó ¸í·É ÄÚ·çÆ¾ Áß´Ü
+        // ? ì´ì „ í˜ë¥´ëª¬ ëª…ë ¹ ì½”ë£¨í‹´ ì¤‘ë‹¨
         CancelCurrentPheromoneCommand();
         
-        // ? ¸¶¿ì½º À§Ä¡ °¡Á®¿À±â
+        // ? ë§ˆìš°ìŠ¤ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸°
         Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mouseWorldPos.z = 0f;
         
         float hexSize = 0.5f;
         if (GameManager.Instance != null) hexSize = GameManager.Instance.hexSize;
         
-        // ? ¸¶¿ì½º À§Ä¡ÀÇ Å¸ÀÏ Ã£±â (Raycast ¿ì¼±, ½ÇÆĞ ½Ã °Å¸® °è»ê)
+        // ? ë§ˆìš°ìŠ¤ ìœ„ì¹˜ì˜ íƒ€ì¼ ì°¾ê¸° (Raycast ìš°ì„ , ì‹¤íŒ¨ ì‹œ ê±°ë¦¬ ê³„ì‚°)
         HexTile mouseTile = null;
         
-        // ¹æ¹ı 1: Raycast·Î Å¸ÀÏ Ã£±â
+        // ë°©ë²• 1: Raycastë¡œ íƒ€ì¼ ì°¾ê¸°
         RaycastHit2D[] hits = Physics2D.RaycastAll(mouseWorldPos, Vector2.zero);
         foreach (var hit in hits)
         {
@@ -43,12 +44,12 @@ public static class QueenPheromoneCommandHandler
             if (tile != null)
             {
                 mouseTile = tile;
-                Debug.Log($"[Æä¸£¸ó] Raycast·Î Å¸ÀÏ ¹ß°ß: ({tile.q}, {tile.r})");
+                Debug.Log($"[í˜ë¥´ëª¬] Raycastë¡œ íƒ€ì¼ ë°œê²¬: ({tile.q}, {tile.r})");
                 break;
             }
         }
         
-        // ¹æ¹ı 2: Raycast ½ÇÆĞ ½Ã ¸¶¿ì½º¿Í °¡Àå °¡±î¿î Å¸ÀÏ Ã£±â
+        // ë°©ë²• 2: Raycast ì‹¤íŒ¨ ì‹œ ë§ˆìš°ìŠ¤ì™€ ê°€ì¥ ê°€ê¹Œìš´ íƒ€ì¼ ì°¾ê¸°
         if (mouseTile == null && TileManager.Instance != null)
         {
             float minDistance = float.MaxValue;
@@ -69,29 +70,29 @@ public static class QueenPheromoneCommandHandler
             
             if (mouseTile != null)
             {
-                Debug.Log($"[Æä¸£¸ó] °Å¸® °è»êÀ¸·Î Å¸ÀÏ ¹ß°ß: ({mouseTile.q}, {mouseTile.r}), °Å¸®: {minDistance:F2}");
+                Debug.Log($"[í˜ë¥´ëª¬] ê±°ë¦¬ ê³„ì‚°ìœ¼ë¡œ íƒ€ì¼ ë°œê²¬: ({mouseTile.q}, {mouseTile.r}), ê±°ë¦¬: {minDistance:F2}");
             }
         }
         
         if (mouseTile == null)
         {
-            Debug.LogWarning("[Æä¸£¸ó] ¸¶¿ì½º À§Ä¡ÀÇ Å¸ÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+            Debug.LogWarning("[í˜ë¥´ëª¬] ë§ˆìš°ìŠ¤ ìœ„ì¹˜ì˜ íƒ€ì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
             return;
         }
         
         int pheromoneQ = mouseTile.q;
         int pheromoneR = mouseTile.r;
         
-        Debug.Log($"[Æä¸£¸ó] ¿©¿Õ¹ú À§Ä¡: ({queenAgent.q}, {queenAgent.r}), Æä¸£¸ó ºĞ»ç Å¸ÀÏ: ({pheromoneQ}, {pheromoneR})");
+        Debug.Log($"[í˜ë¥´ëª¬] ì—¬ì™•ë²Œ ìœ„ì¹˜: ({queenAgent.q}, {queenAgent.r}), í˜ë¥´ëª¬ ë¶„ì‚¬ íƒ€ì¼: ({pheromoneQ}, {pheromoneR})");
         
-        // ? È°µ¿ ¹üÀ§ Ã¼Å©
-        int activityRadius = 5; // ±âº»°ª
+        // ? í™œë™ ë²”ìœ„ ì²´í¬
+        int activityRadius = 5; // ê¸°ë³¸ê°’
         if (queenAgent.homeHive != null && HiveManager.Instance != null)
         {
             activityRadius = HiveManager.Instance.hiveActivityRadius;
         }
         
-        // ? Æä¸£¸ó ºĞ»ç Å¸ÀÏÀÌ È°µ¿ ¹üÀ§ ¹ÛÀÌ¸é Á¶Á¤
+        // ? í˜ë¥´ëª¬ ë¶„ì‚¬ íƒ€ì¼ì´ í™œë™ ë²”ìœ„ ë°–ì´ë©´ ì¡°ì •
         bool isPheromoneOutOfRange = false;
         
         if (queenAgent.homeHive != null)
@@ -104,26 +105,45 @@ public static class QueenPheromoneCommandHandler
             if (pheromoneDistanceToHive > activityRadius)
             {
                 isPheromoneOutOfRange = true;
-                Debug.Log($"[Æä¸£¸ó] Æä¸£¸ó Å¸ÀÏÀÌ È°µ¿ ¹üÀ§ ¹Û ({pheromoneDistanceToHive}/{activityRadius})");
+                Debug.Log($"[í˜ë¥´ëª¬] í˜ë¥´ëª¬ íƒ€ì¼ì´ í™œë™ ë²”ìœ„ ë°– ({pheromoneDistanceToHive}/{activityRadius})");
             }
         }
+
+        // ? ì—¬ì™•ë²Œ í˜„ì¬ íƒ€ì¼ ë˜ëŠ” ì¸ì ‘ íƒ€ì¼ì´ë©´ ì´ë™ ì—†ì´ ì¦‰ì‹œ ë¶„ì‚¬
+        int distanceToQueen = Pathfinder.AxialDistance(queenAgent.q, queenAgent.r, pheromoneQ, pheromoneR);
+        Debug.Log($"[í˜ë¥´ëª¬] íƒ€ê²Ÿ íƒ€ì¼: ({pheromoneQ}, {pheromoneR}), ì—¬ì™•: ({queenAgent.q}, {queenAgent.r}), ê±°ë¦¬: {distanceToQueen}");
+        if (distanceToQueen <= 1)
+        {
+            int finalQ = pheromoneQ;
+            int finalR = pheromoneR;
+            if (isPheromoneOutOfRange && queenAgent.homeHive != null)
+            {
+                // í™œë™ ë²”ìœ„ ë°–ì´ë©´ ì—¬ì™• ìœ„ì¹˜ì— ë¶„ì‚¬
+                finalQ = queenAgent.q;
+                finalR = queenAgent.r;
+            }
+
+            Debug.Log($"[í˜ë¥´ëª¬] í˜„ì¬/ì¸ì ‘ íƒ€ì¼ ë¶„ì‚¬: ({finalQ}, {finalR})");
+            SprayPheromone(queenAgent, finalQ, finalR, squad);
+            return;
+        }
         
-        // ? ¿©¿Õ¹úÀÌ ÇöÀç À§Ä¡¿¡ Æä¸£¸ó ºĞ»çÇÏ´Â °æ¿ì
+        // ? ì—¬ì™•ë²Œì´ í˜„ì¬ ìœ„ì¹˜ì— í˜ë¥´ëª¬ ë¶„ì‚¬í•˜ëŠ” ê²½ìš°
         if (pheromoneQ == queenAgent.q && pheromoneR == queenAgent.r)
         {
-            Debug.Log($"[Æä¸£¸ó] ÇöÀç À§Ä¡¿¡ Æä¸£¸ó ºĞ»ç");
+            Debug.Log($"[í˜ë¥´ëª¬] í˜„ì¬ ìœ„ì¹˜ì— í˜ë¥´ëª¬ ë¶„ì‚¬");
             SprayPheromone(queenAgent, pheromoneQ, pheromoneR, squad);
             return;
         }
         
-        // ? ¿©¿Õ¹úÀÌ ÀÌµ¿ÇØ¾ß ÇÏ´Â °æ¿ì
-        // 1. Æä¸£¸ó ºĞ»ç Å¸ÀÏ±îÁöÀÇ °æ·Î °è»ê
+        // ? ì—¬ì™•ë²Œì´ ì´ë™í•´ì•¼ í•˜ëŠ” ê²½ìš°
+        // 1. í˜ë¥´ëª¬ ë¶„ì‚¬ íƒ€ì¼ê¹Œì§€ì˜ ê²½ë¡œ ê³„ì‚°
         var currentTile = TileManager.Instance?.GetTile(queenAgent.q, queenAgent.r);
         var pheromoneTargetTile = mouseTile;
         
         if (currentTile == null || pheromoneTargetTile == null)
         {
-            Debug.LogWarning($"[Æä¸£¸ó] Å¸ÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù");
+            Debug.LogWarning($"[í˜ë¥´ëª¬] íƒ€ì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤");
             return;
         }
         
@@ -131,13 +151,13 @@ public static class QueenPheromoneCommandHandler
         
         if (pathToPheromone == null || pathToPheromone.Count == 0)
         {
-            Debug.LogWarning($"[Æä¸£¸ó] °æ·Î¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù");
+            Debug.LogWarning($"[í˜ë¥´ëª¬] ê²½ë¡œë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤");
             return;
         }
         
-        Debug.Log($"[Æä¸£¸ó] Æä¸£¸ó Å¸ÀÏ±îÁö °æ·Î ±æÀÌ: {pathToPheromone.Count}");
+        Debug.Log($"[í˜ë¥´ëª¬] í˜ë¥´ëª¬ íƒ€ì¼ê¹Œì§€ ê²½ë¡œ ê¸¸ì´: {pathToPheromone.Count}");
         
-        // ? 2. ¿©¿Õ¹ú ÀÌµ¿ À§Ä¡ °áÁ¤ (Æä¸£¸ó Å¸ÀÏ ¹Ù·Î ¾Õ±îÁö)
+        // ? 2. ì—¬ì™•ë²Œ ì´ë™ ìœ„ì¹˜ ê²°ì • (í˜ë¥´ëª¬ íƒ€ì¼ ë°”ë¡œ ì•ê¹Œì§€)
         int queenMoveQ = queenAgent.q;
         int queenMoveR = queenAgent.r;
         int finalPheromoneQ = pheromoneQ;
@@ -145,26 +165,26 @@ public static class QueenPheromoneCommandHandler
         
         if (pathToPheromone.Count >= 3)
         {
-            // ? °æ·Î°¡ 2°³ ÀÌ»óÀÌ¸é ¸¶Áö¸· Á÷Àü Å¸ÀÏ±îÁö ÀÌµ¿
-            var moveToTile = pathToPheromone[pathToPheromone.Count - 3]; // Æä¸£¸ó Å¸ÀÏ ¹Ù·Î ¾Õ
+            // ? ê²½ë¡œê°€ 2ê°œ ì´ìƒì´ë©´ ë§ˆì§€ë§‰ ì§ì „ íƒ€ì¼ê¹Œì§€ ì´ë™
+            var moveToTile = pathToPheromone[pathToPheromone.Count - 3]; // í˜ë¥´ëª¬ íƒ€ì¼ ë°”ë¡œ ì•
             queenMoveQ = moveToTile.q;
             queenMoveR = moveToTile.r;
             
-            Debug.Log($"[Æä¸£¸ó] ¿©¿Õ¹ú ÀÌµ¿ ¸ñÇ¥: ({queenMoveQ}, {queenMoveR}) (Æä¸£¸ó Å¸ÀÏ ¹Ù·Î ¾Õ, °æ·Î {pathToPheromone.Count - 2}¹øÂ°)");
+            Debug.Log($"[í˜ë¥´ëª¬] ì—¬ì™•ë²Œ ì´ë™ ëª©í‘œ: ({queenMoveQ}, {queenMoveR}) (í˜ë¥´ëª¬ íƒ€ì¼ ë°”ë¡œ ì•, ê²½ë¡œ {pathToPheromone.Count - 2}ë²ˆì§¸)");
         }
         else if (pathToPheromone.Count == 1 || pathToPheromone.Count == 2)
         {
-            // ? °æ·Î°¡ 1°³ (ÀÎÁ¢ Å¸ÀÏ)¸é ÇöÀç À§Ä¡¿¡¼­ Æä¸£¸ó ºĞ»ç
+            // ? ê²½ë¡œê°€ 1ê°œ (ì¸ì ‘ íƒ€ì¼)ë©´ í˜„ì¬ ìœ„ì¹˜ì—ì„œ í˜ë¥´ëª¬ ë¶„ì‚¬
             queenMoveQ = queenAgent.q;
             queenMoveR = queenAgent.r;
             
-            Debug.Log($"[Æä¸£¸ó] Æä¸£¸ó Å¸ÀÏÀÌ ÀÎÁ¢: ÇöÀç À§Ä¡¿¡¼­ ºĞ»ç");
+            Debug.Log($"[í˜ë¥´ëª¬] í˜ë¥´ëª¬ íƒ€ì¼ì´ ì¸ì ‘: í˜„ì¬ ìœ„ì¹˜ì—ì„œ ë¶„ì‚¬");
         }
         
-        // ? 3. È°µ¿ ¹üÀ§ Ã¼Å© ¹× Á¶Á¤
+        // ? 3. í™œë™ ë²”ìœ„ ì²´í¬ ë° ì¡°ì •
         if (queenAgent.homeHive != null)
         {
-            // ? 3-1. ¿©¿Õ¹ú ÀÌµ¿ À§Ä¡°¡ È°µ¿ ¹üÀ§ ¹ÛÀÌ¸é °æ°è±îÁö¸¸ ÀÌµ¿
+            // ? 3-1. ì—¬ì™•ë²Œ ì´ë™ ìœ„ì¹˜ê°€ í™œë™ ë²”ìœ„ ë°–ì´ë©´ ê²½ê³„ê¹Œì§€ë§Œ ì´ë™
             int queenMoveDistanceToHive = Pathfinder.AxialDistance(
                 queenAgent.homeHive.q, queenAgent.homeHive.r,
                 queenMoveQ, queenMoveR
@@ -172,9 +192,9 @@ public static class QueenPheromoneCommandHandler
             
             if (queenMoveDistanceToHive > activityRadius)
             {
-                Debug.Log($"[Æä¸£¸ó] ¿©¿Õ¹ú ÀÌµ¿ À§Ä¡°¡ È°µ¿ ¹üÀ§ ¹Û ({queenMoveDistanceToHive}/{activityRadius}), °æ°è±îÁö¸¸ ÀÌµ¿");
+                Debug.Log($"[í˜ë¥´ëª¬] ì—¬ì™•ë²Œ ì´ë™ ìœ„ì¹˜ê°€ í™œë™ ë²”ìœ„ ë°– ({queenMoveDistanceToHive}/{activityRadius}), ê²½ê³„ê¹Œì§€ë§Œ ì´ë™");
                 
-                // ? ÇöÀç À§Ä¡ ¡æ ÀÌµ¿ ¸ñÇ¥ °æ·Î¿¡¼­ È°µ¿ ¹üÀ§ °æ°è Ã£±â
+                // ? í˜„ì¬ ìœ„ì¹˜ â†’ ì´ë™ ëª©í‘œ ê²½ë¡œì—ì„œ í™œë™ ë²”ìœ„ ê²½ê³„ ì°¾ê¸°
                 var pathToMove = Pathfinder.FindPath(currentTile, TileManager.Instance.GetTile(queenMoveQ, queenMoveR));
                 
                 if (pathToMove != null && pathToMove.Count > 0)
@@ -201,44 +221,44 @@ public static class QueenPheromoneCommandHandler
                     queenMoveQ = lastValidTile.q;
                     queenMoveR = lastValidTile.r;
                     
-                    Debug.Log($"[Æä¸£¸ó] ¿©¿Õ¹ú È°µ¿ ¹üÀ§ °æ°è: ({queenMoveQ}, {queenMoveR})");
+                    Debug.Log($"[í˜ë¥´ëª¬] ì—¬ì™•ë²Œ í™œë™ ë²”ìœ„ ê²½ê³„: ({queenMoveQ}, {queenMoveR})");
                 }
             }
             
-            // ? 3-2. Æä¸£¸ó ºĞ»ç À§Ä¡°¡ È°µ¿ ¹üÀ§ ¹ÛÀÌ¸é ¿©¿Õ¹ú ÀÌµ¿ À§Ä¡¿¡ Æä¸£¸ó ºĞ»ç
+            // ? 3-2. í˜ë¥´ëª¬ ë¶„ì‚¬ ìœ„ì¹˜ê°€ í™œë™ ë²”ìœ„ ë°–ì´ë©´ ì—¬ì™•ë²Œ ì´ë™ ìœ„ì¹˜ì— í˜ë¥´ëª¬ ë¶„ì‚¬
             if (isPheromoneOutOfRange)
             {
                 finalPheromoneQ = queenMoveQ;
                 finalPheromoneR = queenMoveR;
                 
-                Debug.Log($"[Æä¸£¸ó] Æä¸£¸ó ºĞ»ç À§Ä¡ Á¶Á¤: ({finalPheromoneQ}, {finalPheromoneR}) (È°µ¿ ¹üÀ§ °æ°è)");
+                Debug.Log($"[í˜ë¥´ëª¬] í˜ë¥´ëª¬ ë¶„ì‚¬ ìœ„ì¹˜ ì¡°ì •: ({finalPheromoneQ}, {finalPheromoneR}) (í™œë™ ë²”ìœ„ ê²½ê³„)");
             }
         }
         
-        // ? 4. ¿©¿Õ¹úÀÌ ÇöÀç À§Ä¡¿Í °°À¸¸é Áï½Ã Æä¸£¸ó ºĞ»ç
+        // ? 4. ì—¬ì™•ë²Œì´ í˜„ì¬ ìœ„ì¹˜ì™€ ê°™ìœ¼ë©´ ì¦‰ì‹œ í˜ë¥´ëª¬ ë¶„ì‚¬
         if (queenMoveQ == queenAgent.q && queenMoveR == queenAgent.r)
         {
-            Debug.Log($"[Æä¸£¸ó] ÀÌµ¿ ºÒÇÊ¿ä, Áï½Ã Æä¸£¸ó ºĞ»ç");
+            Debug.Log($"[í˜ë¥´ëª¬] ì´ë™ ë¶ˆí•„ìš”, ì¦‰ì‹œ í˜ë¥´ëª¬ ë¶„ì‚¬");
             SprayPheromone(queenAgent, finalPheromoneQ, finalPheromoneR, squad);
             return;
         }
         
-        // ? 5. ¿©¿Õ¹ú ÀÌµ¿ ÈÄ Æä¸£¸ó ºĞ»ç (»õ ÄÚ·çÆ¾ ½ÃÀÛ)
+        // ? 5. ì—¬ì™•ë²Œ ì´ë™ í›„ í˜ë¥´ëª¬ ë¶„ì‚¬ (ìƒˆ ì½”ë£¨í‹´ ì‹œì‘)
         var queenBehavior = queenAgent.GetComponent<MonoBehaviour>();
         if (queenBehavior != null)
         {
             currentCoroutineHost = queenBehavior;
             currentPheromoneCoroutine = queenBehavior.StartCoroutine(MoveQueenAndSprayPheromone(queenAgent, queenMoveQ, queenMoveR, finalPheromoneQ, finalPheromoneR, squad));
-            Debug.Log($"[Æä¸£¸ó] »õ Æä¸£¸ó ÄÚ·çÆ¾ ½ÃÀÛ");
+            Debug.Log($"[í˜ë¥´ëª¬] ìƒˆ í˜ë¥´ëª¬ ì½”ë£¨í‹´ ì‹œì‘");
         }
         else
         {
-            Debug.LogWarning("[Æä¸£¸ó] ¿©¿Õ¹ú MonoBehaviour¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+            Debug.LogWarning("[í˜ë¥´ëª¬] ì—¬ì™•ë²Œ MonoBehaviourë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
         }
     }
     
     /// <summary>
-    /// ÇöÀç ½ÇÇà ÁßÀÎ Æä¸£¸ó ¸í·É Ãë¼Ò
+    /// í˜„ì¬ ì‹¤í–‰ ì¤‘ì¸ í˜ë¥´ëª¬ ëª…ë ¹ ì·¨ì†Œ
     /// </summary>
     public static void CancelCurrentPheromoneCommand()
     {
@@ -247,40 +267,40 @@ public static class QueenPheromoneCommandHandler
             currentCoroutineHost.StopCoroutine(currentPheromoneCoroutine);
             currentPheromoneCoroutine = null;
             currentCoroutineHost = null;
-            Debug.Log($"[Æä¸£¸ó] ÀÌÀü Æä¸£¸ó ¸í·É Ãë¼Ò");
+            Debug.Log($"[í˜ë¥´ëª¬] ì´ì „ í˜ë¥´ëª¬ ëª…ë ¹ ì·¨ì†Œ");
         }
     }
     
     /// <summary>
-    /// ¿©¿Õ¹úÀ» ÀÌµ¿½ÃÅ² ÈÄ Æä¸£¸ó ºĞ»ç
+    /// ì—¬ì™•ë²Œì„ ì´ë™ì‹œí‚¨ í›„ í˜ë¥´ëª¬ ë¶„ì‚¬
     /// </summary>
     private static IEnumerator MoveQueenAndSprayPheromone(UnitAgent queenAgent, int moveQ, int moveR, int pheromoneQ, int pheromoneR, WorkerSquad squad)
     {
-        // ? 1. ¿©¿Õ¹ú ÀÌµ¿ ¸í·É
+        // ? 1. ì—¬ì™•ë²Œ ì´ë™ ëª…ë ¹
         var currentTile = TileManager.Instance?.GetTile(queenAgent.q, queenAgent.r);
         var moveTile = TileManager.Instance?.GetTile(moveQ, moveR);
         
         if (currentTile == null || moveTile == null)
         {
-            Debug.LogWarning($"[Æä¸£¸ó] Å¸ÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù: ÇöÀç({queenAgent.q}, {queenAgent.r}) ¡æ ÀÌµ¿({moveQ}, {moveR})");
+            Debug.LogWarning($"[í˜ë¥´ëª¬] íƒ€ì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: í˜„ì¬({queenAgent.q}, {queenAgent.r}) â†’ ì´ë™({moveQ}, {moveR})");
             currentPheromoneCoroutine = null;
             currentCoroutineHost = null;
             yield break;
         }
         
-        // ? °æ·Î °è»ê
+        // ? ê²½ë¡œ ê³„ì‚°
         var path = Pathfinder.FindPath(currentTile, moveTile);
         if (path == null || path.Count == 0)
         {
-            Debug.LogWarning($"[Æä¸£¸ó] °æ·Î¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù");
+            Debug.LogWarning($"[í˜ë¥´ëª¬] ê²½ë¡œë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤");
             currentPheromoneCoroutine = null;
             currentCoroutineHost = null;
             yield break;
         }
         
-        Debug.Log($"[Æä¸£¸ó] ¿©¿Õ¹ú ÀÌµ¿ ½ÃÀÛ: ({queenAgent.q}, {queenAgent.r}) ¡æ ({moveQ}, {moveR}), °æ·Î ±æÀÌ: {path.Count}");
+        Debug.Log($"[í˜ë¥´ëª¬] ì—¬ì™•ë²Œ ì´ë™ ì‹œì‘: ({queenAgent.q}, {queenAgent.r}) â†’ ({moveQ}, {moveR}), ê²½ë¡œ ê¸¸ì´: {path.Count}");
         
-        // ? 2. ¿©¿Õ¹ú ÀÌµ¿ (QueenBehaviorController »ç¿ë)
+        // ? 2. ì—¬ì™•ë²Œ ì´ë™ (QueenBehaviorController ì‚¬ìš©)
         var queenBehavior = queenAgent.GetComponent<QueenBehaviorController>();
         if (queenBehavior != null)
         {
@@ -288,7 +308,7 @@ public static class QueenPheromoneCommandHandler
         }
         else
         {
-            // QueenBehaviorController°¡ ¾øÀ¸¸é UnitController Á÷Á¢ »ç¿ë
+            // QueenBehaviorControllerê°€ ì—†ìœ¼ë©´ UnitController ì§ì ‘ ì‚¬ìš©
             var mover = queenAgent.GetComponent<UnitController>();
             if (mover != null)
             {
@@ -296,23 +316,23 @@ public static class QueenPheromoneCommandHandler
             }
             else
             {
-                Debug.LogWarning("[Æä¸£¸ó] ¿©¿Õ¹ú ÀÌµ¿ ÄÁÆ®·Ñ·¯¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+                Debug.LogWarning("[í˜ë¥´ëª¬] ì—¬ì™•ë²Œ ì´ë™ ì»¨íŠ¸ë¡¤ëŸ¬ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
                 currentPheromoneCoroutine = null;
                 currentCoroutineHost = null;
                 yield break;
             }
         }
         
-        // ? 3. ¿©¿Õ¹úÀÌ ¸ñÇ¥ À§Ä¡¿¡ µµÂøÇÒ ¶§±îÁö ´ë±â
-        float timeout = 30f; // ÃÖ´ë 30ÃÊ ´ë±â
+        // ? 3. ì—¬ì™•ë²Œì´ ëª©í‘œ ìœ„ì¹˜ì— ë„ì°©í•  ë•Œê¹Œì§€ ëŒ€ê¸°
+        float timeout = 30f; // ìµœëŒ€ 30ì´ˆ ëŒ€ê¸°
         float elapsed = 0f;
         
         while (elapsed < timeout)
         {
-            // ¸ñÇ¥ Å¸ÀÏ¿¡ µµÂøÇß´ÂÁö Ã¼Å©
+            // ëª©í‘œ íƒ€ì¼ì— ë„ì°©í–ˆëŠ”ì§€ ì²´í¬
             if (queenAgent.q == moveQ && queenAgent.r == moveR)
             {
-                Debug.Log($"[Æä¸£¸ó] ¿©¿Õ¹ú µµÂø: ({moveQ}, {moveR})");
+                Debug.Log($"[í˜ë¥´ëª¬] ì—¬ì™•ë²Œ ë„ì°©: ({moveQ}, {moveR})");
                 break;
             }
             
@@ -322,75 +342,144 @@ public static class QueenPheromoneCommandHandler
         
         if (elapsed >= timeout)
         {
-            Debug.LogWarning($"[Æä¸£¸ó] ¿©¿Õ¹ú ÀÌµ¿ Å¸ÀÓ¾Æ¿ô: ÇöÀç ({queenAgent.q}, {queenAgent.r}), ¸ñÇ¥ ({moveQ}, {moveR})");
-            // Å¸ÀÓ¾Æ¿ôÀÌ¾îµµ ÇöÀç À§Ä¡¿¡ Æä¸£¸ó ºĞ»ç
+            Debug.LogWarning($"[í˜ë¥´ëª¬] ì—¬ì™•ë²Œ ì´ë™ íƒ€ì„ì•„ì›ƒ: í˜„ì¬ ({queenAgent.q}, {queenAgent.r}), ëª©í‘œ ({moveQ}, {moveR})");
+            // íƒ€ì„ì•„ì›ƒì´ì–´ë„ í˜„ì¬ ìœ„ì¹˜ì— í˜ë¥´ëª¬ ë¶„ì‚¬
             SprayPheromone(queenAgent, queenAgent.q, queenAgent.r, squad);
             currentPheromoneCoroutine = null;
             currentCoroutineHost = null;
             yield break;
         }
         
-        // ? 4. µµÂø ÈÄ Æä¸£¸ó ºĞ»ç (Æä¸£¸ó Å¸ÀÏ¿¡)
-        yield return new WaitForSeconds(0.1f); // ¾à°£ÀÇ µô·¹ÀÌ
+        // ? 4. ë„ì°© í›„ í˜ë¥´ëª¬ ë¶„ì‚¬ (í˜ë¥´ëª¬ íƒ€ì¼ì—)
+        yield return new WaitForSeconds(0.1f); // ì•½ê°„ì˜ ë”œë ˆì´
         
-        Debug.Log($"[Æä¸£¸ó] Æä¸£¸ó ºĞ»ç: ({pheromoneQ}, {pheromoneR}) (¿©¿Õ¹ú À§Ä¡: ({queenAgent.q}, {queenAgent.r}))");
+        Debug.Log($"[í˜ë¥´ëª¬] í˜ë¥´ëª¬ ë¶„ì‚¬: ({pheromoneQ}, {pheromoneR}) (ì—¬ì™•ë²Œ ìœ„ì¹˜: ({queenAgent.q}, {queenAgent.r}))");
         SprayPheromone(queenAgent, pheromoneQ, pheromoneR, squad);
         
-        // ? ÄÚ·çÆ¾ ¿Ï·á
+        // ? ì½”ë£¨í‹´ ì™„ë£Œ
         currentPheromoneCoroutine = null;
         currentCoroutineHost = null;
     }
     
     /// <summary>
-    /// Æä¸£¸ó ºĞ»ç (½ÇÁ¦ Æä¸£¸ó È¿°ú Àû¿ë ¹× ÀÏ¹ú ¸í·É)
+    /// í˜ë¥´ëª¬ ë¶„ì‚¬ (ì‹¤ì œ í˜ë¥´ëª¬ íš¨ê³¼ ì ìš© ë° ì¼ë²Œ ëª…ë ¹)
     /// </summary>
     private static void SprayPheromone(UnitAgent queenAgent, int targetQ, int targetR, WorkerSquad squad)
     {
         var targetTile = TileManager.Instance?.GetTile(targetQ, targetR);
         if (targetTile == null)
         {
-            Debug.LogWarning($"[Æä¸£¸ó] Å¸ÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù: ({targetQ}, {targetR})");
+            Debug.LogWarning($"[í˜ë¥´ëª¬] íƒ€ì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: ({targetQ}, {targetR})");
             return;
         }
         
         if (HiveManager.Instance == null)
         {
-            Debug.LogWarning("[Æä¸£¸ó] HiveManager¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+            Debug.LogWarning("[í˜ë¥´ëª¬] HiveManagerë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
             return;
         }
+
+        if (PheromoneManager.Instance != null)
+        {
+            var existing = PheromoneManager.Instance.GetPheromonePositionsOrdered(squad);
+            Debug.Log($"[í˜ë¥´ëª¬] ë¶„ì‚¬ ì „ ë¦¬ìŠ¤íŠ¸ ({squad}): {string.Join(" | ", existing)}");
+        }
         
-        // ? Æä¸£¸ó È¿°ú Ãß°¡ (Å¸ÀÏ °­Á¶ Ç¥½Ã)
+        // ? í˜ë¥´ëª¬ íš¨ê³¼ ì¶”ê°€ (íƒ€ì¼ ê°•ì¡° í‘œì‹œ)
         if (PheromoneManager.Instance != null)
         {
             PheromoneManager.Instance.AddPheromone(targetQ, targetR, squad);
         }
         
-        // ÇØ´ç ºÎ´ëÀÇ ÀÏ¹ú ¸ñ·Ï °¡Á®¿À±â
+        // í•´ë‹¹ ë¶€ëŒ€ì˜ ì¼ë²Œ ëª©ë¡ ê°€ì ¸ì˜¤ê¸°
         var squadWorkers = HiveManager.Instance.GetSquadWorkers(squad);
         
         if (squadWorkers.Count == 0)
         {
-            Debug.Log($"[Æä¸£¸ó] {squad} ºÎ´ë¿¡ ÀÏ¹úÀÌ ¾ø½À´Ï´Ù!");
+            Debug.Log($"[í˜ë¥´ëª¬] {squad} ë¶€ëŒ€ì— ì¼ë²Œì´ ì—†ìŠµë‹ˆë‹¤!");
             return;
         }
-        
-        Debug.Log($"[Æä¸£¸ó] Æä¸£¸ó ºĞ»ç ¿Ï·á: ({targetQ}, {targetR})");
-        Debug.Log($"[Æä¸£¸ó] {squad} ºÎ´ë {squadWorkers.Count}¸¶¸®¿¡°Ô ¸í·É: À§Ä¡ ({targetQ}, {targetR})·Î Áı°á");
-        
-        // °¢ ÀÏ¹ú¿¡°Ô ÀÌµ¿ ¸í·É
+
+        // í˜„ì¬ ë¶€ëŒ€ í˜ë¥´ëª¬ ëª©ë¡(ì¶”ê°€ ìˆœì„œ) í™•ë³´
+        List<Vector2Int> pheromonePositions = new List<Vector2Int>();
+        if (PheromoneManager.Instance != null)
+        {
+            pheromonePositions = PheromoneManager.Instance.GetPheromonePositionsOrdered(squad);
+        }
+
+        // í˜ë¥´ëª¬ì´ ì—†ìœ¼ë©´ ì§‘ìœ¼ë¡œ ë³µê·€
+        if (pheromonePositions.Count == 0)
+        {
+            Debug.Log($"[í˜ë¥´ëª¬] {squad} í˜ë¥´ëª¬ ì—†ìŒ â†’ í•˜ì´ë¸Œ ë³µê·€ ëª…ë ¹");
+            SendSquadWorkersHome(squadWorkers);
+            return;
+        }
+
+        Debug.Log($"[í˜ë¥´ëª¬] í˜ë¥´ëª¬ ë¶„ì‚¬ ì™„ë£Œ: ({targetQ}, {targetR})");
+        Debug.Log($"[í˜ë¥´ëª¬] {squad} ë¶€ëŒ€ {squadWorkers.Count}ë§ˆë¦¬ ë¶„ë°°: í˜ë¥´ëª¬ {pheromonePositions.Count}ê°œ");
+
+        DistributeWorkersToPheromones(squadWorkers, pheromonePositions);
+    }
+
+    /// <summary>
+    /// ë¶€ëŒ€ ì¼ë²Œì„ í˜ë¥´ëª¬ ìœ„ì¹˜ì— 3ë“±ë¶„ í›„ ì”ì—¬ëŠ” ì²« í˜ë¥´ëª¬ë¶€í„° ì¶”ê°€ ë°°ì¹˜
+    /// </summary>
+    private static void DistributeWorkersToPheromones(System.Collections.Generic.List<UnitAgent> squadWorkers, System.Collections.Generic.List<Vector2Int> pheromonePositions)
+    {
+        if (pheromonePositions.Count == 0) return;
+
+        int workerIndex = 0;
+        int baseShare = squadWorkers.Count / pheromonePositions.Count;
+        int remainder = squadWorkers.Count % pheromonePositions.Count;
+
+        for (int i = 0; i < pheromonePositions.Count; i++)
+        {
+            int assignCount = baseShare + (i < remainder ? 1 : 0);
+            Vector2Int coord = pheromonePositions[i];
+            var targetTile = TileManager.Instance?.GetTile(coord.x, coord.y);
+            if (targetTile == null) continue;
+
+            for (int j = 0; j < assignCount && workerIndex < squadWorkers.Count; j++)
+            {
+                var worker = squadWorkers[workerIndex++];
+                if (worker == null) continue;
+
+                worker.hasManualOrder = true;
+                worker.hasManualTarget = true;
+                worker.manualTargetCoord = coord;
+
+                var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
+                if (workerBehavior != null)
+                {
+                    workerBehavior.IssueCommandToTile(targetTile);
+                    Debug.Log($"[í˜ë¥´ëª¬] {worker.name} â†’ ({coord.x}, {coord.y}) ë°°ì •");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// í˜ë¥´ëª¬ì´ ì—†ì„ ë•Œ í•´ë‹¹ ë¶€ëŒ€ ì¼ë²Œì„ í•˜ì´ë¸Œë¡œ ë³µê·€ì‹œí‚´
+    /// </summary>
+    public static void SendSquadWorkersHome(System.Collections.Generic.List<UnitAgent> squadWorkers)
+    {
         foreach (var worker in squadWorkers)
         {
             if (worker == null) continue;
-            
-            // ? Æä¸£¸ó ¸í·ÉÀº ¼öµ¿ ¸í·ÉÀ¸·Î ¼³Á¤ (ÀÚ¿ø Ã¤Ãë ÈÄ¿¡µµ Æä¸£¸ó À§Ä¡·Î º¹±Í)
-            worker.hasManualOrder = true;
-            
-            // WorkerBehaviorController¸¦ ÅëÇØ ÀÌµ¿ ¸í·É
+
+            worker.hasManualOrder = false;
+            worker.hasManualTarget = false;
+
+            if (worker.homeHive == null) continue;
+
+            var hiveTile = TileManager.Instance?.GetTile(worker.homeHive.q, worker.homeHive.r);
+            if (hiveTile == null) continue;
+
             var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
             if (workerBehavior != null)
             {
-                workerBehavior.IssueCommandToTile(targetTile);
-                Debug.Log($"[Æä¸£¸ó] {worker.name} ({squad}) ¡æ ({targetQ}, {targetR}) ÀÌµ¿ ¸í·É (hasManualOrder=true)");
+                workerBehavior.IssueCommandToTile(hiveTile);
+                Debug.Log($"[í˜ë¥´ëª¬] {worker.name} í•˜ì´ë¸Œ ë³µê·€ ëª…ë ¹");
             }
         }
     }
