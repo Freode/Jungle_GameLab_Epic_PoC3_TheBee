@@ -33,6 +33,14 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     [Header("Debug")]
     public bool showDebugLogs = false; // 디버그 로그 표시
     
+    [Header("수동 체력 회복(피해 없을 때)")]
+    [Tooltip("피해를 받지 않고 경과해야 하는 시간(초)")]
+    public float passiveRegenDelay = 5f;
+    [Tooltip("피해 없을 때 초당 회복량")]
+    public float passiveRegenPerSecond = 1f;
+    private float passiveRegenTimer = 0f;
+    private float lastDamageTime = 0f;
+
     [Header("UI")]
     public TMPro.TextMeshProUGUI relocateTimerText; // 이사 준비 타이머 텍스트?
 
@@ -80,6 +88,14 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         {
             spawnRoutine = StartCoroutine(SpawnLoop());
         }
+
+        // 피해 감지용 이벤트 구독
+        var combat = GetComponent<CombatUnit>();
+        if (combat != null)
+        {
+            combat.OnDamaged += OnHiveDamaged;
+            lastDamageTime = Time.time;
+        }
     }
 
     void OnDisable()
@@ -91,6 +107,12 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         if (HiveManager.Instance != null)
         {
             HiveManager.Instance.UnregisterHive(this);
+        }
+
+        var combat = GetComponent<CombatUnit>();
+        if (combat != null)
+        {
+            combat.OnDamaged -= OnHiveDamaged;
         }
 
         // ? 플레이어 하이브는 WaspWaveManager에 등록 해제 불필요
@@ -256,6 +278,8 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 r = queenBee.r;
             }
         }
+
+        HandlePassiveRegen();
     }
 
     IEnumerator SpawnLoop()
@@ -389,6 +413,35 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 // 다음 프레임에 가시성 업데이트 (유닛 완전 초기화 후)
                 StartCoroutine(HideEnemyOnSpawn(agent));
             }
+        }
+    }
+
+    private void OnHiveDamaged(int damage)
+    {
+        passiveRegenTimer = 0f;
+        lastDamageTime = Time.time;
+    }
+
+    private void HandlePassiveRegen()
+    {
+        var combat = GetComponent<CombatUnit>();
+        if (combat == null) return;
+
+        if (combat.health >= combat.maxHealth) return;
+
+        float elapsed = Time.time - lastDamageTime;
+        if (elapsed < passiveRegenDelay)
+        {
+            return;
+        }
+
+        passiveRegenTimer += Time.deltaTime * passiveRegenPerSecond;
+        if (passiveRegenTimer >= 1f)
+        {
+            int healAmount = Mathf.FloorToInt(passiveRegenTimer);
+            passiveRegenTimer -= healAmount;
+            combat.SetHealth(combat.health + healAmount);
+            if (showDebugLogs) Debug.Log($"[하이브 회복] +{healAmount} (현재 {combat.health}/{combat.maxHealth})");
         }
     }
 

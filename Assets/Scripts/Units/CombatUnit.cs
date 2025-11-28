@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 public class CombatUnit : MonoBehaviour
 {
@@ -40,7 +41,8 @@ public class CombatUnit : MonoBehaviour
     private float queenHealTimer = 0f;
 
     // 체력/공격력 변경 이벤트
-    public event System.Action OnStatsChanged;
+    public event Action OnStatsChanged;
+    public event Action<int> OnDamaged;
 
     void Awake()
     {
@@ -145,6 +147,7 @@ public class CombatUnit : MonoBehaviour
         }
 
         health -= dmg;
+        OnDamaged?.Invoke(dmg);
 
         // ✅ 피격 색상 플래시 효과
         if (hitFlashCoroutine != null)
