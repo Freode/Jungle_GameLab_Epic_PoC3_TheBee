@@ -316,24 +316,21 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         // Apply upgrades to newly spawned worker (Player만)
         if (agent.faction == Faction.Player && HiveManager.Instance != null)
         {
-            var combat = go.GetComponent<CombatUnit>();
-            if (combat != null)
+            // Ensure RoleAssigner exists and ask it to reapply role+global stats
+            var roleAssigner = go.GetComponent<RoleAssigner>();
+            if (roleAssigner == null)
             {
-                combat.attack = HiveManager.Instance.GetWorkerAttack();
-                combat.maxHealth = HiveManager.Instance.GetWorkerMaxHealth();
-                combat.health = combat.maxHealth;
+                roleAssigner = go.AddComponent<RoleAssigner>();
             }
-            
+
+            // Refresh role so RoleAssigner applies role bonuses combined with current global upgrades
+            roleAssigner.RefreshRole();
+
+            // Apply global-only stats that are not role-dependent
             var controller = go.GetComponent<UnitController>();
             if (controller != null)
             {
                 controller.moveSpeed = HiveManager.Instance.GetWorkerSpeed();
-            }
-            
-            var behavior = go.GetComponent<UnitBehaviorController>();
-            if (behavior != null)
-            {
-                behavior.gatherAmount = HiveManager.Instance.GetGatherAmount();
             }
         }
         

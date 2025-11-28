@@ -395,7 +395,7 @@ public class HiveManager : MonoBehaviour
         currentWorkers = allWorkers.Count;
         return currentWorkers;
     }
-    
+
     /// <summary>
     /// 특정 부대의 일꾼 목록 가져오기 ✅
     /// </summary>
@@ -410,7 +410,7 @@ public class HiveManager : MonoBehaviour
         squadWorkers[squad].RemoveAll(w => w == null);
         return new List<UnitAgent>(squadWorkers[squad]);
     }
-    
+
     /// <summary>
     /// 부대별 인원 수 가져오기 ✅
     /// </summary>
@@ -497,7 +497,8 @@ public class HiveManager : MonoBehaviour
         if (!TrySpendResources(cost)) return false;
 
         workerAttackLevel++;
-        UpdateAllWorkerCombat();
+        // Apply attack upgrade only to attacker-role workers
+        UpdateWorkersAttackByRole(RoleType.Attacker);
 
         Debug.Log($"[업그레이드] 일꾼 공격력 +1! 현재: {GetWorkerAttack()}");
         
@@ -520,7 +521,8 @@ public class HiveManager : MonoBehaviour
         if (!TrySpendResources(cost)) return false;
 
         workerHealthLevel++;
-        UpdateAllWorkerCombat();
+        // Apply health upgrade only to tank-role workers
+        UpdateWorkersHealthByRole(RoleType.Tank);
 
         Debug.Log($"[업그레이드] 일꾼 체력 +2! 현재: {GetWorkerMaxHealth()}");
         
@@ -612,7 +614,7 @@ public class HiveManager : MonoBehaviour
         if (!TrySpendResources(cost)) return false;
 
         gatherAmountLevel++;
-        UpdateAllWorkerGatherAmount();
+        UpdateWorkersGatherAmountByRole(RoleType.Gatherer); // 채취형 역할에 대해서만 업데이트
 
         Debug.Log($"[업그레이드] 자원 채취량 +1! 현재: {GetGatherAmount()}");
         
@@ -801,6 +803,44 @@ public class HiveManager : MonoBehaviour
         if (worker == null) yield break;
         worker.transform.localScale = Vector3.one * targetScale;
         Debug.Log($"[부대] {worker.name} 스케일 강제 적용: {targetScale}");
+    }
+
+    // 역할에 따른 일꾼 공격력 업데이트
+    void UpdateWorkersAttackByRole(RoleType role)
+    {
+        // Reapply role stats via RoleAssigner so global upgrades and role bonuses combine correctly
+        RefreshRoleFor(role);
+    }
+
+    // 역할에 따른 일꾼 체력 업데이트
+    void UpdateWorkersHealthByRole(RoleType role)
+    {
+        // Reapply role stats via RoleAssigner so global upgrades and role bonuses combine correctly
+        RefreshRoleFor(role);
+    }
+
+    // 역할에 따른 일꾼 자원 채취량 업데이트
+    void UpdateWorkersGatherAmountByRole(RoleType role)
+    {
+        // Reapply role stats via RoleAssigner so global upgrades and role bonuses combine correctly
+        RefreshRoleFor(role);
+    }
+
+    // 지정된 RoleType을 가진 모든 유닛의 RoleAssigner.RefreshRole() 호출
+    void RefreshRoleFor(RoleType role)
+    {
+        if (TileManager.Instance == null) return;
+
+        foreach (var unit in TileManager.Instance.GetAllUnits())
+        {
+            if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
+
+            var roleAssigner = unit.GetComponent<RoleAssigner>();
+            if (roleAssigner != null && roleAssigner.role == role)
+            {
+                roleAssigner.RefreshRole();
+            }
+        }
     }
     /// <summary>
     /// 자원 강탈 연출 (하이브가 파괴될 때 호출)
