@@ -69,9 +69,61 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: tankStats.bonusMaxHealth
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: attackerStats.bonusAttack
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: gathererStats.bonusAttack
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: 'roleCommands.Array.data[0]'
       value: 
       objectReference: {fileID: 11400000, guid: 6087083f8ef98e7489dd1ef6a38160c3, type: 2}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: attackerStats.bonusMaxHealth
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: gathererStats.bonusMaxHealth
+      value: -5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: tankStats.activityRadiusBonus
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: gathererStats.gatherAmountBonus
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: attackerStats.activityRadiusBonus
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: gathererStats.moveSpeedMultiplier
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: tankStats.attackCooldownMultiplier
+      value: 1.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: attackerStats.attackCooldownMultiplier
+      value: 0.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: gathererStats.attackCooldownMultiplier
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691115191405788594, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
+      propertyPath: gathererStats.gatherCooldownMultiplier
+      value: 0.8
+      objectReference: {fileID: 0}
     - target: {fileID: 6112904449999854078, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: moveSpeed
       value: 1
