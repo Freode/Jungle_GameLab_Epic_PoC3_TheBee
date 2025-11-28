@@ -432,14 +432,14 @@ public class HiveManager : MonoBehaviour
             + GetMaxWorkersForRole(RoleType.Tank);
     }
 
-    // Helper: role display name in Korean
+    // Helper: role display label (short form used in parentheses)
     private string GetRoleDisplayName(RoleType role)
     {
         switch (role)
         {
-            case RoleType.Attacker: return "공격형 일벌";
-            case RoleType.Gatherer: return "채취형 일벌";
-            case RoleType.Tank: return "탱커형 일벌";
+            case RoleType.Attacker: return "공격형";
+            case RoleType.Gatherer: return "채취형";
+            case RoleType.Tank: return "탱커형";
             default: return "일벌";
         }
     }
@@ -460,9 +460,9 @@ public class HiveManager : MonoBehaviour
         }
         UpdateAllHiveMaxWorkers();
 
-        string roleName = GetRoleDisplayName(role);
+        string roleShort = GetRoleDisplayName(role);
         if (UpgradeResultUI.Instance != null)
-            UpgradeResultUI.Instance.ShowUpgradeResult("확장 군집", $"{roleName} 최대 일꾼 +2", $"<color=#00FF00>{GetMaxWorkersForRole(role)}마리</color>");
+            UpgradeResultUI.Instance.ShowUpgradeResult("확장 군집", $"일벌({roleShort}) 최대 일꾼 +2", $"<color=#00FF00>{GetMaxWorkersForRole(role)}마리</color>");
 
         // notify listeners about upgrade
         OnUpgradeApplied?.Invoke();
@@ -480,12 +480,23 @@ public class HiveManager : MonoBehaviour
             default: workerSpeedLevelGatherer++; RefreshRoleFor(RoleType.Gatherer); break;
         }
 
+        // apply updates to units
+        UpdateAllWorkerSpeed();
+
         // show UI result with localized role name and new speed
         string roleName = GetRoleDisplayName(role);
-        float newSpeed = GetWorkerSpeed(role);
+        // prefer actual unit controller value if available
+        float displaySpeed = GetWorkerSpeed(role);
+        var sample = FindPlayerUnitWithRole(role);
+        if (sample != null)
+        {
+            var ctrl = sample.GetComponent<UnitController>();
+            if (ctrl != null) displaySpeed = ctrl.moveSpeed;
+        }
+
         if (UpgradeResultUI.Instance != null)
         {
-            UpgradeResultUI.Instance.ShowUpgradeResult("빠른 날개", $"일꾼 이동 속도({roleName}) 증가", $"<color=#00FF00>{newSpeed:F2} 속도</color>");
+            UpgradeResultUI.Instance.ShowUpgradeResult("빠른 날개", $"일벌({roleName}) 이동 속도 증가", $"<color=#00FF00>{displaySpeed:F2} 속도</color>");
         }
 
         // notify listeners about upgrade
@@ -526,7 +537,15 @@ public class HiveManager : MonoBehaviour
 
         if (UpgradeResultUI.Instance != null)
         {
-            UpgradeResultUI.Instance.ShowUpgradeResult("날카로운 침", "일벌(공격형) 공격력 +1", $"<color=#00FF00>{GetWorkerAttack()}</color>");
+            // show actual attacker unit attack if present
+            int displayAttack = GetWorkerAttack();
+            var sample = FindPlayerUnitWithRole(RoleType.Attacker);
+            if (sample != null)
+            {
+                var combat = sample.GetComponent<CombatUnit>();
+                if (combat != null) displayAttack = combat.attack;
+            }
+            UpgradeResultUI.Instance.ShowUpgradeResult("날카로운 침", "일벌(공격형) 공격력 +1", $"<color=#00FF00>{displayAttack}</color>");
         }
 
         OnUpgradeApplied?.Invoke();
@@ -544,7 +563,15 @@ public class HiveManager : MonoBehaviour
 
         if (UpgradeResultUI.Instance != null)
         {
-            UpgradeResultUI.Instance.ShowUpgradeResult("강화 외골격", "일벌(탱커형) 체력 +2", $"<color=#00FF00>{GetWorkerMaxHealth()} HP</color>");
+            // show actual tank unit max health if present
+            int displayMax = GetWorkerMaxHealth();
+            var sample = FindPlayerUnitWithRole(RoleType.Tank);
+            if (sample != null)
+            {
+                var combat = sample.GetComponent<CombatUnit>();
+                if (combat != null) displayMax = combat.maxHealth;
+            }
+            UpgradeResultUI.Instance.ShowUpgradeResult("강화 외골격", "일벌(탱커형) 최대 체력 +2", $"<color=#00FF00>{displayMax} HP</color>");
         }
 
         OnUpgradeApplied?.Invoke();
@@ -576,7 +603,14 @@ public class HiveManager : MonoBehaviour
 
         if (UpgradeResultUI.Instance != null)
         {
-            UpgradeResultUI.Instance.ShowUpgradeResult("효율적 채집", "자원 채취량 +1", $"<color=#00FF00>{GetGatherAmount()}</color>");
+            int displayGather = GetGatherAmount();
+            var sample = FindPlayerUnitWithRole(RoleType.Gatherer);
+            if (sample != null)
+            {
+                var behavior = sample.GetComponent<UnitBehaviorController>();
+                if (behavior != null) displayGather = behavior.gatherAmount;
+            }
+            UpgradeResultUI.Instance.ShowUpgradeResult("효율적 채집", "일벌(채취형) 채집량 +1", $"<color=#00FF00>{displayGather}</color>");
         }
 
         OnUpgradeApplied?.Invoke();
@@ -589,27 +623,20 @@ public class HiveManager : MonoBehaviour
         foreach (var unit in TileManager.Instance.GetAllUnits())
         {
             if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
+            var ra = unit.GetComponent<RoleAssigner>();
+            if (ra != null)
+            {
+                // Let RoleAssigner reapply role-specific stats (includes global upgrades when applicable)
+                ra.RefreshRole();
+                continue;
+            }
+
             var combat = unit.GetComponent<CombatUnit>();
             if (combat != null)
             {
                 combat.SetAttack(GetWorkerAttack());
                 int newMax = GetWorkerMaxHealth();
                 combat.SetMaxHealth(newMax);
-            }
-        }
-    }
-
-    void UpdateAllWorkerSpeed()
-    {
-        if (TileManager.Instance == null) return;
-        foreach (var unit in TileManager.Instance.GetAllUnits())
-        {
-            if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
-            var controller = unit.GetComponent<UnitController>();
-            if (controller != null)
-            {
-                var ra = unit.GetComponent<RoleAssigner>();
-                controller.moveSpeed = ra != null ? GetWorkerSpeed(ra.role) : GetWorkerSpeed(RoleType.Gatherer);
             }
         }
     }
@@ -623,13 +650,23 @@ public class HiveManager : MonoBehaviour
             if (combat != null)
             {
                 int oldMax = combat.maxHealth;
-                combat.maxHealth = GetHiveMaxHealth();
+                int newMax = GetHiveMaxHealth();
+
+                float ratio = 1f;
+                if (oldMax > 0) ratio = (float)combat.health / oldMax;
+
+                // Use CombatUnit API to ensure events are fired and health clamped correctly
+                combat.SetMaxHealth(newMax);
+
                 if (oldMax > 0)
                 {
-                    float ratio = (float)combat.health / oldMax;
-                    combat.health = Mathf.RoundToInt(combat.maxHealth * ratio);
+                    int adjustedHealth = Mathf.RoundToInt(newMax * ratio);
+                    combat.SetHealth(Mathf.Clamp(adjustedHealth, 0, newMax));
                 }
-                else combat.health = combat.maxHealth;
+                else
+                {
+                    combat.SetHealth(newMax);
+                }
             }
         }
     }
@@ -790,5 +827,34 @@ public class HiveManager : MonoBehaviour
     public bool UpgradeMaxWorkers(int cost)
     {
         return UpgradeMaxWorkersForRole(RoleType.Gatherer, cost);
+    }
+
+    // Ensure worker speed updates are applied to UnitController components
+    void UpdateAllWorkerSpeed()
+    {
+        if (TileManager.Instance == null) return;
+        foreach (var unit in TileManager.Instance.GetAllUnits())
+        {
+            if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
+            var controller = unit.GetComponent<UnitController>();
+            if (controller != null)
+            {
+                var ra = unit.GetComponent<RoleAssigner>();
+                controller.moveSpeed = ra != null ? GetWorkerSpeed(ra.role) : GetWorkerSpeed(RoleType.Gatherer);
+            }
+        }
+    }
+
+    // Helper: find a player unit with given role to sample runtime-applied stats
+    private UnitAgent FindPlayerUnitWithRole(RoleType role)
+    {
+        if (TileManager.Instance == null) return null;
+        foreach (var unit in TileManager.Instance.GetAllUnits())
+        {
+            if (unit == null || unit.faction != Faction.Player || unit.isQueen) continue;
+            var ra = unit.GetComponent<RoleAssigner>();
+            if (ra != null && ra.role == role) return unit;
+        }
+        return null;
     }
 }

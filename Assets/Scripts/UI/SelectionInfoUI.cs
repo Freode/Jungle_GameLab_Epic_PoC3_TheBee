@@ -475,31 +475,37 @@ public class SelectionInfoUI : MonoBehaviour
             details += $"현재 작업: <color=#00FF00>{behavior.currentTaskString}</color>\n";
         }
 
-        //// Show global/role upgrades from HiveManager when available
-        //if (HiveManager.Instance != null)
-        //{
-        //    details += "\n=== 업그레이드 ===\n";
-
-        //    // 일벌 채취 (Gatherer)
-        //    int gatherAmount = HiveManager.Instance.GetGatherAmount();
-        //    details += $"자원 채취량 (채취형 일벌): <color=#00FF00>+{gatherAmount}</color>\n";
-
-        //    // 일벌 공격력 (Attacker)
-        //    int attack = HiveManager.Instance.GetWorkerAttack();
-        //    details += $"일벌 공격력 (공격형 일벌): <color=#00FF00>+{attack}</color>\n";
-
-        //    // 일벌 체력 (Tank role is primary for health upgrades)
-        //    int wHealth = HiveManager.Instance.GetWorkerMaxHealth();
-        //    details += $"일벌 최대 체력 (탱커형 일벌 기준): <color=#00FF00>{wHealth}</color>\n";
-
-        //    // 벌집 체력
-        //    int hiveHealth = HiveManager.Instance.GetHiveMaxHealth();
-        //    details += $"벌집 최대 체력: <color=#00FF00>{hiveHealth} HP</color>\n";
-
-        //    // 활동 범위
-        //    int range = HiveManager.Instance.hiveActivityRadius;
-        //    details += $"하이브 활동 범위: <color=#00FF00>{range}</color>칸\n";
-        //}
+        // 역할별로 적용되는 업그레이드/효과를 해당 역할 유닛에 한해 표시
+        var roleAssigner = unit.GetComponent<RoleAssigner>();
+        var controller = unit.GetComponent<UnitController>();
+        if (roleAssigner != null && unit.faction == Faction.Player && !unit.isQueen)
+        {
+            details += "\n=== 역할별 스탯 ===\n";
+            switch (roleAssigner.role)
+            {
+                case RoleType.Gatherer:
+                    // 채취형: behavior.gatherAmount 및 역할별/글로벌 이동속도
+                    if (behavior != null)
+                        details += $"자원 채취량 (채취형 일벌): <color=#00FF00>{behavior.gatherAmount}</color>\n";
+                    if (controller != null)
+                        details += $"이동 속도 (채취형 일벌): <color=#00FF00>{controller.moveSpeed:F2}</color>\n";
+                    break;
+                case RoleType.Attacker:
+                    // 공격형: 공격력 및 이동속도
+                    if (combat != null)
+                        details += $"공격력 (공격형 일벌): <color=#00FF00>{combat.attack}</color>\n";
+                    if (controller != null)
+                        details += $"이동 속도 (공격형 일벌): <color=#00FF00>{controller.moveSpeed:F2}</color>\n";
+                    break;
+                case RoleType.Tank:
+                    // 탱커형: 최대 체력(역할보너스 + 글로벌 적용)
+                    if (combat != null)
+                        details += $"최대 체력 (탱커형 일벌): <color=#00FF00>{combat.maxHealth}</color>\n";
+                    if (controller != null)
+                        details += $"이동 속도 (탱커형 일벌): <color=#00FF00>{controller.moveSpeed:F2}</color>\n";
+                    break;
+            }
+        }
 
         detailsText.text = details.TrimEnd('\n');
         AdjustPanelPosition();
