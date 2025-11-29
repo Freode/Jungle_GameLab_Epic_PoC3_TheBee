@@ -20,6 +20,6 @@ MonoBehaviour:
   resourceCost: 10
   upgradeType: 5
   targetRole: 2
-  baseCost: 20
+  baseCost: 15
   incrementalCost: 5
   maxLevel: 24
