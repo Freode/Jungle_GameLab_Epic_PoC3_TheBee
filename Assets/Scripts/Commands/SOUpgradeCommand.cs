@@ -16,8 +16,11 @@ public class SOUpgradeCommand : SOCommand
     public RoleType targetRole = RoleType.Gatherer;
 
     [Header("비용 설정")]
-    [Tooltip("초기 업그레이드 비용 (매 업그레이드마다 이 값만큼 증가)")]
+    [Tooltip("초기 업그레이드 비용")]
     public int baseCost = 10; // 초기 비용
+
+    [Tooltip("등차적으로 늘어날 추가 비용 (예: 2면 6, 8, 12...)")]
+    public int incrementalCost = 0;
 
     [Tooltip("최대 업그레이드 레벨 (0 = 무제한)")]
     public int maxLevel = 0; // 최대 레벨
@@ -63,7 +66,10 @@ public class SOUpgradeCommand : SOCommand
         if (HiveManager.Instance == null) return baseCost;
 
         int currentLevel = GetCurrentLevel(upgradeType);
-        return baseCost + (baseCost * currentLevel);
+
+        // 등차수열 누적 증가: baseCost + incrementalCost * (n*(n+1)/2)
+        int additionalCost = incrementalCost * currentLevel * (currentLevel + 1) / 2;
+        return baseCost + additionalCost;
     }
 
     /// <summary>

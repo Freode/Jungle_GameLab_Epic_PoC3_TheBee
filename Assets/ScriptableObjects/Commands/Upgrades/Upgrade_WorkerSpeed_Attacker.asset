@@ -21,4 +21,5 @@ MonoBehaviour:
   upgradeType: 3
   targetRole: 0
   baseCost: 10
+  incrementalCost: 3
   maxLevel: 0
