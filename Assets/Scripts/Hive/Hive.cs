@@ -289,6 +289,17 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
                 }
                 q = queenBee.q;
                 r = queenBee.r;
+
+                // Update activity boundary to follow the hive while floating
+                if (HexBoundaryHighlighter.Instance != null)
+                {
+                    int radius = 5;
+                    if (HiveManager.Instance != null) radius = HiveManager.Instance.hiveActivityRadius;
+                    // Ensure highlighter remains enabled for player hives
+                    if (!HexBoundaryHighlighter.Instance.enabledForHives)
+                        HexBoundaryHighlighter.Instance.SetEnabledForHives(true);
+                    HexBoundaryHighlighter.Instance.ShowBoundaryAt(q, r, radius);
+                }
             }
         }
 
@@ -538,7 +549,15 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         }
         if (HexBoundaryHighlighter.Instance != null)
         {
-            HexBoundaryHighlighter.Instance.Clear();
+            int radius = 5;
+            if (HiveManager.Instance != null) radius = HiveManager.Instance.hiveActivityRadius;
+            // Keep the activity boundary visible while relocating by showing it at the current hive/queen position
+            if (!HexBoundaryHighlighter.Instance.enabledForHives)
+                HexBoundaryHighlighter.Instance.SetEnabledForHives(true);
+            // Show boundary centered at the queen/hive current coords
+            int centerQ = queenBee != null ? queenBee.q : q;
+            int centerR = queenBee != null ? queenBee.r : r;
+            HexBoundaryHighlighter.Instance.ShowBoundaryAt(centerQ, centerR, radius);
         }
         queenBee.homeHive = null;
 
@@ -1104,7 +1123,7 @@ private IEnumerator RefreshQueenUI()
             }
         }
 
-        // 3. 랜덤 가중치 부여
+        // 3. 랜덤 가Weightedght 부여
         float totalWeight = 0f;
         float[] weights = new float[targetTiles.Count];
         for (int i = 0; i < targetTiles.Count; i++)
@@ -1208,7 +1227,7 @@ private IEnumerator RefreshQueenUI()
         }
 
         // 이륙 카운트다운 시작
-        // 모든 페로몬 제거 및 명령 취소 (벌집 띄우기 준비)
+        // 모든 페르몬 제거 및 명령 취소 (벌집 띄우기 준비)
         if (PheromoneManager.Instance != null)
         {
             PheromoneManager.Instance.ClearAllPheromones();
