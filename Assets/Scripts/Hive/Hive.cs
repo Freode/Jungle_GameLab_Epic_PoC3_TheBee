@@ -971,6 +971,9 @@ private IEnumerator RefreshQueenUI()
             // keep reference
             hiddenWorkers.Add(worker);
 
+            // Deposit carried resources before hiding
+            DepositCarriedResource(worker);
+
             // move to hive/queen position before hiding
             var agent = worker.GetComponent<UnitAgent>();
             if (agent != null)
@@ -989,6 +992,20 @@ private IEnumerator RefreshQueenUI()
         }
 
         workersHidden = true;
+    }
+
+    // If worker carries resource, deposit it to HiveManager before resetting state
+    private void DepositCarriedResource(UnitAgent worker)
+    {
+        if (worker == null) return;
+        var agent = worker.GetComponent<UnitAgent>();
+        var behavior = worker.GetComponent<WorkerBehaviorController>();
+
+        if (agent != null && agent.isCarryingResource && behavior != null && HiveManager.Instance != null)
+        {
+            HiveManager.Instance.AddResources(behavior.gatherAmount);
+            agent.SetCarryingResource(false);
+        }
     }
 
     // Show hidden workers (on landing or if hive is destroyed mid-air)
@@ -1072,6 +1089,9 @@ private IEnumerator RefreshQueenUI()
         foreach (var worker in workers)
         {
             if (worker == null) continue;
+
+            // Deposit carried resources before clearing task
+            DepositCarriedResource(worker);
 
             worker.hasManualOrder = false;
             worker.hasManualTarget = false;
