@@ -95,6 +95,13 @@ public class PheromoneManager : MonoBehaviour
     /// </summary>
     public void AddPheromone(int q, int r, WorkerSquad squad)
     {
+        // 이륙 카운트다운/이동 중에는 페르몬 사용 불가 (취소도 하지 않음)
+        if (IsHiveRelocatingOrCasting())
+        {
+            Debug.LogWarning("[페르몬] 하이브 이사 중에는 페르몬을 사용할 수 없습니다.");
+            return;
+        }
+
         Vector2Int coord = new Vector2Int(q, r);
 
         Debug.Log($"[페르몬] 요청: {squad} ({q}, {r}), 현재 리스트: {string.Join(" | ", pheromoneOrder[squad])}");
@@ -141,6 +148,19 @@ public class PheromoneManager : MonoBehaviour
         RefreshPheromoneHighlightsForTile(coord);
 
         Debug.Log($"[페르몬] {squad} 페르몬 추가: ({q}, {r}), 현재 개수: {pheromoneOrder[squad].Count}");
+    }
+
+    // 하이브가 떠 있는 중이거나 이륙 캐스팅 중인지 확인
+    private bool IsHiveRelocatingOrCasting()
+    {
+        if (HiveManager.Instance == null) return false;
+        foreach (var hive in HiveManager.Instance.GetAllHives())
+        {
+            if (hive == null) continue;
+            if (hive.isFloating) return true;
+            if (hive.IsCastingLift) return true;
+        }
+        return false;
     }
     
     /// <summary>

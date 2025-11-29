@@ -56,6 +56,12 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
     private Color savedColor = Color.white;
 
     public bool IsCasting => castingRoutine != null;
+    public bool IsCastingLift => castingRoutine != null && castingIsLift;
+
+    // Hidden workers while hive is floating
+    private readonly List<UnitAgent> hiddenWorkers = new List<UnitAgent>();
+    private bool workersHidden = false;
+    private bool castingIsLift = false;
 
     void OnEnable()
     {
@@ -96,6 +102,13 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             combat.OnDamaged += OnHiveDamaged;
             lastDamageTime = Time.time;
         }
+    }
+
+    // 외부 취소 요청 (예: 페로몬 사용 시)
+    public void CancelCastingExternal(string reason)
+    {
+        Debug.LogWarning($"[Hive] 캐스팅 취소: {reason}");
+        CancelCasting();
     }
 
     void OnDisable()
@@ -565,6 +578,9 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             }
         }
 
+        // Hide all workers while hive is in transit
+        HideWorkersDuringLift();
+
         // 7. 콜라이더 끄기
         //var myCollider = GetComponent<Collider>();
         //if (myCollider != null) myCollider.enabled = false;
@@ -608,6 +624,9 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             TileManager.Instance?.RegisterUnit(agent);
             agent.RegisterWithFog();
         }
+
+        // Bring back hidden workers at the new hive location
+        ShowHiddenWorkers(newQ, newR, setHome: true);
 
         // Restore vision after landing
         if (HiveManager.Instance != null)
@@ -678,6 +697,9 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         if (isFloating && queenBee != null)
         {
             Debug.LogWarning("[하이브 파괴] 운반 중 파괴됨! 여왕벌 상태를 복구합니다.");
+
+            // 숨겨둔 일꾼을 다시 노출 (여왕 위치에 소환)
+            ShowHiddenWorkers(q, r, setHome: false);
 
             // 1. 여왕벌 속도 원상복구
             var queenController = queenBee.GetComponent<UnitController>();
@@ -764,7 +786,13 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         {
             HexBoundaryHighlighter.Instance.Clear();
         }
-        
+
+        // 떠있는 상태가 아니더라도 숨겨진 일꾼이 있으면 다시 노출
+        if (workersHidden)
+        {
+            ShowHiddenWorkers(q, r, setHome: false);
+        }
+
         // ✅ 하이브 파괴 시 페르몬 코루틴 취소
         QueenPheromoneCommandHandler.CancelCurrentPheromoneCommand();
         Debug.Log("[하이브 파괴] 페르몬 명령 취소");
@@ -911,6 +939,84 @@ private IEnumerator RefreshQueenUI()
         return new List<UnitAgent>(workers);
     }
 
+    // Hide all workers when hive is in transit
+    private void HideWorkersDuringLift()
+    {
+        if (workersHidden) return;
+        hiddenWorkers.Clear();
+
+        foreach (var worker in workers)
+        {
+            if (worker == null) continue;
+
+            // keep reference
+            hiddenWorkers.Add(worker);
+
+            // move to hive/queen position before hiding
+            var agent = worker.GetComponent<UnitAgent>();
+            if (agent != null)
+            {
+                agent.SetPosition(q, r);
+                worker.transform.position = TileHelper.HexToWorld(q, r, agent.hexSize);
+            }
+
+            // clear tasks/path
+            var behavior = worker.GetComponent<UnitBehaviorController>();
+            if (behavior != null) behavior.CancelCurrentTask();
+            var controller = worker.GetComponent<UnitController>();
+            if (controller != null) controller.ClearPath();
+
+            worker.gameObject.SetActive(false);
+        }
+
+        workersHidden = true;
+    }
+
+    // Show hidden workers (on landing or if hive is destroyed mid-air)
+    private void ShowHiddenWorkers(int targetQ, int targetR, bool setHome)
+    {
+        if (!workersHidden) return;
+
+        foreach (var worker in hiddenWorkers)
+        {
+            if (worker == null) continue;
+            worker.gameObject.SetActive(true);
+
+            var agent = worker.GetComponent<UnitAgent>();
+            if (agent != null)
+            {
+                agent.SetPosition(targetQ, targetR);
+                worker.transform.position = TileHelper.HexToWorld(targetQ, targetR, agent.hexSize);
+                agent.homeHive = setHome ? this : null;
+                agent.isFollowingQueen = setHome ? false : agent.isFollowingQueen;
+            }
+
+            // reset tasks
+            var controller = worker.GetComponent<UnitController>();
+            if (controller != null) controller.ClearPath();
+
+            var behavior = worker.GetComponent<UnitBehaviorController>();
+            if (behavior != null)
+            {
+                behavior.CancelCurrentTask();
+            }
+
+            // Only worker-specific behavior needs OnHiveConstructed
+            var workerBehavior = worker.GetComponent<WorkerBehaviorController>();
+            if (setHome && workerBehavior != null)
+            {
+                workerBehavior.OnHiveConstructed(this);
+            }
+
+            // reapply role stats/speed
+            var roleAssigner = worker.GetComponent<RoleAssigner>();
+            if (roleAssigner != null) roleAssigner.RefreshRole();
+        }
+
+        hiddenWorkers.Clear();
+        workersHidden = false;
+    }
+
     // Commands targeting the hive workers
     public void IssueCommandToWorkers(string commandId, CommandTarget target)
     {
@@ -937,6 +1043,33 @@ private IEnumerator RefreshQueenUI()
                 case "hive_attack":
                     // move towards target unit or tile
                     goto case "hive_explore";
+            }
+        }
+    }
+
+    // Cancel all worker manual orders and send them home
+    private void RecallWorkersToHive()
+    {
+        foreach (var worker in workers)
+        {
+            if (worker == null) continue;
+
+            worker.hasManualOrder = false;
+            worker.hasManualTarget = false;
+
+            var behavior = worker.GetComponent<UnitBehaviorController>();
+            if (behavior != null)
+            {
+                behavior.CancelCurrentTask();
+            }
+
+            if (worker.homeHive != null)
+            {
+                var hiveTile = TileManager.Instance?.GetTile(worker.homeHive.q, worker.homeHive.r);
+                if (hiveTile != null && behavior != null)
+                {
+                    behavior.IssueCommandToTile(hiveTile);
+                }
             }
         }
     }
@@ -1075,6 +1208,14 @@ private IEnumerator RefreshQueenUI()
         }
 
         // 이륙 카운트다운 시작
+        // 모든 페로몬 제거 및 명령 취소 (벌집 띄우기 준비)
+        if (PheromoneManager.Instance != null)
+        {
+            PheromoneManager.Instance.ClearAllPheromones();
+        }
+        QueenPheromoneCommandHandler.CancelCurrentPheromoneCommand();
+        RecallWorkersToHive(); // 기존 이동/페로몬 명령 초기화
+
         castingRoutine = StartCoroutine(CastingRoutine(true, 0, 0));
         StartCoroutine(RefreshQueenUI());
 
@@ -1106,6 +1247,7 @@ private IEnumerator RefreshQueenUI()
 
     private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
     {
+        castingIsLift = isLifting;
         float timer = castTime;
         Vector3 startPos = queenBee != null ? queenBee.transform.position : transform.position; // 시작 위치 저장
         string actionName = isLifting ? "이륙" : "착륙";
@@ -1164,6 +1306,7 @@ private IEnumerator RefreshQueenUI()
         // 카운트다운 완료! 실제 동작 실행
         if (relocateTimerText != null) relocateTimerText.gameObject.SetActive(false);
         castingRoutine = null;
+        castingIsLift = false;
 
         if (NotificationToast.Instance != null)
         {
@@ -1183,6 +1326,7 @@ private IEnumerator RefreshQueenUI()
     {
         if (relocateTimerText != null) relocateTimerText.gameObject.SetActive(false);
         castingRoutine = null;
+        castingIsLift = false;
     }
 
 }
