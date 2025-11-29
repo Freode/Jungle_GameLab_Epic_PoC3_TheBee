@@ -181,83 +181,41 @@ public class HiveManager : MonoBehaviour
     // Store original vision ranges for units when temporarily reduced during hive relocation
     private Dictionary<int, int> savedVisionRanges = new Dictionary<int, int>();
 
+    // NOTE: Previously we changed unit vision to 1 during hive relocation. This behavior is disabled
+    // because we want units to keep their normal vision distance at all times. The methods below
+    // are preserved but intentionally implemented as no-ops to avoid changing runtime behavior.
+
     // Reduce vision for hive and queen to 1 during relocation and update FogOfWar
     public void ReduceVisionForRelocation(Hive hive)
     {
-        if (hive == null) return;
-
-        // Queen
-        if (hive.queenBee != null)
-        {
-            SaveAndApplyVision(hive.queenBee, 1);
-        }
-
-        // Hive agent (the hive itself may have a UnitAgent)
-        var hiveAgent = hive.GetComponent<UnitAgent>();
-        if (hiveAgent != null)
-        {
-            SaveAndApplyVision(hiveAgent, 1);
-        }
+        // no-op: vision changes disabled
+        return;
     }
 
     // Restore vision for hive and queen after landing
     public void RestoreVisionAfterLanding(Hive hive)
     {
-        if (hive == null) return;
-
-        if (hive.queenBee != null)
-        {
-            RestoreVision(hive.queenBee);
-        }
-
-        var hiveAgent = hive.GetComponent<UnitAgent>();
-        if (hiveAgent != null)
-        {
-            RestoreVision(hiveAgent);
-        }
+        // no-op: vision changes disabled
+        return;
     }
 
     // Restore vision if hive is destroyed while relocating
     public void RestoreVisionOnHiveDestroyed(Hive hive)
     {
-        if (hive == null) return;
-        if (hive.queenBee != null)
-        {
-            RestoreVision(hive.queenBee);
-        }
-        var hiveAgent = hive.GetComponent<UnitAgent>();
-        if (hiveAgent != null)
-        {
-            RestoreVision(hiveAgent);
-        }
+        // no-op: vision changes disabled
+        return;
     }
 
     private void SaveAndApplyVision(UnitAgent agent, int newVision)
     {
-        if (agent == null) return;
-        if (!savedVisionRanges.ContainsKey(agent.id))
-        {
-            savedVisionRanges[agent.id] = agent.visionRange;
-        }
-        agent.visionRange = newVision;
-        if (FogOfWarManager.Instance != null)
-        {
-            FogOfWarManager.Instance.UpdateUnitPosition(agent.id, agent.q, agent.r, agent.visionRange);
-        }
+        // no-op: previously saved and applied vision changes here, but feature disabled.
+        return;
     }
 
     private void RestoreVision(UnitAgent agent)
     {
-        if (agent == null) return;
-        if (savedVisionRanges.TryGetValue(agent.id, out int original))
-        {
-            agent.visionRange = original;
-            if (FogOfWarManager.Instance != null)
-            {
-                FogOfWarManager.Instance.UpdateUnitPosition(agent.id, agent.q, agent.r, agent.visionRange);
-            }
-            savedVisionRanges.Remove(agent.id);
-        }
+        // no-op: previously restored saved vision here, but feature disabled.
+        return;
     }
 
     // Register worker and assign to smallest squad with capacity.
