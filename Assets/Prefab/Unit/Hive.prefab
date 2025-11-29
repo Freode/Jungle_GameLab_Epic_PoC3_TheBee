@@ -298,7 +298,7 @@ MonoBehaviour:
   q: 0
   r: 0
   workerPrefab: {fileID: 122535924390814216, guid: 9b4e582aa5b040e4fba39b28bd92b7c8, type: 3}
-  spawnInterval: 3
+  spawnInterval: 2.5
   maxWorkers: 5
   isRelocating: 0
   queenBee: {fileID: 0}

@@ -153,9 +153,9 @@ MonoBehaviour:
   autoSpawnOnStart: 1
   spawnDelay: 1
   normalHiveCount: 20
-  minDistanceFromElite: 4
-  maxDistanceFromElite: 9
-  minDistanceBetweenHives: 4
+  minDistanceFromElite: 7
+  maxDistanceFromElite: 10
+  minDistanceBetweenHives: 7
 --- !u!4 &20992909
 Transform:
   m_ObjectHideFlags: 0
@@ -1667,7 +1667,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hexMap: 1
-  mapRadius: 15
+  mapRadius: 17
   mapWidth: 20
   mapHeight: 12
   hexSize: 0.5
