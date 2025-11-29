@@ -75,7 +75,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 15
+  m_SortingOrder: 0
   m_Sprite: {fileID: -2135585597343286014, guid: eed45a33cd08446c8b88325cf82fc52f, type: 3}
   m_Color: {r: 1, g: 0.9318118, b: 0, a: 1}
   m_FlipX: 0
@@ -305,6 +305,8 @@ MonoBehaviour:
   carrySpeedMultiplier: 0.5
   hiveCommands: []
   showDebugLogs: 0
+  passiveRegenDelay: 5
+  passiveRegenPerSecond: 1
   relocateTimerText: {fileID: 0}
   isFloating: 0
   castTime: 3
@@ -330,6 +332,8 @@ MonoBehaviour:
   isInvincible: 0
   hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
   hitFlashDuration: 0.2
+  queenHealInterval: 1
+  queenHealAmount: 1
 --- !u!4 &7137265993117279580 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8356495950311495776, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
