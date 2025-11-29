@@ -795,7 +795,7 @@ public class HiveManager : MonoBehaviour
         return baseSpeed + (float)level / 5f;
     }
     public float GetWorkerSpeedBonusForRole(RoleType role) => (GetWorkerSpeed(role) - 2.0f);
-    public int GetHiveMaxHealth() => 100 + (hiveHealthLevel * 30);
+    public int GetHiveMaxHealth() => 150 + (hiveHealthLevel * 30);
     public int GetGatherAmount() => 1 + gatherAmountLevel;
 
     private System.Collections.IEnumerator EnsureScaleApplied(UnitAgent worker, float targetScale)
