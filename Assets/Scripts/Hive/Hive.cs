@@ -127,8 +127,8 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         
         // ✅ 하이브 건설 시 페르몬 코루틴 취소 (요구사항)
         QueenPheromoneCommandHandler.CancelCurrentPheromoneCommand();
-        Debug.Log("[하이브 초기화] 페르몬 명령 취소");
-        
+        Debug.Log("[하이브 초기화] 페르몬 명령 취 cancel");
+
         // ✅ 하이브 건설 시 모든 페르몬 효과 제거 (요구사항 1)
         if (PheromoneManager.Instance != null)
         {
@@ -546,6 +546,13 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         // 5. 데이터 연결
         queenBee.carriedHive = this;
 
+        // 5b. Reduce vision for relocation (queen and hive) to 1
+        if (HiveManager.Instance != null)
+        {
+            HiveManager.Instance.ReduceVisionForRelocation(this);
+            if (showDebugLogs) Debug.Log("[Hive] 이륙: 여왕과 하이브 시야를 1로 축소");
+        }
+
         // 6. 일꾼 처리
         foreach (var worker in workers)
         {
@@ -600,6 +607,13 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
             transform.position = TileHelper.HexToWorld(newQ, newR, agent.hexSize);
             TileManager.Instance?.RegisterUnit(agent);
             agent.RegisterWithFog();
+        }
+
+        // Restore vision after landing
+        if (HiveManager.Instance != null)
+        {
+            HiveManager.Instance.RestoreVisionAfterLanding(this);
+            if (showDebugLogs) Debug.Log("[Hive] 착륙: 여왕과 하이브 시야 복구");
         }
 
         if (HexBoundaryHighlighter.Instance != null)
@@ -657,130 +671,6 @@ public class Hive : MonoBehaviour, IUnitCommandProvider
         StartCoroutine(RefreshQueenUI());
     }
 
-public void StartLiftSequence()
-    {
-        // 이미 떠있거나, 캐스팅 중이면 무시
-        if (isFloating || castingRoutine != null) return;
-        if (queenBee == null) return;
-
-        // 위치 검사: 여왕벌이 하이브 위에 있어야 함
-        if (queenBee.q != this.q || queenBee.r != this.r)
-        {
-            if (NotificationToast.Instance != null) NotificationToast.Instance.ShowMessage("여왕벌이 하이브 위에 있어야 합니다!", 2f);
-            return;
-        }
-
-        // 이륙 카운트다운 시작
-        castingRoutine = StartCoroutine(CastingRoutine(true, 0, 0));
-        StartCoroutine(RefreshQueenUI());
-
-
-        // Immediately refresh command UI so Land command becomes available when float begins
-        StartCoroutine(DelayedRefreshCommandsAfterCastStart());
-    }
-
-    private IEnumerator DelayedRefreshCommandsAfterCastStart()
-    {
-        // small delay to allow internal flags (isFloating/isRelocating) to update if set elsewhere
-        yield return null;
-        if (UnitCommandPanel.Instance != null) UnitCommandPanel.Instance.RefreshAllCommands();
-    }
-public void StartLandSequence(int targetQ, int targetR)
-    {
-        // 떠있지 않거나, 캐스팅 중이면 무시
-        if (!isFloating || castingRoutine != null) return;
-
-        // 착륙 카운트다운 시작
-        castingRoutine = StartCoroutine(CastingRoutine(false, targetQ, targetR));
-        StartCoroutine(RefreshQueenUI());
-
-
-        // Force UI refresh so relocating/land-mode buttons update immediately
-        StartCoroutine(DelayedRefreshCommandsAfterCastStart());
-    }
-private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
-    {
-        float timer = castTime;
-        Vector3 startPos = queenBee.transform.position; // 시작 위치 저장
-        string actionName = isLifting ? "이륙" : "착륙";
-
-        if (NotificationToast.Instance != null)
-        {
-            NotificationToast.Instance.ShowMessage($"{castTime}초 뒤 {actionName}을 시작합니다. 움직이면 취소됩니다.", 2f);
-        }
-        // UI 표시
-        if (relocateTimerText != null)
-        {
-            relocateTimerText.gameObject.SetActive(true);
-            relocateTimerText.color = Color.white;
-        }
-
-        Debug.Log($"[Hive] {actionName} 준비... 움직이면 취소됩니다.");
-
-        while (timer > 0)
-        {
-            // 1. 여왕벌 사망 체크
-            if (queenBee == null)
-            {
-                CancelCasting();
-                yield break;
-            }
-
-            // 2. 움직임 체크 (0.1f 이상 이동 시 취소)
-            if (Vector3.Distance(queenBee.transform.position, startPos) > 0.1f)
-            {
-                Debug.Log($"[Hive] 여왕벌이 움직여서 {actionName}이(가) 취소되었습니다.");
-                if (NotificationToast.Instance != null) 
-                    NotificationToast.Instance.ShowMessage("이동하여 작업이 취소되었습니다.", 1.5f);
-                
-                // UI에 취소 표시
-                if (relocateTimerText != null)
-                {
-                    relocateTimerText.color = Color.red;
-                    relocateTimerText.text = "취소됨!";
-                }
-                yield return new WaitForSeconds(1f); // 1초 뒤 UI 끄기
-                
-                CancelCasting();
-                yield break;
-            }
-
-            // 3. 타이머 갱신
-            timer -= Time.deltaTime;
-            if (relocateTimerText != null)
-            {
-                relocateTimerText.text = $"{actionName} 중...\n{timer:F1}초";
-            }
-
-            yield return null;
-        }
-
-        // 카운트다운 완료! 실제 동작 실행
-        if (relocateTimerText != null) relocateTimerText.gameObject.SetActive(false);
-        castingRoutine = null;
-
-        if (NotificationToast.Instance != null)
-        {
-            NotificationToast.Instance.ShowMessage($"{actionName} 완료!", 1.5f);
-        }
-
-        if (isLifting) LiftHive();         // 실제 이륙
-        else LandHive(targetQ, targetR);   // 실제 착륙
-
-        // After lift/land, force UI refresh on next frame
-        yield return null;
-        if (UnitCommandPanel.Instance != null) UnitCommandPanel.Instance.RefreshAllCommands();
-    }
-
-    // 캐스팅 강제 취소 (내부용)
-    private void CancelCasting()
-    {
-        if (relocateTimerText != null) relocateTimerText.gameObject.SetActive(false);
-        castingRoutine = null;
-    }
-
-
-
     void DestroyHive()
     {
         Debug.Log("[하이브 파괴] 하이브가 파괴됩니다.");
@@ -807,6 +697,13 @@ private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
             if (queenCombat != null)
             {
                 queenCombat.SetInvincible(false);
+            }
+
+            // Restore vision because hive was destroyed while relocating
+            if (HiveManager.Instance != null)
+            {
+                HiveManager.Instance.RestoreVisionOnHiveDestroyed(this);
+                if (showDebugLogs) Debug.Log("[하이브 파괴] 운반 중 파괴: 여왕 시야 복구");
             }
 
             // 3. 여왕벌의 homeHive는 이미 null(LiftHive에서 해제됨)이므로 
@@ -1142,7 +1039,7 @@ private IEnumerator RefreshQueenUI()
             // 여왕벌이 아직 살아있고, 속도가 느려진 상태라면
             if (queenController != null && savedQueenSpeed > 0)
             {
-                // 현재 속도가 저장된(원래) 속도보다 작다면 복구
+                // 현재 속도가 저장된 속도보다 작다면 복구
                 if (queenController.moveSpeed < savedQueenSpeed)
                 {
                     queenController.moveSpeed = savedQueenSpeed;
@@ -1154,6 +1051,138 @@ private IEnumerator RefreshQueenUI()
             {
                 queenBee.carriedHive = null;
             }
+
+            // Ensure vision restored as a safety
+            if (HiveManager.Instance != null)
+            {
+                HiveManager.Instance.RestoreVisionOnHiveDestroyed(this);
+            }
         }
     }
+
+    public void StartLiftSequence()
+    {
+        // 이미 떠있거나, 캐스팅 중이면 무시
+        if (isFloating || castingRoutine != null) return;
+        if (queenBee == null) return;
+
+        // 위치 검사: 여왕벌이 하이브 위에 있어야 함
+        if (queenBee.q != this.q || queenBee.r != this.r)
+        {
+            if (NotificationToast.Instance != null)
+                NotificationToast.Instance.ShowMessage("여왕벌이 하이브 위에 있어야 합니다!", 2f);
+            return;
+        }
+
+        // 이륙 카운트다운 시작
+        castingRoutine = StartCoroutine(CastingRoutine(true, 0, 0));
+        StartCoroutine(RefreshQueenUI());
+
+
+        // Immediately refresh command UI so Land command becomes available when float begins
+        StartCoroutine(DelayedRefreshCommandsAfterCastStart());
+    }
+
+    private IEnumerator DelayedRefreshCommandsAfterCastStart()
+    {
+        // small delay to allow internal flags (isFloating/isRelocating) to update if set elsewhere
+        yield return null;
+        if (UnitCommandPanel.Instance != null) UnitCommandPanel.Instance.RefreshAllCommands();
+    }
+
+    public void StartLandSequence(int targetQ, int targetR)
+    {
+        // 떠있지 않거나, 캐스팅 중이면 무시
+        if (!isFloating || castingRoutine != null) return;
+
+        // 착륙 카운트다운 시작
+        castingRoutine = StartCoroutine(CastingRoutine(false, targetQ, targetR));
+        StartCoroutine(RefreshQueenUI());
+
+
+        // Force UI refresh so relocating/land-mode buttons update immediately
+        StartCoroutine(DelayedRefreshCommandsAfterCastStart());
+    }
+
+    private IEnumerator CastingRoutine(bool isLifting, int targetQ, int targetR)
+    {
+        float timer = castTime;
+        Vector3 startPos = queenBee != null ? queenBee.transform.position : transform.position; // 시작 위치 저장
+        string actionName = isLifting ? "이륙" : "착륙";
+
+        if (NotificationToast.Instance != null)
+        {
+            NotificationToast.Instance.ShowMessage($"{castTime}초 뒤 {actionName}을 시작합니다. 움직이면 취소됩니다.", 2f);
+        }
+        // UI 표시
+        if (relocateTimerText != null)
+        {
+            relocateTimerText.gameObject.SetActive(true);
+            relocateTimerText.color = Color.white;
+        }
+
+        Debug.Log($"[Hive] {actionName} 준비... 움직이면 취소됩니다.");
+
+        while (timer > 0)
+        {
+            // 1. 여왕벌 사망 체크
+            if (queenBee == null)
+            {
+                CancelCasting();
+                yield break;
+            }
+
+            // 2. 움직임 체크 (0.1f 이상 이동 시 취소)
+            if (Vector3.Distance(queenBee.transform.position, startPos) > 0.1f)
+            {
+                Debug.Log($"[Hive] 여왕벌이 움직여서 {actionName}이(가) 취소되었습니다.");
+                if (NotificationToast.Instance != null) 
+                    NotificationToast.Instance.ShowMessage("이동하여 작업이 취소되었습니다.", 1.5f);
+                
+                // UI에 취소 표시
+                if (relocateTimerText != null)
+                {
+                    relocateTimerText.color = Color.red;
+                    relocateTimerText.text = "취소됨!";
+                }
+                yield return new WaitForSeconds(1f); // 1초 뒤 UI 끄기
+                
+                CancelCasting();
+                yield break;
+            }
+
+            // 3. 타이머 갱신
+            timer -= Time.deltaTime;
+            if (relocateTimerText != null)
+            {
+                relocateTimerText.text = $"{actionName} 중...\n{timer:F1}초";
+            }
+
+            yield return null;
+        }
+
+        // 카운트다운 완료! 실제 동작 실행
+        if (relocateTimerText != null) relocateTimerText.gameObject.SetActive(false);
+        castingRoutine = null;
+
+        if (NotificationToast.Instance != null)
+        {
+            NotificationToast.Instance.ShowMessage($"{actionName} 완료!", 1.5f);
+        }
+
+        if (isLifting) LiftHive();         // 실제 이륙
+        else LandHive(targetQ, targetR);   // 실제 착륙
+
+        // After lift/land, force UI refresh on next frame
+        yield return null;
+        if (UnitCommandPanel.Instance != null) UnitCommandPanel.Instance.RefreshAllCommands();
+    }
+
+    // 캐스팅 강제 취소 (내부용)
+    private void CancelCasting()
+    {
+        if (relocateTimerText != null) relocateTimerText.gameObject.SetActive(false);
+        castingRoutine = null;
+    }
+
 }

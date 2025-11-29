@@ -178,6 +178,88 @@ public class HiveManager : MonoBehaviour
 
     public bool HasResources(int amount) => playerStoredResources >= amount;
 
+    // Store original vision ranges for units when temporarily reduced during hive relocation
+    private Dictionary<int, int> savedVisionRanges = new Dictionary<int, int>();
+
+    // Reduce vision for hive and queen to 1 during relocation and update FogOfWar
+    public void ReduceVisionForRelocation(Hive hive)
+    {
+        if (hive == null) return;
+
+        // Queen
+        if (hive.queenBee != null)
+        {
+            SaveAndApplyVision(hive.queenBee, 1);
+        }
+
+        // Hive agent (the hive itself may have a UnitAgent)
+        var hiveAgent = hive.GetComponent<UnitAgent>();
+        if (hiveAgent != null)
+        {
+            SaveAndApplyVision(hiveAgent, 1);
+        }
+    }
+
+    // Restore vision for hive and queen after landing
+    public void RestoreVisionAfterLanding(Hive hive)
+    {
+        if (hive == null) return;
+
+        if (hive.queenBee != null)
+        {
+            RestoreVision(hive.queenBee);
+        }
+
+        var hiveAgent = hive.GetComponent<UnitAgent>();
+        if (hiveAgent != null)
+        {
+            RestoreVision(hiveAgent);
+        }
+    }
+
+    // Restore vision if hive is destroyed while relocating
+    public void RestoreVisionOnHiveDestroyed(Hive hive)
+    {
+        if (hive == null) return;
+        if (hive.queenBee != null)
+        {
+            RestoreVision(hive.queenBee);
+        }
+        var hiveAgent = hive.GetComponent<UnitAgent>();
+        if (hiveAgent != null)
+        {
+            RestoreVision(hiveAgent);
+        }
+    }
+
+    private void SaveAndApplyVision(UnitAgent agent, int newVision)
+    {
+        if (agent == null) return;
+        if (!savedVisionRanges.ContainsKey(agent.id))
+        {
+            savedVisionRanges[agent.id] = agent.visionRange;
+        }
+        agent.visionRange = newVision;
+        if (FogOfWarManager.Instance != null)
+        {
+            FogOfWarManager.Instance.UpdateUnitPosition(agent.id, agent.q, agent.r, agent.visionRange);
+        }
+    }
+
+    private void RestoreVision(UnitAgent agent)
+    {
+        if (agent == null) return;
+        if (savedVisionRanges.TryGetValue(agent.id, out int original))
+        {
+            agent.visionRange = original;
+            if (FogOfWarManager.Instance != null)
+            {
+                FogOfWarManager.Instance.UpdateUnitPosition(agent.id, agent.q, agent.r, agent.visionRange);
+            }
+            savedVisionRanges.Remove(agent.id);
+        }
+    }
+
     // Register worker and assign to smallest squad with capacity.
     public void RegisterWorker(UnitAgent worker, WorkerSquad? desiredSquad = null)
     {
