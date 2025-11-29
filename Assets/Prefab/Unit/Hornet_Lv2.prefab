@@ -86,7 +86,7 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: 6087083f8ef98e7489dd1ef6a38160c3, type: 2}
     - target: {fileID: 6112904449999854078, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: moveSpeed
-      value: 1
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6112904449999854078, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
       propertyPath: tileRandomRadius
@@ -224,6 +224,8 @@ MonoBehaviour:
   isInvincible: 0
   hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
   hitFlashDuration: 0.2
+  queenHealInterval: 1
+  queenHealAmount: 1
 --- !u!114 &4909472681349407938 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6112904449999854078, guid: fbd489a349676d34997f12e8c68a8424, type: 3}
