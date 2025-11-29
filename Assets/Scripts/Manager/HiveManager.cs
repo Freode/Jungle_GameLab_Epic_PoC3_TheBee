@@ -689,8 +689,12 @@ public class HiveManager : MonoBehaviour
         foreach (var unit in TileManager.Instance.GetAllUnits())
         {
             if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
-            var behavior = unit.GetComponent<UnitBehaviorController>();
-            if (behavior != null) behavior.gatherAmount = GetGatherAmount();
+            var roleAssigner = unit.GetComponent<RoleAssigner>();
+            // only apply to gatherer role units; refresh role to let RoleAssigner handle bonuses
+            if (roleAssigner != null && roleAssigner.role == RoleType.Gatherer)
+            {
+                roleAssigner.RefreshRole();
+            }
         }
     }
 
