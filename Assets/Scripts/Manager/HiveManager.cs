@@ -916,17 +916,31 @@ public class HiveManager : MonoBehaviour
     }
 
     // Ensure worker speed updates are applied to UnitController components
+    public float GetWorkerSpeedBonusValue(RoleType role)
+    {
+        int level = 0;
+        switch (role)
+        {
+            case RoleType.Attacker: level = workerSpeedLevelAttacker; break;
+            case RoleType.Gatherer: level = workerSpeedLevelGatherer; break;
+            case RoleType.Tank: level = workerSpeedLevelTank; break;
+            default: level = workerSpeedLevelGatherer; break;
+        }
+        
+        // 레벨당 0.2 증가
+        return level * 0.2f; 
+    }
     void UpdateAllWorkerSpeed()
     {
         if (TileManager.Instance == null) return;
         foreach (var unit in TileManager.Instance.GetAllUnits())
         {
             if (unit == null || unit.isQueen || unit.faction != Faction.Player) continue;
-            var controller = unit.GetComponent<UnitController>();
-            if (controller != null)
+            
+            var ra = unit.GetComponent<RoleAssigner>();
+            if (ra != null)
             {
-                var ra = unit.GetComponent<RoleAssigner>();
-                controller.moveSpeed = ra != null ? GetWorkerSpeed(ra.role) : GetWorkerSpeed(RoleType.Gatherer);
+                ra.RefreshRole(); 
             }
         }
     }

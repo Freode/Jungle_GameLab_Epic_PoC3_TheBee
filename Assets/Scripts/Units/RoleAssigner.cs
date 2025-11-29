@@ -236,14 +236,12 @@ public class RoleAssigner : MonoBehaviour, IUnitCommandProvider
         // apply movement speed multiplier if UnitController exists
         if (controller != null)
         {
-            // Apply role multiplier to the unit's baseMoveSpeed and include HiveManager per-role speed bonuses
-            float roleBonus = 0f;
+            float levelBonus = 0f;
             if (HiveManager.Instance != null)
             {
-                roleBonus = HiveManager.Instance.GetWorkerSpeedBonusForRole(r);
+                levelBonus = HiveManager.Instance.GetWorkerSpeedBonusValue(r);
             }
-
-            controller.moveSpeed = (baseMoveSpeed + roleBonus) * stats.moveSpeedMultiplier;
+            controller.moveSpeed = (baseMoveSpeed * stats.moveSpeedMultiplier) + levelBonus;
         }
 
         Debug.Log($"[RoleAssigner] {gameObject.name} role applied: {r}");
