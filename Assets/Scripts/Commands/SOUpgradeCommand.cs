@@ -67,6 +67,12 @@ public class SOUpgradeCommand : SOCommand
 
         int currentLevel = GetCurrentLevel(upgradeType);
 
+        // incrementalCost가 0이면 단순 선형 증가(레벨+1 배)
+        if (incrementalCost == 0)
+        {
+            return baseCost * (currentLevel + 1);
+        }
+
         // 등차수열 누적 증가: baseCost + incrementalCost * (n*(n+1)/2)
         int additionalCost = incrementalCost * currentLevel * (currentLevel + 1) / 2;
         return baseCost + additionalCost;
