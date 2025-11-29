@@ -19,6 +19,6 @@ MonoBehaviour:
   hidePanelOnClick: 0
   resourceCost: 11
   upgradeType: 2
-  targetRole: 1
+  targetRole: 2
   baseCost: 11
   maxLevel: 0
