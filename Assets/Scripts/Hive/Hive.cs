@@ -1242,7 +1242,7 @@ private IEnumerator RefreshQueenUI()
         if (queenBee.q != this.q || queenBee.r != this.r)
         {
             if (NotificationToast.Instance != null)
-                NotificationToast.Instance.ShowMessage("여왕벌이 하이브 위에 있어야 합니다!", 2f);
+                NotificationToast.Instance.ShowMessage("여왕벌이 꿀벌집 위에 있어야 합니다!", 2f);
             return;
         }
 

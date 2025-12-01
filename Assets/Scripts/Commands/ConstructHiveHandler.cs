@@ -29,7 +29,7 @@ public class ConstructHiveHandler : MonoBehaviour
         if (CheckIfPlayerHiveExists())
         {
             if (NotificationToast.Instance != null) 
-                NotificationToast.Instance.ShowMessage("이미 하이브가 존재합니다!", 2f);
+                NotificationToast.Instance.ShowMessage("이미 꿀벌집이 존재합니다!", 2f);
             return;
         }
 
@@ -54,7 +54,7 @@ public class ConstructHiveHandler : MonoBehaviour
 
             // 시작 알림
             if (NotificationToast.Instance != null)
-                NotificationToast.Instance.ShowMessage($"3초 뒤 하이브를 건설합니다. 움직이면 취소됩니다.", 2f);
+                NotificationToast.Instance.ShowMessage($"3초 뒤 꿀벌집을 건설합니다. 움직이면 취소됩니다.", 2f);
         
             Debug.Log($"[Construct] 건설 준비... ({duration}초)");
 

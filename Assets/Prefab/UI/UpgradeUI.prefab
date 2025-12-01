@@ -1787,4 +1787,3 @@ MonoBehaviour:
   queenCommands: []
   hiveCommands:
   - {fileID: 11400000, guid: 44a7cf4add082a049b2a08706c820179, type: 2}
-  - {fileID: 11400000, guid: 0db3374cb4df1bc43bea01b805c0fce9, type: 2}
